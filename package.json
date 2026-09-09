@@ -12,6 +12,7 @@
     "lint": "biome lint .",
     "check": "biome ci .",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "knip": "knip",
@@ -48,6 +49,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.5.12",
     "@types/react": "~19.1.0",
+    "@vitest/coverage-v8": "4.1.11",
     "knip": "^6.35.1",
     "lefthook": "^2.1.12",
     "typescript": "~5.9.2",
