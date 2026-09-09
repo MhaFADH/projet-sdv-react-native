@@ -1,0 +1,13 @@
+pre-commit:
+  commands:
+    format-and-lint:
+      run: npx @biomejs/biome check --write --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
+      stage_fixed: true
+
+pre-push:
+  parallel: true
+  commands:
+    tests:
+      run: npm test
+    typecheck:
+      run: npm run typecheck
