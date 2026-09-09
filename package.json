@@ -10,9 +10,11 @@
     "web": "expo start --web",
     "format": "biome format --write .",
     "lint": "biome lint .",
+    "check": "biome ci .",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
+    "knip": "knip",
     "prepare": "lefthook install"
   },
   "dependencies": {
@@ -46,6 +48,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.5.12",
     "@types/react": "~19.1.0",
+    "knip": "^6.35.1",
     "lefthook": "^2.1.12",
     "typescript": "~5.9.2",
     "vitest": "^4.1.11"

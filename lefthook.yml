@@ -7,6 +7,8 @@ pre-commit:
 pre-push:
   parallel: true
   commands:
+    knip:
+      run: npm run knip
     tests:
       run: npm test
     typecheck:

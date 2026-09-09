@@ -1,0 +1,9 @@
+{
+  "$schema": "./node_modules/knip/schema.json",
+  "ignoreDependencies": ["expo-updates"],
+  "metro": {
+    "entry": [
+      "{src,components,features,hooks,services}/**/*.{ios,android,windows,web,native,default}.{js,jsx,json,ts,tsx}"
+    ]
+  }
+}
