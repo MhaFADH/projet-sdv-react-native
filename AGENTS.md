@@ -4,8 +4,8 @@
 
 Avant toute modification de code :
 
-. Pour le contrat back-end, lire `api-books-v2/README.md` dans `../api-books-v2-/api-books-v2.zip`. Ce README prime sur le résumé du sujet.
-3. Pour Expo, consulter exclusivement la documentation versionnée SDK 54 sous <https://docs.expo.dev/versions/v54.0.0/> avant d'utiliser une API Expo. Ne pas transposer une API de la documentation `latest` sans vérifier sa présence en SDK 54.
+1. Pour le contrat back-end, lire `../api-books-v2-/api-books-v2/README.md`. Ce README prime sur le résumé du sujet.
+2. Pour Expo, consulter exclusivement la documentation versionnée SDK 54 sous <https://docs.expo.dev/versions/v54.0.0/> avant d'utiliser une API Expo. Ne pas transposer une API de la documentation `latest` sans vérifier sa présence en SDK 54.
 
 En cas de contradiction : le README de l'API fait foi pour le protocole HTTP, le PDF pour la recette, et les versions installées pour les API clientes disponibles.
 
