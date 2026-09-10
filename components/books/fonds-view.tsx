@@ -1,11 +1,19 @@
 import type { PropsWithChildren } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { BarreSelectionSuppression } from '@/components/books/barre-selection-suppression';
 import { Bouton } from '@/components/bouton';
 import { EtatAbsence, EtatErreur, SqueletteDonnees } from '@/components/etats-donnees';
 import type { PageOuvrages } from '@/domain/ouvrage';
 import { theme } from '@/theme/tokens';
 import { OuvragesList } from './ouvrages-list';
 import { Pagination } from './pagination';
+
+type SelectionFonds = {
+  identifiants: ReadonlySet<string>;
+  basculer: (id: string) => void;
+  demanderSuppression: () => void;
+  suppressionDesactivee: boolean;
+};
 
 type EtatFonds =
   | { type: 'chargement' }
@@ -16,6 +24,7 @@ type EtatFonds =
       pagePrecedente: () => void;
       pageSuivante: () => void;
       ouvrirOuvrage: (id: string) => void;
+      selection: SelectionFonds;
       masquageTemporaire?: boolean;
     };
 
@@ -59,11 +68,30 @@ const FondsVide = () => (
   <EtatAbsence message="Aucun ouvrage n'est encore recensé." titre="Le fonds est vide" />
 );
 
-const FondsMasqueTemporairement = () => (
-  <EtatAbsence
-    message="Les ouvrages de cette page restent récupérables avec « Annuler tout » avant l’envoi."
-    titre="Ouvrages masqués temporairement"
-  />
+const FondsMasqueTemporairement = ({
+  page,
+  pagePrecedente,
+  pageSuivante,
+  selection,
+}: Extract<EtatFonds, { type: 'succes' }>) => (
+  <>
+    <BarreSelectionSuppression
+      demanderSuppression={selection.demanderSuppression}
+      nombreSelectionnes={0}
+      suppressionDesactivee={selection.suppressionDesactivee}
+    />
+    <EtatAbsence
+      message="Les ouvrages de cette page restent récupérables avec « Annuler tout » avant l’envoi."
+      titre="Ouvrages masqués temporairement"
+    />
+    <Pagination
+      page={page.page}
+      pagePrecedente={pagePrecedente}
+      pageSuivante={pageSuivante}
+      total={page.total}
+      totalPages={page.totalPages}
+    />
+  </>
 );
 
 const PageIndisponible = ({
@@ -91,24 +119,40 @@ const FondsRempli = ({
   pagePrecedente,
   pageSuivante,
   ouvrirOuvrage,
-}: Extract<EtatFonds, { type: 'succes' }>) => (
-  <>
-    <OuvragesList ouvrages={page.items} ouvrirOuvrage={ouvrirOuvrage} />
-    <Pagination
-      page={page.page}
-      pagePrecedente={pagePrecedente}
-      pageSuivante={pageSuivante}
-      total={page.total}
-      totalPages={page.totalPages}
-    />
-  </>
-);
+  selection,
+}: Extract<EtatFonds, { type: 'succes' }>) => {
+  const nombreSelectionnes = page.items.filter(({ id }) => selection.identifiants.has(id)).length;
+
+  return (
+    <>
+      <BarreSelectionSuppression
+        demanderSuppression={selection.demanderSuppression}
+        nombreSelectionnes={nombreSelectionnes}
+        suppressionDesactivee={selection.suppressionDesactivee}
+      />
+      <OuvragesList
+        basculerSelection={selection.basculer}
+        identifiantsSelectionnes={selection.identifiants}
+        ouvrages={page.items}
+        ouvrirOuvrage={ouvrirOuvrage}
+      />
+      <Pagination
+        page={page.page}
+        pagePrecedente={pagePrecedente}
+        pageSuivante={pageSuivante}
+        total={page.total}
+        totalPages={page.totalPages}
+      />
+    </>
+  );
+};
 
 const ContenuFonds = ({ etat }: Pick<FondsViewProps, 'etat'>) => {
   if (etat.type === 'chargement') return <ChargementFonds />;
   if (etat.type === 'erreur') return <ErreurFonds {...etat} />;
   if (etat.page.total === 0) return <FondsVide />;
-  if (etat.page.items.length === 0 && etat.masquageTemporaire) return <FondsMasqueTemporairement />;
+  if (etat.page.items.length === 0 && etat.masquageTemporaire)
+    return <FondsMasqueTemporairement {...etat} />;
   if (etat.page.items.length === 0) return <PageIndisponible {...etat} />;
   return <FondsRempli {...etat} />;
 };

@@ -4,12 +4,12 @@
 
 Les dépendances vont de la composition vers le domaine et les services. Le domaine ne dépend ni de React, ni d’Expo, ni du réseau.
 
-| Couche                 | Responsabilité livrée dans les tickets #2, #3, #4, #5, #6 et #7                                                                                                                                                                                                                                   |
+| Couche                 | Responsabilité livrée dans les tickets #2, #3, #4, #5, #6, #7 et #8                                                                                                                                                                                                                                |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `app/`                 | Compose Expo Router, TanStack Query, le provider global de suppression, le thème clair et l’ErrorBoundary global. Détient la page consultée dans l’URL et déclenche les navigations.                                                                                                              |
-| `features/books/`      | Transforme l’état des hooks en états de présentation, pour le fonds paginé, la fiche et le formulaire partagé d’ajout et de correction. Interprète l’issue d’une écriture : refus par champ, indisponibilité ou résultat inconnu. Coordonne également le cycle global des suppressions différées. |
+| `features/books/`      | Transforme l’état des hooks en états de présentation, pour le fonds paginé, sa sélection, la fiche et le formulaire partagé d’ajout et de correction. Interprète l’issue d’une écriture et coordonne également le cycle global des suppressions différées.                                         |
 | `hooks/`               | Décrit les requêtes et mutations TanStack Query, leurs clés de cache, leur annulation, leur réessai temporisé, la réactualisation au retour, le toast de succès, la durée de ce toast et la temporisation d’un réessai manuel, ainsi que l’accès au contexte de suppression.                      |
-| `components/`          | Affiche des props sans connaître le réseau ni le cache. Contient notamment les formulaires, confirmations et bandeaux de suppression. Les états de chargement, d’erreur et d’absence sont mutualisés dans `components/etats-donnees.tsx`.                                                         |
+| `components/`          | Affiche des props sans connaître le réseau ni le cache. Contient notamment les formulaires, cases de sélection, confirmations et bandeaux de suppression. Les états de données sont mutualisés dans `components/etats-donnees.tsx`.                                                               |
 | `services/api/`        | Construit les requêtes GET, POST, PATCH et DELETE, applique les en-têtes et le délai d’expiration, traduit les erreurs, valide les réponses et porte la politique de réessai.                                                                                                                     |
 | `services/plateforme/` | Expose une interface unique par capacité dépendant de la plateforme, avec une implémentation web et une implémentation par défaut.                                                                                                                                                                |
 | `domain/`              | Définit l’ouvrage, l’enveloppe paginée, le schéma de saisie et les règles pures du groupe de suppressions sans dépendance technique.                                                                                                                                                              |
@@ -65,7 +65,7 @@ Le ticket #4 livre la création d’un ouvrage par `POST`.
 
 ## Parcours d’une écriture livré : la correction d’un ouvrage
 
-Le ticket #5 livre la correction d’un ouvrage par `PATCH`, comme la bascule de statut du ticket #6 décrite plus bas. Les verbes `PUT` et `DELETE` ne sont déclenchés par aucun composant.
+Le ticket #5 livre la correction d’un ouvrage par `PATCH`, comme la bascule de statut du ticket #6 décrite plus bas. `PUT` n’est déclenché par aucun composant ; `DELETE` reste réservé au parcours de suppression décrit plus bas.
 
 1. La fiche propose « Corriger cet ouvrage ». `app/ouvrages/[id].tsx` pousse `/ouvrages/[id]/modifier`, qui compose `CorrectionOuvrageScreen` sans URL ni appel réseau.
 2. L’écran lit l’ouvrage par `useBook`, donc par la même clé de cache que la fiche. Le chargement affiche un squelette, un `404` une absence contextualisée et tout autre échec un réessai explicite : aucun de ces états ne propose une création déguisée.
@@ -96,14 +96,15 @@ L’opération `PUT` n’est déclenchée par aucun composant dans ce périmètr
 
 ## Parcours de la suppression différée
 
-1. La fiche ouvre une confirmation pure qui récapitule le titre. Renoncer ne change ni le cache ni le groupe.
-2. Après confirmation, `SuppressionsProvider` ajoute l’identifiant et le titre au groupe en mémoire. Les règles de `domain/groupe-suppressions.ts` fixent une nouvelle échéance commune à cinq secondes.
-3. Le contexte masque les ouvrages du fonds et leur fiche sans modifier les données serveur. Le provider étant au-dessus de la pile Expo Router, groupe, compteur et « Annuler tout » survivent aux navigations internes.
-4. « Annuler tout » vide seulement un groupe encore en attente. Aucun DELETE n’a alors été envoyé et les données cachées redeviennent visibles.
-5. À l’échéance, le domaine passe le groupe en envoi. Le provider interdit les nouvelles suppressions sans bloquer la consultation, puis déclenche la mutation TanStack Query du groupe.
-6. La mutation appelle `deleteBook` pour chaque identifiant. `clientHttp` centralise l’URL, les en-têtes, le délai d’expiration et la traduction des erreurs. Seule une réponse vide `204` confirme une suppression.
-7. Les fiches réussies sont retirées du cache et toutes les clés de listes sont invalidées. Le rechargement serveur permet au fonds de revenir à la dernière page disponible si la page courante disparaît.
-8. Seuls les ouvrages en échec redeviennent visibles dans un message persistant. Leur réessai repasse par la confirmation et un nouveau groupe annulable de cinq secondes ; les réussites ne sont jamais rejouées.
+1. `FondsScreen` conserve uniquement les identifiants sélectionnés sur la page affichée et remet cette sélection à zéro au changement de page. `FondsView` expose les cases accessibles et la barre de suppression sans connaître le groupe ni le réseau.
+2. La liste ou la fiche ouvre le même composant pur de confirmation, qui récapitule les titres concernés. Renoncer ne change ni le cache ni le groupe.
+3. Après confirmation, les deux points d’entrée transmettent les identifiants et les titres au même `SuppressionsProvider`. Les règles de `domain/groupe-suppressions.ts` les fusionnent sans doublon et fixent une nouvelle échéance commune à cinq secondes.
+4. Le contexte masque les ouvrages du fonds et leur fiche sans modifier les données serveur. Le provider étant au-dessus de la pile Expo Router, groupe, compteur et « Annuler tout » survivent aux navigations internes.
+5. « Annuler tout » vide seulement un groupe encore en attente. Aucun DELETE n’a alors été envoyé et les données cachées redeviennent visibles.
+6. À l’échéance, le domaine passe le groupe en envoi. Le provider interdit les nouvelles suppressions depuis la liste et la fiche sans bloquer la consultation, puis déclenche la mutation TanStack Query du groupe.
+7. La mutation appelle `deleteBook` pour chaque identifiant. `clientHttp` centralise l’URL, les en-têtes, le délai d’expiration et la traduction des erreurs. Seule une réponse vide `204` confirme une suppression.
+8. Les fiches réussies sont retirées du cache et toutes les clés de listes sont invalidées. Le rechargement serveur permet au fonds de revenir à la dernière page disponible si la page courante disparaît.
+9. Seuls les ouvrages en échec redeviennent visibles dans un message persistant. Leur réessai repasse par la confirmation et un nouveau groupe annulable de cinq secondes ; les réussites ne sont jamais rejouées.
 
 Le groupe n’est ni persistant ni atomique. Fermer ou recharger avant l’échéance abandonne les intentions sans envoyer de requête. Après le départ d’un DELETE, aucune annulation serveur n’est garantie et aucune fiche supprimée n’est recréée.
 
@@ -111,4 +112,6 @@ Le groupe n’est ni persistant ni atomique. Fermer ou recharger avant l’éch�
 
 Les parcours livrés utilisent les interfaces communes de React Native, le transport `fetch` et le routage Expo Router. La page consultée voyageant dans l’URL, le retour navigateur et le retour de pile mobile aboutissent au même état.
 
-La seule capacité divergente est l’avertissement de départ du document, propre au navigateur. Elle passe par l’interface unique `services/plateforme/avertissement-depart.ts`, dont Metro sélectionne l’implémentation `.web.ts` sur la cible web. Toute divergence future suivra la même règle.
+L’avertissement de départ du document passe par l’interface `services/plateforme/avertissement-depart.ts`, dont Metro sélectionne l’implémentation `.web.ts` sur la cible web.
+
+React Native Web rend une `Pressable` de rôle `checkbox` comme un élément non natif et n’associe pas la touche Espace à `onPress`. `services/plateforme/activation-clavier.ts` fournit cette adaptation sur le web sans transmettre de prop supplémentaire sur mobile.
