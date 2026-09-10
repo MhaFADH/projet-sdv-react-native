@@ -15,7 +15,8 @@ export const BarreSelectionSuppression = ({
   suppressionDesactivee,
   demanderSuppression,
 }: ProprietesBarreSelectionSuppression) => {
-  const desactivee = nombreSelectionnes === 0 || suppressionDesactivee;
+  if (nombreSelectionnes === 0) return null;
+  const desactivee = suppressionDesactivee;
   const libelle = libelleSelection(nombreSelectionnes);
 
   return (
@@ -37,14 +38,7 @@ export const BarreSelectionSuppression = ({
 };
 
 const styles = StyleSheet.create({
-  barre: {
-    alignItems: 'flex-end',
-    padding: theme.spacing.sm,
-    borderWidth: theme.borderWidth,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.surface,
-  },
+  barre: { alignSelf: 'flex-end' },
   bouton: {
     minHeight: theme.minTargetSize,
     justifyContent: 'center',

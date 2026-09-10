@@ -1,19 +1,17 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useRef } from 'react';
+import { CONSULTATION_FONDS_PAR_DEFAUT, type ConsultationFonds } from '@/domain/criteres-ouvrages';
 import { clesOuvrages } from './cles-ouvrages';
 
-/**
- * Le retour depuis une fiche ne démonte pas l'écran du fonds : la page consultée
- * est donc réactualisée à chaque nouveau focus, jamais au premier affichage.
- * La page voyage par référence pour que le rappel reste stable : un changement
- * de page ne doit pas déclencher une seconde requête pendant que l'écran a le focus.
- */
-export const useRafraichirFondsAuFocus = (page: number, recherche = '') => {
+export const useRafraichirFondsAuFocus = (
+  page: number,
+  consultation: ConsultationFonds = CONSULTATION_FONDS_PAR_DEFAUT,
+) => {
   const client = useQueryClient();
-  const criteresConsultes = useRef({ page, recherche });
+  const criteresConsultes = useRef({ page, consultation });
   const premierFocus = useRef(true);
-  criteresConsultes.current = { page, recherche };
+  criteresConsultes.current = { page, consultation };
 
   useFocusEffect(
     useCallback(() => {
@@ -23,7 +21,7 @@ export const useRafraichirFondsAuFocus = (page: number, recherche = '') => {
       }
       const criteres = criteresConsultes.current;
       void client.invalidateQueries({
-        queryKey: clesOuvrages.liste(criteres.page, criteres.recherche),
+        queryKey: clesOuvrages.liste(criteres.page, criteres.consultation),
       });
     }, [client]),
   );

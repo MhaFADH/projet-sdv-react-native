@@ -1,8 +1,10 @@
 import type { PropsWithChildren } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { BarreSelectionSuppression } from '@/components/books/barre-selection-suppression';
+import { FiltresTriFonds } from '@/components/books/filtres-tri-fonds';
 import { Bouton } from '@/components/bouton';
 import { EtatAbsence, EtatErreur, SqueletteDonnees } from '@/components/etats-donnees';
+import type { ConsultationFonds } from '@/domain/criteres-ouvrages';
 import type { PageOuvrages } from '@/domain/ouvrage';
 import { theme } from '@/theme/tokens';
 import { OuvragesList } from './ouvrages-list';
@@ -28,6 +30,7 @@ type EtatFonds =
       selection: SelectionFonds;
       masquageTemporaire?: boolean;
       pageEnChargement?: number;
+      erreurActualisation?: { message: string; reessayer: () => void };
     };
 
 type FondsViewProps = {
@@ -36,6 +39,10 @@ type FondsViewProps = {
   recherche?: {
     valeurAppliquee: string;
     appliquer: (recherche: string) => void;
+  };
+  criteres?: {
+    consultation: ConsultationFonds;
+    appliquer: (consultation: ConsultationFonds) => void;
   };
 };
 
@@ -53,12 +60,15 @@ const EnteteFonds = ({ ajouterOuvrage }: Pick<FondsViewProps, 'ajouterOuvrage'>)
   </View>
 );
 
-type CadreFondsProps = PropsWithChildren<Pick<FondsViewProps, 'ajouterOuvrage' | 'recherche'>>;
+type CadreFondsProps = PropsWithChildren<
+  Pick<FondsViewProps, 'ajouterOuvrage' | 'recherche' | 'criteres'>
+>;
 
-const CadreFonds = ({ ajouterOuvrage, recherche, children }: CadreFondsProps) => (
+const CadreFonds = ({ ajouterOuvrage, recherche, criteres, children }: CadreFondsProps) => (
   <ScrollView contentContainerStyle={styles.conteneur} keyboardShouldPersistTaps="handled">
     <EnteteFonds ajouterOuvrage={ajouterOuvrage} />
     {recherche ? <RechercheFonds {...recherche} /> : null}
+    {criteres ? <FiltresTriFonds {...criteres} /> : null}
     {children}
   </ScrollView>
 );
@@ -71,9 +81,9 @@ const ErreurFonds = ({ message, reessayer }: Extract<EtatFonds, { type: 'erreur'
   <EtatErreur message={message} reessayer={reessayer} titre="Impossible de charger le fonds" />
 );
 
-const FondsVide = ({ rechercheActive }: { rechercheActive: boolean }) =>
-  rechercheActive ? (
-    <EtatAbsence message="Aucun ouvrage ne correspond à cette recherche." titre="Aucun résultat" />
+const FondsVide = ({ criteresActifs }: { criteresActifs: boolean }) =>
+  criteresActifs ? (
+    <EtatAbsence message="Aucun ouvrage ne correspond à ces critères." titre="Aucun résultat" />
   ) : (
     <EtatAbsence message="Aucun ouvrage n'est encore recensé." titre="Le fonds est vide" />
   );
@@ -131,6 +141,7 @@ const FondsRempli = ({
   ouvrirOuvrage,
   selection,
   pageEnChargement,
+  erreurActualisation,
 }: Extract<EtatFonds, { type: 'succes' }>) => {
   const interactionsDesactivees = pageEnChargement !== undefined;
   const nombreSelectionnes = page.items.filter(({ id }) => selection.identifiants.has(id)).length;
@@ -144,6 +155,13 @@ const FondsRempli = ({
         >
           <Text style={styles.chargementPage}>Chargement de la page {pageEnChargement}…</Text>
         </View>
+      ) : null}
+      {erreurActualisation ? (
+        <EtatErreur
+          message={erreurActualisation.message}
+          reessayer={erreurActualisation.reessayer}
+          titre="Impossible d’actualiser le fonds"
+        />
       ) : null}
       <BarreSelectionSuppression
         demanderSuppression={selection.demanderSuppression}
@@ -170,20 +188,30 @@ const FondsRempli = ({
   );
 };
 
-const ContenuFonds = ({ etat, recherche }: Pick<FondsViewProps, 'etat' | 'recherche'>) => {
+const ContenuFonds = ({
+  etat,
+  recherche,
+  criteres,
+}: Pick<FondsViewProps, 'etat' | 'recherche' | 'criteres'>) => {
   if (etat.type === 'chargement') return <ChargementFonds />;
   if (etat.type === 'erreur') return <ErreurFonds {...etat} />;
-  if (etat.page.total === 0)
-    return <FondsVide rechercheActive={(recherche?.valeurAppliquee ?? '') !== ''} />;
+  if (etat.page.total === 0) {
+    const consultation = criteres?.consultation;
+    const criteresActifs =
+      (recherche?.valeurAppliquee ?? '') !== '' ||
+      (consultation !== undefined &&
+        (consultation.lecture !== 'tous' || consultation.recommandation !== 'toutes'));
+    return <FondsVide criteresActifs={criteresActifs} />;
+  }
   if (etat.page.items.length === 0 && etat.masquageTemporaire)
     return <FondsMasqueTemporairement {...etat} />;
   if (etat.page.items.length === 0) return <PageIndisponible {...etat} />;
   return <FondsRempli {...etat} />;
 };
 
-export const FondsView = ({ etat, ajouterOuvrage, recherche }: FondsViewProps) => (
-  <CadreFonds ajouterOuvrage={ajouterOuvrage} recherche={recherche}>
-    <ContenuFonds etat={etat} recherche={recherche} />
+export const FondsView = ({ etat, ajouterOuvrage, recherche, criteres }: FondsViewProps) => (
+  <CadreFonds ajouterOuvrage={ajouterOuvrage} criteres={criteres} recherche={recherche}>
+    <ContenuFonds criteres={criteres} etat={etat} recherche={recherche} />
   </CadreFonds>
 );
 

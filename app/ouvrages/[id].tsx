@@ -6,11 +6,16 @@ import { theme } from '@/theme/tokens';
 
 const FicheRoute = () => {
   const router = useRouter();
-  const { id, retourPage, retourRecherche } = useLocalSearchParams<{
-    id: string;
-    retourPage?: string;
-    retourRecherche?: string;
-  }>();
+  const { id, retourPage, retourRecherche, retourStatus, retourFavori, retourSort, retourOrder } =
+    useLocalSearchParams<{
+      id: string;
+      retourPage?: string;
+      retourRecherche?: string;
+      retourStatus?: string;
+      retourFavori?: string;
+      retourSort?: string;
+      retourOrder?: string;
+    }>();
   const retour = () => {
     if (router.canGoBack()) {
       router.back();
@@ -18,7 +23,14 @@ const FicheRoute = () => {
     }
     router.replace({
       pathname: '/',
-      params: { page: retourPage ?? '1', q: retourRecherche ?? '' },
+      params: {
+        page: retourPage ?? '1',
+        q: retourRecherche ?? '',
+        status: retourStatus,
+        favori: retourFavori,
+        sort: retourSort,
+        order: retourOrder,
+      },
     });
   };
 

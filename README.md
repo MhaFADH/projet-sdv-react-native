@@ -1,6 +1,6 @@
 # BookList Pro
 
-BookList Pro numérise le cahier de lecture des Comptoirs du Livre. Cette version livre la consultation et la recherche par titre ou auteur du fonds par pages de vingt ouvrages triées par titre croissant par l’API, la fiche détaillée avec ses notes de lecture, l’ajout et la suppression d’une note, l’ajout d’ouvrage protégé contre la perte de saisie, la modification du statut collectif lu/non lu et la suppression différée depuis une fiche ou une sélection de la liste, avec annulation groupée.
+BookList Pro numérise le cahier de lecture des Comptoirs du Livre. Cette version livre la consultation, la recherche, les filtres de lecture et de coups de cœur ainsi que les tris serveur du fonds par pages de vingt ouvrages, la fiche détaillée avec ses notes de lecture, leur ajout et leur suppression, l’ajout d’ouvrage protégé contre la perte de saisie, la modification du statut collectif lu/non lu et la suppression différée depuis une fiche ou une sélection de la liste, avec annulation groupée.
 
 ## Prérequis
 
@@ -38,18 +38,22 @@ Pour tester depuis un appareil mobile, remplacer `localhost` dans `.env.local` p
 
 ## Comportement livré
 
-- appel de `GET /books?page=…&limit=20&q=…&sort=titre&order=asc`, avec omission de `q` quand la recherche est vide ;
+- appel de `GET /books` avec `page`, `limit=20`, `q`, `status`, `favori`, `sort` et `order`, en omettant les filtres inactifs ;
 - recherche titre ou auteur appliquée côté serveur 300 ms après la dernière frappe, avec annulation des demandes dépassées ;
+- filtres combinables Tous/Lus/Non lus et Tous/Coups de cœur, sans filtrage local du fonds ;
+- barre de critères unique avec les zones verticales « Affiner » puis « Trier » sur écran large, remplacée sur petit écran par un panneau « Filtres et tri » avec résumé des choix ; les radios se parcourent avec les flèches du clavier ;
+- tris serveur par titre, auteur, année ou notation, dans les sens croissant et décroissant, sans règle locale pour les notations absentes ;
 - validation Zod de l’enveloppe paginée et de tous les champs d’un ouvrage ;
 - chargement par squelette, erreur avec réessai, fonds vide et liste en succès ;
 - pagination « Précédent / Suivant » bornée par les métadonnées serveur ;
-- recherche et page consultée portées par l’URL de la liste (`/?page=3&q=zola`) afin d’être restituées et actualisées au retour ;
+- recherche, filtres, tri, ordre et page consultée portés par l’URL de la liste (`/?page=3&q=zola&status=nonlu&favori=true&sort=note&order=desc`) afin d’être restitués et actualisés au retour ;
 - statut collectif « Lu » ou « Non lu » indiqué dans la liste, sans action par ligne ;
-- cases à cocher limitées aux vingt ouvrages de la page, sélection remise à zéro à chaque changement de page et barre « N sélectionnés — Supprimer » ;
+- cases à cocher limitées aux vingt ouvrages de la page et sélection remise à zéro à chaque changement de page ; l’action compacte « N sélectionnés — Supprimer » apparaît uniquement lorsqu’une sélection existe ;
 - confirmation récapitulative avant l’ajout de la sélection au même groupe annulable que la suppression depuis une fiche ;
 - ouverture de la fiche d’un ouvrage depuis la liste (`/ouvrages/<identifiant>`) avec `GET /books/:id` validé ;
 - bascule accessible depuis la fiche, immédiatement optimiste, envoyée par `PATCH` avec le seul champ `lu` ;
 - restauration expliquée et réessai disponible après un refus, avec un réessai automatique temporisé pour une indisponibilité réessayable ;
+- sous filtre de lecture, maintien de la ligne pendant la bascule optimiste puis retrait après confirmation et actualisation ; un échec de relecture reste distinct du succès du `PATCH` ;
 - validation de la réponse d’écriture, protection contre les réponses obsolètes et actualisation ciblée des caches de fiche et de liste ;
 - fiche en squelette, erreur avec réessai, absence contextualisée sur `404` et succès ;
 - consultation de `GET /books/:id/notes` dans un cache distinct par ouvrage, avec validation de chaque note, ordre serveur conservé, date et heure françaises, squelette, vide contextualisé et erreur réessayable sans masquer la bibliographie ;

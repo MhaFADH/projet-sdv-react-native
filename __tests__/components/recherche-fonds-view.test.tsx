@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { FondsView } from '../../components/books/fonds-view';
 
@@ -28,5 +28,43 @@ describe('recherche présentée dans le fonds', () => {
 
     expect(screen.getByRole('heading', { name: 'Aucun résultat' })).toBeVisible();
     expect(screen.queryByRole('heading', { name: 'Le fonds est vide' })).not.toBeInTheDocument();
+  });
+
+  it('conserve les données pendant un échec de relecture', () => {
+    const reessayer = vi.fn();
+    render(
+      <FondsView
+        ajouterOuvrage={vi.fn()}
+        etat={{
+          ...etatVide,
+          page: {
+            ...etatVide.page,
+            items: [
+              {
+                id: '33575fa9-7968-45b3-8447-ec994a0b8401',
+                titre: 'Bel-Ami',
+                auteur: 'Guy de Maupassant',
+                editeur: 'Victor Havard',
+                annee: 1885,
+                lu: true,
+                favori: false,
+                note: 4,
+                couverture: null,
+                createdAt: '2025-01-01T10:00:00.000Z',
+                updatedAt: '2025-01-02T10:00:00.000Z',
+                version: 4,
+              },
+            ],
+            total: 1,
+          },
+          erreurActualisation: { message: 'Lecture impossible.', reessayer },
+        }}
+      />,
+    );
+
+    expect(screen.getByRole('heading', { name: 'Impossible d’actualiser le fonds' })).toBeVisible();
+    expect(screen.getByText('Lu')).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Réessayer' }));
+    expect(reessayer).toHaveBeenCalledOnce();
   });
 });

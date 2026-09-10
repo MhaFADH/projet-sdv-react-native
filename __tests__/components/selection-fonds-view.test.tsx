@@ -50,7 +50,9 @@ describe('sélection dans la présentation du fonds', () => {
     expect(caseBelAmi).toHaveAttribute('aria-checked', 'false');
     expect(caseBelAmi).toHaveAttribute('tabindex', '0');
     expect(caseBelAmi).toHaveStyle({ minHeight: '44px', minWidth: '44px' });
-    expect(screen.getByRole('button', { name: '0 sélectionnés — Supprimer' })).toBeDisabled();
+    expect(
+      screen.queryByRole('button', { name: '0 sélectionnés — Supprimer' }),
+    ).not.toBeInTheDocument();
 
     fireEvent.click(caseBelAmi);
     expect(basculer).toHaveBeenCalledExactlyOnceWith(ouvrage.id);

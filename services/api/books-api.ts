@@ -48,6 +48,8 @@ export const fetchBooksPage = async (
       page: criteres.page,
       limit: criteres.limit,
       q: criteres.q === '' ? undefined : criteres.q,
+      status: criteres.status,
+      favori: criteres.favori,
       sort: criteres.sort,
       order: criteres.order,
     },

@@ -18,15 +18,15 @@ Les dépendances vont de la composition vers le domaine et les services. Le doma
 
 ## Parcours de consultation livré
 
-1. `app/index.tsx` compose `FondsScreen` sans appel réseau : il lit la recherche et la page demandées dans l’URL et fournit les navigations.
+1. `app/index.tsx` compose `FondsScreen` sans appel réseau : il lit dans l’URL la page, la recherche, les filtres, le tri et l’ordre, puis fournit les navigations.
 2. `RechercheFonds` conserve seule la saisie immédiate. Son attente repoussable applique la valeur après 300 ms, sans rendre de nouveau la liste pendant les frappes.
-3. `FondsScreen` traduit l’état de `useBooksPage` en états de présentation. Une recherche appliquée revient à la page une et vide la sélection, y compris lorsque la première page était déjà affichée.
-4. Le hook crée une clé de cache contenant `q`, la page, la limite de vingt et le tri fixe par titre croissant. Seul le serveur recherche, trie et pagine.
+3. `FondsScreen` traduit l’état de `useBooksPage` en états de présentation. Tout changement de critère revient à la page une et vide la sélection, y compris lorsque la première page était déjà affichée.
+4. Le hook crée une clé de cache contenant `q`, `status`, `favori`, `sort`, `order`, la page et la limite de vingt. Seul le serveur recherche, filtre, trie et pagine.
 5. TanStack Query fournit un `AbortSignal` à `fetchBooksPage`. Un changement de critères annule la requête devenue inutile et chaque combinaison conserve une entrée de cache distincte.
 6. `clientHttp` lit `EXPO_PUBLIC_API_URL`, ajoute les en-têtes communs, construit les paramètres et applique un délai d'expiration de dix secondes.
 7. `books-api.ts` valide avec Zod l'enveloppe, les ouvrages, les identifiants, les dates, les versions et les autres champs serveur.
 8. Une réponse valide rejoint le cache de sa clé. Une réponse invalide ou une erreur HTTP devient une erreur applicative discriminée, jamais une donnée fictive.
-9. `FondsView` reçoit un état de chargement, d’erreur ou de succès. Il distingue fonds vide, recherche sans résultat et chargement d’une autre page. Pendant ce dernier, les anciennes lignes restent lisibles, mais leur sélection, la suppression et la pagination sont désactivées jusqu’à la réponse serveur.
+9. `FondsView` reçoit un état de chargement, d’erreur ou de succès. Il distingue fonds vide, critères sans résultat et chargement d’une autre page. Une barre d’outils unique empile les zones « Affiner » puis « Trier » sur écran large ; un panneau replié avec résumé la remplace sur petit écran. Les groupes radio conservent un seul arrêt de tabulation et répondent aux flèches, à Début et à Fin. Pendant le chargement d’une autre page, les anciennes lignes restent lisibles, mais leur sélection, la suppression et la pagination sont désactivées jusqu’à la réponse serveur.
 10. Si une écriture concurrente fait disparaître la page demandée, `FondsScreen` revient à la dernière page indiquée par le serveur. L’état transitoire conserve une commande « Précédent » au lieu de présenter tout le fonds comme vide.
 
 Une réponse de page ancienne ne remplace pas la page actuellement demandée : les clés sont distinctes et TanStack Query annule l’observation précédente.
@@ -49,9 +49,9 @@ Une fois la fiche bibliographique disponible, `useNotes` interroge `GET /books/:
 
 ## Retour au fonds
 
-La page consultée et la recherche appliquée sont portées par les paramètres d’URL `page` et `q` de la route racine. Une page inutilisable retombe sur la première page.
+La page et la consultation sont portées par les paramètres d’URL `page`, `q`, `status`, `favori`, `sort` et `order` de la route racine. Les lecteurs purs de `domain/criteres-ouvrages.ts` valident les valeurs discrètes et appliquent titre croissant par défaut.
 
-Le retour depuis une fiche ne démonte pas l’écran du fonds : `useRafraichirFondsAuFocus` invalide la clé exacte de la recherche et de la page consultées à chaque nouveau focus, jamais au premier affichage. La fiche reçoit aussi ces paramètres de retour afin que son repli sans historique reconstruise le même fonds. Si le fonds a diminué au point de faire disparaître cette page, `FondsScreen` demande la dernière page annoncée par le serveur, comme lors d’une pagination classique.
+Le retour depuis une fiche ne démonte pas l’écran du fonds : `useRafraichirFondsAuFocus` invalide la clé complète de la consultation à chaque nouveau focus, jamais au premier affichage. La fiche reçoit aussi ces paramètres de retour afin que son repli sans historique reconstruise le même fonds. Si le résultat filtré a diminué au point de faire disparaître cette page, `FondsScreen` demande la dernière page annoncée par le serveur.
 
 ## Preuve de rendu avec React DevTools
 
@@ -103,15 +103,15 @@ La bascule du statut collectif suit le chemin route de composition → `FicheScr
 2. Le hook annule les lectures actives de la fiche et des listes, en mémorise les caches puis applique immédiatement le booléen demandé.
 3. Le service envoie `PATCH /books/:id` avec uniquement `{ lu }`. Le client partagé fournit l’URL, les en-têtes, l’expiration et la traduction des erreurs.
 4. `books-api.ts` valide la réponse complète avec Zod et vérifie son identifiant.
-5. Une réponse confirmée remplace l’ouvrage dans la fiche et les pages déjà en cache, puis invalide ces seules familles de clés. Les autres champs proviennent de la réponse serveur et restent préservés.
-6. Un refus de la dernière intention restaure les instantanés et produit un message avec réessai. Une indisponibilité réessayable attend une seconde avant un unique nouvel essai automatique.
+5. Une réponse confirmée remplace l’ouvrage dans la fiche et les pages déjà en cache, puis invalide ces seules familles de clés. Sous filtre de lecture, la ligne conserve sa valeur optimiste pendant le `PATCH`, puis la relecture serveur la retire si elle ne correspond plus.
+6. Un refus de la dernière intention restaure les instantanés et produit un message avec réessai. Une indisponibilité réessayable attend une seconde avant un unique nouvel essai automatique. Si le `PATCH` réussit mais que la relecture échoue, la valeur confirmée reste affichée avec une erreur d’actualisation réessayable ; elle n’est pas restaurée fictivement.
 7. Chaque intention est séquencée localement : une réponse plus ancienne ne peut pas remplacer l’état d’une intention plus récente.
 
 L’opération `PUT` n’est déclenchée par aucun composant dans ce périmètre.
 
 ## Parcours de la suppression différée
 
-1. `FondsScreen` conserve uniquement les identifiants sélectionnés sur la page affichée et remet cette sélection à zéro au changement de page. `FondsView` expose les cases accessibles et la barre de suppression sans connaître le groupe ni le réseau.
+1. `FondsScreen` conserve uniquement les identifiants sélectionnés sur la page affichée et remet cette sélection à zéro au changement de page. `FondsView` expose les cases accessibles sans connaître le groupe ni le réseau ; l’action de suppression compacte n’est montée que lorsque la sélection contient au moins un ouvrage.
 2. La liste ou la fiche ouvre le même composant pur de confirmation, qui récapitule les titres concernés. Renoncer ne change ni le cache ni le groupe.
 3. Après confirmation, les deux points d’entrée transmettent les identifiants et les titres au même `SuppressionsProvider`. Les règles de `domain/groupe-suppressions.ts` les fusionnent sans doublon et fixent une nouvelle échéance commune à cinq secondes.
 4. Le contexte masque les ouvrages du fonds et leur fiche sans modifier les données serveur. Le provider étant au-dessus de la pile Expo Router, groupe, compteur et « Annuler tout » survivent aux navigations internes.

@@ -73,18 +73,41 @@ afterEach(() => {
 describe('navigation entre le fonds et une fiche', () => {
   it('transmet la recherche et la page à la fiche puis revient par l’historique', async () => {
     simulerTransport();
-    parametresRoute = { page: '3', q: 'zola' };
+    parametresRoute = {
+      page: '3',
+      q: 'zola',
+      status: 'nonlu',
+      favori: 'true',
+      sort: 'note',
+      order: 'desc',
+    };
     const { client, enveloppe } = creerEnvironnement();
     const fonds = render(<FondsRoute />, { wrapper: enveloppe });
 
     fireEvent.click(await screen.findByRole('button', { name: /^Bel-Ami/ }));
     expect(routeur.push).toHaveBeenCalledWith({
       pathname: '/ouvrages/[id]',
-      params: { id: ouvrage.id, retourPage: '3', retourRecherche: 'zola' },
+      params: {
+        id: ouvrage.id,
+        retourPage: '3',
+        retourRecherche: 'zola',
+        retourStatus: 'nonlu',
+        retourFavori: 'true',
+        retourSort: 'note',
+        retourOrder: 'desc',
+      },
     });
     fonds.unmount();
 
-    parametresRoute = { id: ouvrage.id, retourPage: '3', retourRecherche: 'zola' };
+    parametresRoute = {
+      id: ouvrage.id,
+      retourPage: '3',
+      retourRecherche: 'zola',
+      retourStatus: 'nonlu',
+      retourFavori: 'true',
+      retourSort: 'note',
+      retourOrder: 'desc',
+    };
     routeur.canGoBack.mockReturnValue(true);
     render(<FicheRoute />, { wrapper: enveloppe });
     fireEvent.click(screen.getByRole('button', { name: 'Retour au fonds' }));
@@ -96,7 +119,15 @@ describe('navigation entre le fonds et une fiche', () => {
 
   it('reconstruit les critères de retour lorsque l’historique est absent', () => {
     simulerTransport();
-    parametresRoute = { id: ouvrage.id, retourPage: '3', retourRecherche: 'zola' };
+    parametresRoute = {
+      id: ouvrage.id,
+      retourPage: '3',
+      retourRecherche: 'zola',
+      retourStatus: 'lu',
+      retourFavori: 'true',
+      retourSort: 'auteur',
+      retourOrder: 'desc',
+    };
     routeur.canGoBack.mockReturnValue(false);
     const { client, enveloppe } = creerEnvironnement();
     render(<FicheRoute />, { wrapper: enveloppe });
@@ -105,7 +136,14 @@ describe('navigation entre le fonds et une fiche', () => {
 
     expect(routeur.replace).toHaveBeenCalledWith({
       pathname: '/',
-      params: { page: '3', q: 'zola' },
+      params: {
+        page: '3',
+        q: 'zola',
+        status: 'lu',
+        favori: 'true',
+        sort: 'auteur',
+        order: 'desc',
+      },
     });
     client.clear();
   });

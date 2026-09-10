@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { type PropsWithChildren, useCallback, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { CONSULTATION_FONDS_PAR_DEFAUT } from '../../domain/criteres-ouvrages';
 import type { Ouvrage } from '../../domain/ouvrage';
 import { FondsScreen } from '../../features/books/fonds-screen';
 import { SuppressionsProvider } from '../../features/books/suppressions-provider';
@@ -50,11 +51,11 @@ const FondsControle = ({ pageInitiale = 1 }: ProprietesFondsControle) => {
   return (
     <FondsScreen
       ajouterOuvrage={vi.fn()}
+      changerConsultation={vi.fn()}
       changerPage={changerPage}
-      changerRecherche={vi.fn()}
+      consultationDemandee={CONSULTATION_FONDS_PAR_DEFAUT}
       ouvrirOuvrage={vi.fn()}
       pageDemandee={page}
-      rechercheDemandee=""
     />
   );
 };
@@ -116,7 +117,9 @@ describe('sélection et suppression depuis le fonds', () => {
       'aria-checked',
       'false',
     );
-    expect(screen.getByRole('button', { name: '0 sélectionnés — Supprimer' })).toBeDisabled();
+    expect(
+      screen.queryByRole('button', { name: '0 sélectionnés — Supprimer' }),
+    ).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Précédent' }));
 
     await screen.findByRole('checkbox', { name: 'Sélectionner Bel-Ami' });

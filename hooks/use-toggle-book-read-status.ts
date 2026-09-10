@@ -1,5 +1,5 @@
 import { type QueryKey, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import type { Ouvrage, PageOuvrages } from '@/domain/ouvrage';
 import { patchBookReadStatus } from '@/services/api/books-api';
 import type { ErreurApplication } from '@/services/api/erreurs';
@@ -32,11 +32,22 @@ const actualiserPage = (
 export const useToggleBookReadStatus = (id: string) => {
   const client = useQueryClient();
   const derniereSequence = useRef(0);
+  const [erreurActualisation, setErreurActualisation] = useState<ErreurApplication>();
+  const actualiserApresConfirmation = async () => {
+    setErreurActualisation(undefined);
+    await Promise.all([
+      client.invalidateQueries({ queryKey: clesOuvrages.fiche(id) }),
+      client.invalidateQueries({ queryKey: clesOuvrages.listes() }),
+    ]);
+    const erreur = client.getQueryState<Ouvrage, ErreurApplication>(clesOuvrages.fiche(id))?.error;
+    if (erreur) setErreurActualisation(erreur);
+  };
   const mutation = useMutation<Ouvrage, ErreurApplication, VariablesBascule, ContexteBascule>({
     mutationFn: (variables) => patchBookReadStatus(variables.id, variables.lu),
     retry: autoriserReessai,
     retryDelay: DELAI_REESSAI_MS,
     onMutate: async (variables) => {
+      setErreurActualisation(undefined);
       const sequence = derniereSequence.current + 1;
       derniereSequence.current = sequence;
       await Promise.all([
@@ -61,14 +72,13 @@ export const useToggleBookReadStatus = (id: string) => {
       client.setQueryData(clesOuvrages.fiche(variables.id), contexte.fichePrecedente);
       for (const [cle, page] of contexte.listesPrecedentes) client.setQueryData(cle, page);
     },
-    onSuccess: (ouvrage, _variables, contexte) => {
+    onSuccess: async (ouvrage, _variables, contexte) => {
       if (!contexte || contexte.sequence !== derniereSequence.current) return;
       client.setQueryData(clesOuvrages.fiche(ouvrage.id), ouvrage);
       client.setQueriesData<PageOuvrages>({ queryKey: clesOuvrages.listes() }, (page) =>
         actualiserPage(page, ouvrage.id, () => ouvrage),
       );
-      void client.invalidateQueries({ queryKey: clesOuvrages.fiche(ouvrage.id) });
-      void client.invalidateQueries({ queryKey: clesOuvrages.listes() });
+      await actualiserApresConfirmation();
     },
   });
 
@@ -79,6 +89,12 @@ export const useToggleBookReadStatus = (id: string) => {
   return {
     basculer: (lu: boolean) => mutation.mutate({ id, lu }),
     enCours: mutation.isPending,
+    erreurActualisation: erreurActualisation
+      ? {
+          message: `Le statut a été enregistré, mais la fiche n’a pas pu être actualisée. ${erreurActualisation.message}`,
+          reessayer: () => void actualiserApresConfirmation(),
+        }
+      : undefined,
     erreur: mutation.error
       ? {
           message: `Le statut précédent a été restauré. ${mutation.error.message}`,

@@ -115,7 +115,9 @@ describe('présentation du fonds', () => {
     );
 
     expect(screen.getByRole('heading', { name: 'Ouvrages masqués temporairement' })).toBeVisible();
-    expect(screen.getByRole('button', { name: '0 sélectionnés — Supprimer' })).toBeDisabled();
+    expect(
+      screen.queryByRole('button', { name: '0 sélectionnés — Supprimer' }),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Suivant' })).toBeEnabled();
   });
 
