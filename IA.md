@@ -124,3 +124,41 @@ Après les corrections issues des revues, la vérification a été refaite : une
 
 Trois ouvrages de recette créés pendant ces vérifications restent dans la base locale de l’API : « Recette Navigateur Lot 1 », « Recette Toast Survol » et « Recette Reprise Saisie ».
 
+
+## Intervention — issue #8
+
+- Outil : pi coding agent.
+- Fournisseur : OpenAI Codex.
+- Modèle : `gpt-5.6-sol`.
+- Périmètre : issue GitHub #8, suppression d’une sélection depuis la liste.
+
+### Demande reçue
+
+1. `https://github.com/MhaFADH/projet-sdv-react-native/issues/8, tu as accès à github cli, ajoute aussi dans le agents.md il faut coder/nommer en français.`
+
+### Actions réalisées avec l’IA
+
+- lecture du ticket #8, de sa spécification parent, du ticket #7, du contrat de l’API et de l’ADR 004 ;
+- ajout test-first des cases à cocher, de la barre de sélection, de la remise à zéro à la pagination et de la confirmation récapitulative ;
+- raccordement de la sélection au provider global de suppression existant, sans second délai ni second parcours d’envoi ;
+- ajout des tests avec transport simulé pour l’abandon, le délai prolongé, l’annulation globale, le verrouillage pendant l’envoi, l’échec partiel et le réessai ciblé ;
+- mise à jour de `AGENTS.md`, du README, de l’architecture et de l’ADR 004.
+
+### Défauts constatés et corrections réelles
+
+- `accessibilityState.checked` ne produisait pas seul `aria-checked` avec React Native Web dans le test de composant. La propriété web explicite a été ajoutée en conservant l’état accessible React Native.
+- Le libellé initial utilisait le singulier pour zéro. Il a été corrigé en « 0 sélectionnés — Supprimer » et verrouillé par test.
+- Une confirmation locale masquée restait en concurrence avec la confirmation globale de réessai dans le test web. La confirmation de liste est désormais montée uniquement lorsqu’elle est ouverte.
+- La recette Chrome a montré qu’une `Pressable` de rôle `checkbox` ne réagissait pas à Espace. Une adaptation sous `services/plateforme/` ajoute cette activation sur le web sans transmettre de prop supplémentaire sur mobile ; le parcours public la couvre désormais.
+- Les deux axes de revue ont relevé que masquer toute une page retirait aussi sa pagination. L’état temporaire conserve désormais la barre désactivée et les commandes de pagination, avec un test sur une page possédant une page suivante.
+
+### Vérification navigateur
+
+Réalisée avec Chrome sans interface piloté par le protocole DevTools, contre `npx expo start --web` et l’API locale sans authentification :
+
+- la première page affiche vingt cases de rôle `checkbox`, avec libellé et état ;
+- Espace sélectionne la case focalisée et la barre passe à « 2 sélectionnés — Supprimer » après une seconde sélection ;
+- Entrée sur l’action ouvre une confirmation contenant les deux titres ;
+- confirmer masque les deux lignes et affiche le bandeau global pour deux ouvrages ;
+- « Annuler tout » restaure les vingt lignes et aucun DELETE n’est observé après expiration du délai ;
+- dans un second passage, confirmer les vingt ouvrages masque toute la page tout en conservant « Suivant » actif ; la navigation affiche vingt ouvrages non sélectionnés en page 2 et l’annulation globale n’envoie aucun DELETE.

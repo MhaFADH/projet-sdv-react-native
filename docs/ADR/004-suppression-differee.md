@@ -2,7 +2,7 @@
 
 ## Statut
 
-Accepté et implémenté pour la suppression directe depuis les fiches dans le ticket #7. La sélection depuis la liste reste hors de ce ticket.
+Accepté et implémenté pour la suppression directe depuis les fiches dans le ticket #7 et pour la sélection depuis la liste dans le ticket #8.
 
 ## Contexte
 
@@ -21,7 +21,7 @@ Le parcours retenu doit permettre plusieurs suppressions successives tout en con
 
 ## Décision
 
-Le ticket #7 conserve une action directe sur la fiche détaillée, mais aucune action de suppression dans le formulaire. La sélection groupée depuis la liste sera livrée séparément et n’est pas annoncée comme disponible ici.
+Le ticket #7 conserve une action directe sur la fiche détaillée, mais aucune action de suppression dans le formulaire. Le ticket #8 ajoute dans la liste une case à cocher par ouvrage et une barre « N sélectionnés — Supprimer ». Cette sélection contient uniquement les ouvrages visibles de la page, vingt au maximum, et revient à zéro à chaque changement de page. Son action est indisponible sans sélection et pendant l’envoi du groupe.
 
 Une confirmation récapitule les ouvrages concernés. Après confirmation, les masquer temporairement et les ajouter au groupe en attente. Chaque ajout confirmé remet le compteur commun à cinq secondes ; les premiers ouvrages peuvent donc rester annulables plus longtemps, jamais moins de cinq secondes.
 
@@ -41,6 +41,7 @@ Fermer ou recharger le document avant l’envoi abandonne les intentions non env
 - Les DELETE peuvent produire des résultats différents au sein du groupe. Aucun retour arrière atomique du groupe n’est promis.
 - Les règles pures et le parcours avec transport simulé vérifient le délai commun, sa remise à cinq secondes, l’annulation totale, l’absence d’envoi anticipé, les résultats partiels et le réessai ciblé.
 - Le groupe vit uniquement dans le provider React racine : la navigation interne le conserve, tandis qu’une fermeture ou un rechargement l’abandonne sans forcer de DELETE.
+- La sélection de liste reste locale à `FondsScreen` et ne traverse jamais une page ; seule sa confirmation transmet les ouvrages au groupe global existant.
 
 ## Références
 

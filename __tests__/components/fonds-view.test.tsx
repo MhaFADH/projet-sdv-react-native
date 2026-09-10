@@ -27,6 +27,13 @@ const ouvrageNonLu = {
   lu: false,
 };
 
+const creerSelectionVide = () => ({
+  identifiants: new Set<string>(),
+  basculer: vi.fn(),
+  demanderSuppression: vi.fn(),
+  suppressionDesactivee: false,
+});
+
 describe('présentation du fonds', () => {
   it('affiche un squelette accessible pendant le chargement', () => {
     render(<FondsView ajouterOuvrage={vi.fn()} etat={{ type: 'chargement' }} />);
@@ -61,6 +68,7 @@ describe('présentation du fonds', () => {
           pagePrecedente: vi.fn(),
           pageSuivante: vi.fn(),
           ouvrirOuvrage: vi.fn(),
+          selection: creerSelectionVide(),
         }}
       />,
     );
@@ -80,6 +88,7 @@ describe('présentation du fonds', () => {
           pagePrecedente: vi.fn(),
           pageSuivante: vi.fn(),
           ouvrirOuvrage: vi.fn(),
+          selection: creerSelectionVide(),
         }}
       />,
     );
@@ -95,17 +104,19 @@ describe('présentation du fonds', () => {
         ajouterOuvrage={vi.fn()}
         etat={{
           type: 'succes',
-          page: { items: [], page: 1, limit: 20, total: 2, totalPages: 1 },
+          page: { items: [], page: 1, limit: 20, total: 40, totalPages: 2 },
           pagePrecedente: vi.fn(),
           pageSuivante: vi.fn(),
           ouvrirOuvrage: vi.fn(),
+          selection: creerSelectionVide(),
           masquageTemporaire: true,
         }}
       />,
     );
 
     expect(screen.getByRole('heading', { name: 'Ouvrages masqués temporairement' })).toBeVisible();
-    expect(screen.getByText(/Annuler tout/)).toBeVisible();
+    expect(screen.getByRole('button', { name: '0 sélectionnés — Supprimer' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Suivant' })).toBeEnabled();
   });
 
   it('présente les ouvrages, leur statut collectif et la pagination serveur', () => {
@@ -125,6 +136,7 @@ describe('présentation du fonds', () => {
           pagePrecedente: vi.fn(),
           pageSuivante,
           ouvrirOuvrage: vi.fn(),
+          selection: creerSelectionVide(),
         }}
       />,
     );
@@ -155,6 +167,7 @@ describe('présentation du fonds', () => {
           pagePrecedente: vi.fn(),
           pageSuivante: vi.fn(),
           ouvrirOuvrage: vi.fn(),
+          selection: creerSelectionVide(),
         }}
       />,
     );
@@ -180,6 +193,7 @@ describe('présentation du fonds', () => {
           pagePrecedente: vi.fn(),
           pageSuivante: vi.fn(),
           ouvrirOuvrage,
+          selection: creerSelectionVide(),
         }}
       />,
     );
@@ -206,6 +220,7 @@ describe('présentation du fonds', () => {
           pagePrecedente: vi.fn(),
           pageSuivante: vi.fn(),
           ouvrirOuvrage: vi.fn(),
+          selection: creerSelectionVide(),
         }}
       />,
     );

@@ -25,6 +25,10 @@ BookList Pro numérise le cahier de lecture des Comptoirs du Livre.
 
 Le projet démarre sur Expo SDK 54. Aucun lot fonctionnel ne doit être considéré comme acquis. Si une demande ne précise pas le lot visé, clarifier le périmètre avant d'implémenter.
 
+## Langue du code et du nommage
+
+Rédiger en français les noms de fichiers ajoutés, les types, les composants, les fonctions, les paramètres, les variables et les intitulés de tests. Conserver tels quels les identifiants imposés par une API, une bibliothèque, un protocole ou un outil.
+
 ## Architecture obligatoire
 
 Respecter ces responsabilités :
