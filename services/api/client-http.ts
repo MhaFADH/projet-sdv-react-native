@@ -11,6 +11,18 @@ type OptionsRequete = {
   signal?: AbortSignal;
 };
 
+type OptionsEcriture = {
+  signal?: AbortSignal;
+};
+
+type RequeteHttp = {
+  chemin: string;
+  methode: 'GET' | 'POST' | 'PATCH';
+  parametres?: Record<string, ParametreRequete>;
+  corps?: unknown;
+  signal?: AbortSignal;
+};
+
 const construireUrl = (chemin: string, parametres: Record<string, ParametreRequete>): string => {
   const baseUrl = process.env.EXPO_PUBLIC_API_URL;
   if (!baseUrl) {
@@ -66,47 +78,53 @@ const erreurTransport = (expiree: boolean, annulee: boolean): ErreurApplication 
   };
 };
 
-const envoyer = async (
-  init: Pick<RequestInit, 'method' | 'headers' | 'body'>,
-  chemin: string,
-  options: OptionsRequete,
-): Promise<unknown> => {
-  const url = construireUrl(chemin, options.parametres ?? {});
+const executer = async ({
+  chemin,
+  methode,
+  parametres = {},
+  corps,
+  signal,
+}: RequeteHttp): Promise<unknown> => {
+  const url = construireUrl(chemin, parametres);
   const controleur = new AbortController();
   let expiree = false;
-  const annuler = () => controleur.abort(options.signal?.reason);
+  const annuler = () => controleur.abort(signal?.reason);
 
-  if (options.signal?.aborted) annuler();
-  options.signal?.addEventListener('abort', annuler, { once: true });
+  if (signal?.aborted) annuler();
+  signal?.addEventListener('abort', annuler, { once: true });
   const expiration = setTimeout(() => {
     expiree = true;
     controleur.abort();
   }, DELAI_EXPIRATION_MS);
 
   let reponse: Response;
-  let corps: unknown;
+  let reponseCorps: unknown;
   try {
-    reponse = await fetch(url, { ...init, signal: controleur.signal });
-    corps = await lireCorps(reponse);
+    reponse = await fetch(url, {
+      method: methode,
+      headers: methode === 'GET' ? EN_TETES_JSON : EN_TETES_ENVOI_JSON,
+      body: corps === undefined ? undefined : JSON.stringify(corps),
+      signal: controleur.signal,
+    });
+    reponseCorps = await lireCorps(reponse);
   } catch {
-    throw erreurTransport(expiree, options.signal?.aborted ?? false);
+    throw erreurTransport(expiree, signal?.aborted ?? false);
   } finally {
     clearTimeout(expiration);
-    options.signal?.removeEventListener('abort', annuler);
+    signal?.removeEventListener('abort', annuler);
   }
 
-  if (!reponse.ok) throw traduireErreurHttp(reponse.status, corps);
-  return corps;
+  if (!reponse.ok) throw traduireErreurHttp(reponse.status, reponseCorps);
+  return reponseCorps;
 };
 
 const get = (chemin: string, options: OptionsRequete = {}): Promise<unknown> =>
-  envoyer({ method: 'GET', headers: EN_TETES_JSON }, chemin, options);
+  executer({ chemin, methode: 'GET', parametres: options.parametres, signal: options.signal });
 
-const post = (chemin: string, corps: unknown, options: OptionsRequete = {}): Promise<unknown> =>
-  envoyer(
-    { method: 'POST', headers: EN_TETES_ENVOI_JSON, body: JSON.stringify(corps) },
-    chemin,
-    options,
-  );
+const post = (chemin: string, corps: unknown, options: OptionsEcriture = {}): Promise<unknown> =>
+  executer({ chemin, methode: 'POST', corps, signal: options.signal });
 
-export const clientHttp = { get, post };
+const patch = (chemin: string, corps: unknown, options: OptionsEcriture = {}): Promise<unknown> =>
+  executer({ chemin, methode: 'PATCH', corps, signal: options.signal });
+
+export const clientHttp = { get, post, patch };

@@ -1,6 +1,7 @@
 import { FicheView } from '@/components/books/fiche-view';
 import { identifiantUtilisable } from '@/domain/ouvrage';
 import { useBook } from '@/hooks/use-book';
+import { useToggleBookReadStatus } from '@/hooks/use-toggle-book-read-status';
 
 const ABSENCE_PAR_DEFAUT = "Cet ouvrage n'existe pas ou plus.";
 
@@ -11,6 +12,7 @@ type FicheScreenProps = {
 
 export const FicheScreen = ({ id, retour }: FicheScreenProps) => {
   const requete = useBook(id);
+  const basculeStatut = useToggleBookReadStatus(id);
 
   if (!identifiantUtilisable(id)) {
     return (
@@ -38,5 +40,16 @@ export const FicheScreen = ({ id, retour }: FicheScreenProps) => {
     );
   }
 
-  return <FicheView etat={{ type: 'succes', ouvrage: requete.data }} retour={retour} />;
+  return (
+    <FicheView
+      etat={{
+        type: 'succes',
+        ouvrage: requete.data,
+        basculerStatut: () => basculeStatut.basculer(!requete.data.lu),
+        statutEnCours: basculeStatut.enCours,
+        erreurStatut: basculeStatut.erreur,
+      }}
+      retour={retour}
+    />
+  );
 };

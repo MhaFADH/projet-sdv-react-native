@@ -4,7 +4,7 @@
 
 Les dépendances vont de la composition vers le domaine et les services. Le domaine ne dépend ni de React, ni d’Expo, ni du réseau.
 
-| Couche | Responsabilité livrée dans les tickets #2, #3 et #4 |
+| Couche | Responsabilité livrée dans les tickets #2, #3, #4 et #6 |
 | --- | --- |
 | `app/` | Compose Expo Router, TanStack Query, le thème clair et l’ErrorBoundary global. Détient la page consultée dans l’URL et déclenche les navigations. |
 | `features/books/` | Transforme l’état des hooks en états de présentation, pour le fonds paginé, la fiche et le formulaire d’ajout. Interprète l’issue d’une création : refus par champ, indisponibilité ou résultat inconnu. |
@@ -54,7 +54,7 @@ Une erreur réseau réessayable reçoit un seul nouvel essai automatique après 
 
 ## Parcours d’une écriture livré : la création d’un ouvrage
 
-Le ticket #4 livre la première écriture. Les autres verbes d’écriture — `PUT`, `PATCH`, `DELETE` — ne sont déclenchés par aucun composant.
+Le ticket #4 livre la création d’un ouvrage par `POST`.
 
 1. `app/index.tsx` pousse `/ouvrages/nouveau` depuis l’en-tête du fonds, présent dans tous ses états, y compris le fonds vide. `app/ouvrages/nouveau.tsx` compose l’écran et fournit le retour au fonds et l’ouverture d’une fiche, sans URL ni appel réseau.
 2. `FormulaireOuvrageScreen` tient le formulaire avec React Hook Form et le résolveur du schéma `domain/saisie-ouvrage.ts`. Ce même schéma normalise les espaces périphériques, borne les champs à 200 caractères, impose une année entière entre 1450 et l’année civile suivante et un `lu` booléen strict.
@@ -67,6 +67,20 @@ Le ticket #4 livre la première écriture. Les autres verbes d’écriture — `
 ## Protection de la saisie
 
 La saisie vit dans le formulaire, jamais dans le cache serveur. Un abandon volontaire d’une saisie modifiée passe par une confirmation rendue dans l’écran. Le départ du document est signalé par `services/plateforme/avertissement-depart`, dont l’implémentation web écoute `beforeunload` et l’implémentation par défaut ne promet rien. Cet avertissement reste soumis aux limites du navigateur : il ne sauvegarde rien, et aucun brouillon persistant ni acceptation d’écriture hors ligne n’est prévu dans ce lot.
+
+## Parcours d’une écriture livré : la bascule du statut de lecture
+
+La bascule du statut collectif suit le chemin route de composition → `FicheScreen` → `useToggleBookReadStatus` → `patchBookReadStatus` → client HTTP partagé → API.
+
+1. Le composant pur expose un contrôle de rôle `switch`, son état coché et l’action correspondant au statut collectif affiché.
+2. Le hook annule les lectures actives de la fiche et des listes, en mémorise les caches puis applique immédiatement le booléen demandé.
+3. Le service envoie `PATCH /books/:id` avec uniquement `{ lu }`. Le client partagé fournit l’URL, les en-têtes, l’expiration et la traduction des erreurs.
+4. `books-api.ts` valide la réponse complète avec Zod et vérifie son identifiant.
+5. Une réponse confirmée remplace l’ouvrage dans la fiche et les pages déjà en cache, puis invalide ces seules familles de clés. Les autres champs proviennent de la réponse serveur et restent préservés.
+6. Un refus de la dernière intention restaure les instantanés et produit un message avec réessai. Une indisponibilité réessayable attend une seconde avant un unique nouvel essai automatique.
+7. Chaque intention est séquencée localement : une réponse plus ancienne ne peut pas remplacer l’état d’une intention plus récente.
+
+Les opérations `PUT` et `DELETE` ne sont déclenchées par aucun composant dans ce périmètre.
 
 ## Adaptation de plateforme
 

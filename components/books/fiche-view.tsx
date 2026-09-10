@@ -1,19 +1,32 @@
 import type { PropsWithChildren } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { EtatAbsence, EtatErreur, SqueletteDonnees } from '@/components/etats-donnees';
 import { libelleEditeur, libelleStatutLecture, type Ouvrage } from '@/domain/ouvrage';
 import { theme } from '@/theme/tokens';
+
+type ErreurStatut = {
+  message: string;
+  reessayer: () => void;
+};
 
 type EtatFiche =
   | { type: 'chargement' }
   | { type: 'erreur'; message: string; reessayer: () => void }
   | { type: 'introuvable'; message: string }
-  | { type: 'succes'; ouvrage: Ouvrage };
+  | {
+      type: 'succes';
+      ouvrage: Ouvrage;
+      basculerStatut: () => void;
+      statutEnCours: boolean;
+      erreurStatut?: ErreurStatut;
+    };
 
 type FicheViewProps = {
   etat: EtatFiche;
   retour: () => void;
 };
+
+type EtatSucces = Extract<EtatFiche, { type: 'succes' }>;
 
 const NOMBRE_LIGNES_SQUELETTE = 3;
 
@@ -25,7 +38,9 @@ const CadreFiche = ({ retour, children }: PropsWithChildren<Pick<FicheViewProps,
       onPress={retour}
       style={styles.boutonRetour}
     >
-      <Text style={styles.texteBoutonRetour}>← Retour au fonds</Text>
+      <Text selectable={false} style={styles.texteBoutonRetour}>
+        ← Retour au fonds
+      </Text>
     </Pressable>
     {children}
   </ScrollView>
@@ -38,15 +53,70 @@ const Renseignement = ({ libelle, valeur }: { libelle: string; valeur: string })
   </View>
 );
 
-const FicheDetail = ({ ouvrage }: { ouvrage: Ouvrage }) => (
+const ControleStatutLecture = ({
+  ouvrage,
+  basculerStatut,
+  statutEnCours,
+  erreurStatut,
+}: Omit<EtatSucces, 'type'>) => {
+  const action = ouvrage.lu ? 'Marquer comme non lu' : 'Marquer comme lu';
+  return (
+    <View style={styles.renseignement}>
+      <Text style={styles.libelle}>Statut de lecture collectif</Text>
+      <Text style={styles.valeur}>{libelleStatutLecture(ouvrage.lu)}</Text>
+      <Pressable
+        accessibilityLabel={action}
+        accessibilityRole="switch"
+        accessibilityState={{ checked: ouvrage.lu, disabled: statutEnCours }}
+        aria-checked={ouvrage.lu}
+        aria-disabled={statutEnCours}
+        disabled={statutEnCours}
+        onPress={basculerStatut}
+        style={[styles.boutonStatut, statutEnCours && styles.boutonDesactive]}
+      >
+        <Text
+          selectable={false}
+          style={[styles.texteBoutonStatut, statutEnCours && styles.texteMasque]}
+        >
+          {action}
+        </Text>
+        {statutEnCours ? (
+          <ActivityIndicator
+            accessibilityLabel="Enregistrement du statut en cours"
+            color={theme.colors.primaryText}
+            size="small"
+            style={styles.indicateurStatut}
+          />
+        ) : null}
+      </Pressable>
+      {erreurStatut ? (
+        <View accessibilityRole="alert" style={styles.erreurStatut}>
+          <Text style={styles.texteErreur}>{erreurStatut.message}</Text>
+          <Pressable
+            accessibilityLabel="Réessayer la modification du statut"
+            accessibilityRole="button"
+            onPress={erreurStatut.reessayer}
+            style={styles.boutonReessai}
+          >
+            <Text selectable={false} style={styles.texteBoutonReessai}>
+              Réessayer
+            </Text>
+          </Pressable>
+        </View>
+      ) : null}
+    </View>
+  );
+};
+
+const FicheDetail = (etat: EtatSucces) => (
   <View style={styles.carte}>
     <Text accessibilityRole="header" style={styles.titre}>
-      {ouvrage.titre}
+      {etat.ouvrage.titre}
     </Text>
-    <Renseignement libelle="Auteur" valeur={ouvrage.auteur} />
-    <Renseignement libelle="Éditeur" valeur={libelleEditeur(ouvrage.editeur)} />
-    <Renseignement libelle="Année de publication" valeur={String(ouvrage.annee)} />
-    <Renseignement libelle="Statut de lecture" valeur={libelleStatutLecture(ouvrage.lu)} />
+    <Renseignement libelle="Auteur" valeur={etat.ouvrage.auteur} />
+    <Renseignement libelle="Éditeur" valeur={libelleEditeur(etat.ouvrage.editeur)} />
+    <Renseignement libelle="Année de publication" valeur={String(etat.ouvrage.annee)} />
+    <ControleStatutLecture {...etat} />
   </View>
 );
 
@@ -71,7 +141,7 @@ const ContenuFiche = ({ etat }: Pick<FicheViewProps, 'etat'>) => {
     return <EtatAbsence alerte message={etat.message} titre="Cette fiche n'est plus disponible" />;
   }
 
-  return <FicheDetail ouvrage={etat.ouvrage} />;
+  return <FicheDetail {...etat} />;
 };
 
 export const FicheView = ({ etat, retour }: FicheViewProps) => (
@@ -128,6 +198,49 @@ const styles = StyleSheet.create({
   },
   texteBoutonRetour: {
     color: theme.colors.primary,
+    fontSize: theme.typography.body,
+    fontWeight: '700',
+  },
+  boutonStatut: {
+    minHeight: theme.minTargetSize,
+    alignSelf: 'flex-start',
+    justifyContent: 'center',
+    borderRadius: theme.radius.sm,
+    backgroundColor: theme.colors.primary,
+    paddingHorizontal: theme.spacing.md,
+  },
+  boutonDesactive: {
+    opacity: 0.65,
+  },
+  texteBoutonStatut: {
+    color: theme.colors.primaryText,
+    fontSize: theme.typography.body,
+    fontWeight: '700',
+  },
+  texteMasque: { opacity: 0 },
+  indicateurStatut: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 },
+  erreurStatut: {
+    gap: theme.spacing.sm,
+    padding: theme.spacing.md,
+    borderRadius: theme.radius.sm,
+    backgroundColor: theme.colors.dangerBackground,
+  },
+  texteErreur: {
+    color: theme.colors.dangerText,
+    fontSize: theme.typography.body,
+    lineHeight: theme.typography.bodyLineHeight,
+  },
+  boutonReessai: {
+    minHeight: theme.minTargetSize,
+    alignSelf: 'flex-start',
+    justifyContent: 'center',
+    borderWidth: theme.borderWidth,
+    borderColor: theme.colors.dangerText,
+    borderRadius: theme.radius.sm,
+    paddingHorizontal: theme.spacing.md,
+  },
+  texteBoutonReessai: {
+    color: theme.colors.dangerText,
     fontSize: theme.typography.body,
     fontWeight: '700',
   },

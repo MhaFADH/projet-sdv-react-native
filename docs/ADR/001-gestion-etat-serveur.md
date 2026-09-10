@@ -2,7 +2,7 @@
 
 ## Statut
 
-Accepté. Implémenté partiellement : ticket #2 pour la consultation paginée, ticket #3 pour la fiche, ticket #4 pour la première mutation et son invalidation.
+Accepté. Implémenté pour les consultations des tickets #2 et #3, la création du ticket #4 et la bascule du statut de lecture du ticket #6.
 
 ## Contexte
 
@@ -31,18 +31,20 @@ Ce choix n’annonce ni cache persistant ni rejeu hors ligne pour le lot 1.
 
 ## État de l’implémentation
 
-Le ticket #2 livre TanStack Query pour `GET /books`, une clé de liste contenant la page, la limite, le tri et l’ordre, ainsi que la transmission du signal d’annulation au client HTTP. Les réponses sont validées à l’exécution avant leur entrée dans le cache. Le hook et l’arrivée tardive d’une ancienne page sont couverts par des tests avec le transport simulé.
+Le ticket #2 livre TanStack Query pour `GET /books`, une clé de liste contenant la page, la limite, le tri et l’ordre, ainsi que la transmission du signal d’annulation au client HTTP. Le ticket #3 ajoute les clés de fiche et `GET /books/:id`. Les réponses sont validées à l’exécution avant leur entrée dans le cache.
 
-Le ticket #3 ajoute la clé de fiche paramétrée par l’identifiant. Le ticket #4 ajoute la première mutation : la création passe par `useMutation` sans réessai automatique, alimente la clé de la fiche créée avec la réponse validée et invalide les clés de liste par leur préfixe commun `['ouvrages', 'liste']`, sans supposer la page d’arrivée d’un ouvrage dans le tri serveur. Ces comportements sont couverts par les tests du parcours d’ajout avec transport simulé.
+Le ticket #4 ajoute la première mutation : la création passe par `useMutation` sans réessai automatique, alimente la clé de la fiche créée avec la réponse validée et invalide les clés de liste par leur préfixe commun `['ouvrages', 'liste']`, sans supposer la page d’arrivée d’un ouvrage dans le tri serveur. Ces comportements sont couverts par les tests du parcours d’ajout avec transport simulé.
 
-La bascule optimiste lu/non lu, les mises à jour et les suppressions restent des décisions prévues pour les tickets suivants. Elles ne sont pas présentées comme disponibles dans l’application actuelle.
+Le ticket #6 livre la mutation du statut collectif. Avant le `PATCH`, les lectures actives de la fiche et des listes sont annulées, puis leurs caches sont modifiés immédiatement. Un refus restaure leurs instantanés précédents. La réponse complète validée remplace ensuite l’ouvrage sans perdre ses autres champs et seules les clés de la fiche concernée et des listes sont invalidées. Chaque intention reçoit un numéro local afin qu’une réponse de mutation plus ancienne ne remplace pas une intention plus récente. Les indisponibilités réessayables reçoivent un unique réessai après une seconde avant la restauration et le réessai manuel visible.
+
+Les autres mises à jour et les suppressions restent prévues pour les tickets suivants.
 
 ## Conséquences
 
 - La liste et la fiche disposent d’un mécanisme commun de cache et de mise à jour, au lieu de copies de l’état serveur gérées indépendamment par chaque écran.
 - La cohérence dépend de clés correctes, d’invalidations ciblées et de restaurations optimistes testées ; la bibliothèque ne remplace pas ces règles applicatives.
 - Un cache de données consultées ne constitue pas une sauvegarde de formulaire ni une garantie de fonctionnement hors ligne.
-- Le hook paginé et la mutation de création sont vérifiés avec un transport simulé ; les mutations suivantes devront apporter leurs propres tests d’invalidation et de restauration.
+- Les hooks de consultation, la création et la bascule sont vérifiés avec un transport simulé ; chaque mutation future devra apporter ses propres tests d’invalidation et de restauration.
 
 ## Références
 

@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { PropsWithChildren } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { FicheScreen } from '../../features/books/fiche-screen';
@@ -97,6 +97,91 @@ describe('parcours de la fiche', () => {
 
     expect(await screen.findByRole('heading', { name: 'Bel-Ami' })).toBeVisible();
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
+    client.clear();
+  });
+
+  it('bascule immédiatement le statut puis affiche la réponse confirmée', async () => {
+    let terminerPatch: ((reponse: Response) => void) | undefined;
+    let nombreLectures = 0;
+    const ouvrageLu = { ...ouvrage, lu: true, version: 4 };
+    const fetchMock = vi.fn<typeof fetch>().mockImplementation((_entree, initialisation) => {
+      if (initialisation?.method === 'PATCH') {
+        return new Promise<Response>((resolve) => {
+          terminerPatch = resolve;
+        });
+      }
+      nombreLectures += 1;
+      return Promise.resolve(
+        new Response(JSON.stringify(nombreLectures === 1 ? ouvrage : ouvrageLu), { status: 200 }),
+      );
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const { client } = rendreFiche();
+
+    const bascule = await screen.findByRole('switch', { name: 'Marquer comme lu' });
+    fireEvent.click(bascule);
+
+    await waitFor(() =>
+      expect(screen.getByRole('switch', { name: 'Marquer comme non lu' })).toHaveAttribute(
+        'aria-checked',
+        'true',
+      ),
+    );
+    expect(
+      screen.getByRole('progressbar', { name: 'Enregistrement du statut en cours' }),
+    ).toBeVisible();
+    const appelPatch = fetchMock.mock.calls.find((appel) => appel[1]?.method === 'PATCH');
+    expect(appelPatch).toEqual([
+      `http://localhost:3000/books/${ID}`,
+      expect.objectContaining({ method: 'PATCH', body: JSON.stringify({ lu: true }) }),
+    ]);
+
+    await act(async () =>
+      terminerPatch?.(new Response(JSON.stringify(ouvrageLu), { status: 200 })),
+    );
+    await waitFor(() => expect(nombreLectures).toBe(2));
+    expect(screen.getByText('Lu')).toBeVisible();
+    expect(screen.getByText('Guy de Maupassant')).toBeVisible();
+    client.clear();
+  });
+
+  it('restaure le statut après un refus puis réessaie à la demande', async () => {
+    let nombrePatchs = 0;
+    let nombreLectures = 0;
+    const ouvrageLu = { ...ouvrage, lu: true, version: 4 };
+    const fetchMock = vi.fn<typeof fetch>().mockImplementation((_entree, initialisation) => {
+      if (initialisation?.method === 'PATCH') {
+        nombrePatchs += 1;
+        return Promise.resolve(
+          nombrePatchs === 1
+            ? new Response(JSON.stringify({ erreur: 'refus', message: 'Modification refusée.' }), {
+                status: 422,
+              })
+            : new Response(JSON.stringify(ouvrageLu), { status: 200 }),
+        );
+      }
+      nombreLectures += 1;
+      return Promise.resolve(
+        new Response(JSON.stringify(nombreLectures === 1 ? ouvrage : ouvrageLu), { status: 200 }),
+      );
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const { client } = rendreFiche();
+
+    fireEvent.click(await screen.findByRole('switch', { name: 'Marquer comme lu' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Le statut précédent a été restauré. Modification refusée.',
+    );
+    expect(screen.getByText('Non lu')).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Réessayer la modification du statut' }));
+
+    await waitFor(() => expect(nombrePatchs).toBe(2));
+    await waitFor(() => expect(nombreLectures).toBe(2));
+    expect(screen.getByRole('switch', { name: 'Marquer comme non lu' })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
     client.clear();
   });
 

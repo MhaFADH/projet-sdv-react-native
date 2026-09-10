@@ -1,6 +1,6 @@
 # BookList Pro
 
-BookList Pro numérise le cahier de lecture des Comptoirs du Livre. Cette version livre la consultation du fonds par pages de vingt ouvrages, triées par titre croissant par l’API, la consultation de la fiche d’un ouvrage et l’ajout d’un ouvrage protégé contre la perte de saisie.
+BookList Pro numérise le cahier de lecture des Comptoirs du Livre. Cette version livre la consultation du fonds par pages de vingt ouvrages triées par titre croissant par l’API, la fiche détaillée, l’ajout protégé contre la perte de saisie et la modification du statut collectif lu/non lu.
 
 ## Prérequis
 
@@ -43,8 +43,11 @@ Pour tester depuis un appareil mobile, remplacer `localhost` dans `.env.local` p
 - chargement par squelette, erreur avec réessai, fonds vide et liste en succès ;
 - pagination « Précédent / Suivant » bornée par les métadonnées serveur ;
 - page consultée portée par l’URL de la liste (`/?page=3`) afin d’être restituée au retour ;
-- statut collectif « Lu » ou « Non lu » affiché sans action de modification ;
+- statut collectif « Lu » ou « Non lu » indiqué dans la liste, sans action par ligne ;
 - ouverture de la fiche d’un ouvrage depuis la liste (`/ouvrages/<identifiant>`) avec `GET /books/:id` validé ;
+- bascule accessible depuis la fiche, immédiatement optimiste, envoyée par `PATCH` avec le seul champ `lu` ;
+- restauration expliquée et réessai disponible après un refus, avec un réessai automatique temporisé pour une indisponibilité réessayable ;
+- validation de la réponse d’écriture, protection contre les réponses obsolètes et actualisation ciblée des caches de fiche et de liste ;
 - fiche en squelette, erreur avec réessai, absence contextualisée sur `404` et succès ;
 - retour au fonds qui retrouve la page consultée et la réactualise, ou affiche la dernière page disponible si elle a disparu ;
 - annulation des requêtes obsolètes et ErrorBoundary global ;
@@ -56,7 +59,7 @@ Pour tester depuis un appareil mobile, remplacer `localhost` dans `.env.local` p
 - confirmation avant abandon volontaire d’une saisie modifiée et avertissement de départ du navigateur, sans brouillon persistant ;
 - après création confirmée : formulaire vidé, statut remis à « Non lu », toast de cinq secondes contenant le bouton vers la fiche, suspendu au survol ou au focus clavier, et invalidation ciblée des listes.
 
-La modification, la suppression, la bascule du statut de lecture depuis la fiche, l’authentification et le mode hors ligne ne font pas partie de ces tickets.
+La correction bibliographique, la suppression, l’authentification et le mode hors ligne ne font pas partie de ces tickets.
 
 ## Vérifications
 
