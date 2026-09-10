@@ -6,6 +6,7 @@ import {
 } from '@/components/books/controle-statut-lecture';
 import { Bouton } from '@/components/bouton';
 import { EtatAbsence, EtatErreur, SqueletteDonnees } from '@/components/etats-donnees';
+import { type EtatNotes, VueListeNotes } from '@/components/notes/vue-liste-notes';
 import { libelleEditeur, type Ouvrage } from '@/domain/ouvrage';
 import { theme } from '@/theme/tokens';
 
@@ -23,6 +24,7 @@ type EtatFiche =
       erreurStatut?: ErreurStatutLecture;
       demanderSuppression: () => void;
       suppressionDesactivee: boolean;
+      etatNotes: EtatNotes;
     };
 
 type FicheViewProps = {
@@ -119,7 +121,12 @@ const ContenuFiche = ({ etat }: Pick<FicheViewProps, 'etat'>) => {
     );
   }
 
-  return <FicheDetail {...etat} />;
+  return (
+    <>
+      <FicheDetail {...etat} />
+      <VueListeNotes etat={etat.etatNotes} titreOuvrage={etat.ouvrage.titre} />
+    </>
+  );
 };
 
 export const FicheView = ({ etat, retour }: FicheViewProps) => (

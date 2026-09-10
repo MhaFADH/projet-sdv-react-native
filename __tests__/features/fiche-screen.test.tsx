@@ -39,9 +39,13 @@ afterEach(() => vi.unstubAllGlobals());
 
 describe('parcours de la fiche', () => {
   it("ouvre la fiche correspondant à l'identifiant demandé", async () => {
-    const fetchMock = vi
-      .fn<typeof fetch>()
-      .mockResolvedValue(new Response(JSON.stringify(ouvrage), { status: 200 }));
+    const fetchMock = vi.fn<typeof fetch>().mockImplementation((entree) =>
+      Promise.resolve(
+        new Response(JSON.stringify(String(entree).endsWith('/notes') ? [] : ouvrage), {
+          status: 200,
+        }),
+      ),
+    );
     vi.stubGlobal('fetch', fetchMock);
 
     const { client } = rendreFiche();
@@ -81,11 +85,16 @@ describe('parcours de la fiche', () => {
   });
 
   it('propose un réessai manuel après un échec réseau persistant', async () => {
-    const fetchMock = vi
-      .fn<typeof fetch>()
-      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
-      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
-      .mockResolvedValueOnce(new Response(JSON.stringify(ouvrage), { status: 200 }));
+    let tentativesFiche = 0;
+    const fetchMock = vi.fn<typeof fetch>().mockImplementation((entree) => {
+      if (String(entree).endsWith('/notes')) {
+        return Promise.resolve(new Response(JSON.stringify([]), { status: 200 }));
+      }
+      tentativesFiche += 1;
+      return tentativesFiche < 3
+        ? Promise.reject(new TypeError('Failed to fetch'))
+        : Promise.resolve(new Response(JSON.stringify(ouvrage), { status: 200 }));
+    });
     vi.stubGlobal('fetch', fetchMock);
 
     const { client } = rendreFiche();
@@ -99,7 +108,7 @@ describe('parcours de la fiche', () => {
     fireEvent.click(boutonReessayer);
 
     expect(await screen.findByRole('heading', { name: 'Bel-Ami' })).toBeVisible();
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(4));
     client.clear();
   });
 
@@ -107,7 +116,10 @@ describe('parcours de la fiche', () => {
     let terminerPatch: ((reponse: Response) => void) | undefined;
     let nombreLectures = 0;
     const ouvrageLu = { ...ouvrage, lu: true, version: 4 };
-    const fetchMock = vi.fn<typeof fetch>().mockImplementation((_entree, initialisation) => {
+    const fetchMock = vi.fn<typeof fetch>().mockImplementation((entree, initialisation) => {
+      if (String(entree).endsWith('/notes')) {
+        return Promise.resolve(new Response(JSON.stringify([]), { status: 200 }));
+      }
       if (initialisation?.method === 'PATCH') {
         return new Promise<Response>((resolve) => {
           terminerPatch = resolve;
@@ -152,7 +164,10 @@ describe('parcours de la fiche', () => {
     let nombrePatchs = 0;
     let nombreLectures = 0;
     const ouvrageLu = { ...ouvrage, lu: true, version: 4 };
-    const fetchMock = vi.fn<typeof fetch>().mockImplementation((_entree, initialisation) => {
+    const fetchMock = vi.fn<typeof fetch>().mockImplementation((entree, initialisation) => {
+      if (String(entree).endsWith('/notes')) {
+        return Promise.resolve(new Response(JSON.stringify([]), { status: 200 }));
+      }
       if (initialisation?.method === 'PATCH') {
         nombrePatchs += 1;
         return Promise.resolve(

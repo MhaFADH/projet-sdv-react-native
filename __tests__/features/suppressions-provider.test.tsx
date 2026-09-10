@@ -69,7 +69,14 @@ describe('parcours de suppression différée', () => {
   it('ne masque ni n’envoie lorsque la confirmation est abandonnée', async () => {
     const fetchMock = vi
       .fn<typeof fetch>()
-      .mockResolvedValue(new Response(JSON.stringify(creerOuvrage(ID_BEL_AMI)), { status: 200 }));
+      .mockImplementation((entree) =>
+        Promise.resolve(
+          new Response(
+            JSON.stringify(String(entree).endsWith('/notes') ? [] : creerOuvrage(ID_BEL_AMI)),
+            { status: 200 },
+          ),
+        ),
+      );
     vi.stubGlobal('fetch', fetchMock);
     const { client } = rendreFiche(ID_BEL_AMI);
 
@@ -78,14 +85,16 @@ describe('parcours de suppression différée', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Renoncer à la suppression' }));
 
     expect(screen.getByRole('heading', { name: 'Bel-Ami' })).toBeVisible();
-    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
     client.clear();
   });
 
   it('conserve le groupe en navigation, repousse l’échéance et annule tous les DELETE', async () => {
     const fetchMock = vi.fn<typeof fetch>().mockImplementation((entree) => {
-      const id = String(entree).split('/').at(-1) ?? '';
-      return Promise.resolve(new Response(JSON.stringify(creerOuvrage(id)), { status: 200 }));
+      const url = String(entree);
+      const id = url.split('/').at(-1) ?? '';
+      const corps = url.endsWith('/notes') ? [] : creerOuvrage(id);
+      return Promise.resolve(new Response(JSON.stringify(corps), { status: 200 }));
     });
     vi.stubGlobal('fetch', fetchMock);
     const { client, naviguer } = rendreFiche(ID_BEL_AMI);
@@ -122,11 +131,13 @@ describe('parcours de suppression différée', () => {
   it('bloque les nouvelles suppressions, garde l’échec partiel et ne réessaie que celui-ci', async () => {
     const resolutionsDelete: Array<(reponse: Response) => void> = [];
     const fetchMock = vi.fn<typeof fetch>().mockImplementation((entree, options) => {
-      const id = String(entree).split('/').at(-1) ?? '';
+      const url = String(entree);
+      const id = url.split('/').at(-1) ?? '';
       if (options?.method === 'DELETE') {
         return new Promise<Response>((resolve) => resolutionsDelete.push(resolve));
       }
-      return Promise.resolve(new Response(JSON.stringify(creerOuvrage(id)), { status: 200 }));
+      const corps = url.endsWith('/notes') ? [] : creerOuvrage(id);
+      return Promise.resolve(new Response(JSON.stringify(corps), { status: 200 }));
     });
     vi.stubGlobal('fetch', fetchMock);
     const { client, naviguer } = rendreFiche(ID_BEL_AMI);

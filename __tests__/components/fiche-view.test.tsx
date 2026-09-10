@@ -30,6 +30,7 @@ const etatSucces = (valeur = ouvrage) => ({
   demanderSuppression: vi.fn(),
   suppressionDesactivee: false,
   corriger: vi.fn(),
+  etatNotes: { type: 'vide' as const },
 });
 
 describe('présentation de la fiche', () => {

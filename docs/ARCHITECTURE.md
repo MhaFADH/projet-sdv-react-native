@@ -9,10 +9,10 @@ Les dépendances vont de la composition vers le domaine et les services. Le doma
 | `app/`                 | Compose Expo Router, TanStack Query, le provider global de suppression, le thème clair et l’ErrorBoundary global. Détient la page consultée dans l’URL et déclenche les navigations.                                                                                                              |
 | `features/books/`      | Transforme l’état des hooks en états de présentation, pour le fonds paginé, sa sélection, la fiche et le formulaire partagé d’ajout et de correction. Interprète l’issue d’une écriture et coordonne également le cycle global des suppressions différées.                                         |
 | `hooks/`               | Décrit les requêtes et mutations TanStack Query, leurs clés de cache, leur annulation, leur réessai temporisé, la réactualisation au retour, le toast de succès, la durée de ce toast et la temporisation d’un réessai manuel, ainsi que l’accès au contexte de suppression.                      |
-| `components/`          | Affiche des props sans connaître le réseau ni le cache. Contient notamment les formulaires, cases de sélection, confirmations et bandeaux de suppression. Les états de données sont mutualisés dans `components/etats-donnees.tsx`.                                                               |
+| `components/`          | Affiche des props sans connaître le réseau ni le cache. Contient notamment les formulaires, les notes de lecture, cases de sélection, confirmations et bandeaux de suppression. Les états de données sont mutualisés dans `components/etats-donnees.tsx`.                                                     |
 | `services/api/`        | Construit les requêtes GET, POST, PATCH et DELETE, applique les en-têtes et le délai d’expiration, traduit les erreurs, valide les réponses et porte la politique de réessai.                                                                                                                     |
 | `services/plateforme/` | Expose une interface unique par capacité dépendant de la plateforme, avec une implémentation web et une implémentation par défaut.                                                                                                                                                                |
-| `domain/`              | Définit l’ouvrage, l’enveloppe paginée, le schéma de saisie et les règles pures du groupe de suppressions sans dépendance technique.                                                                                                                                                              |
+| `domain/`              | Définit l’ouvrage, la note de lecture, l’enveloppe paginée, le schéma de saisie et les règles pures du groupe de suppressions sans dépendance technique.                                                                                                                                          |
 | `theme/`               | Centralise couleurs, espacements, typographie et dimensions accessibles.                                                                                                                                                                                                                          |
 
 ## Parcours de consultation livré
@@ -38,6 +38,12 @@ Une réponse de page ancienne ne remplace pas la page actuellement demandée : 
 5. Un changement rapide de fiche annule la requête précédente par son `AbortSignal`. Chaque identifiant conservant sa propre entrée de cache, une réponse ancienne ne peut pas remplacer la fiche courante.
 6. Un identifiant de route vide n’engage aucune requête et présente directement l’absence. Un `404` devient l’erreur applicative `introuvable`. La fiche présente alors une absence contextualisée, sans chargement infini, sans réessai automatique et sans succès fictif.
 7. Les autres échecs restent des erreurs réseau ou de validation : un seul réessai automatique temporisé, puis une action « Réessayer » visible.
+
+## Consultation des notes de lecture
+
+Une fois la fiche bibliographique disponible, `useNotes` interroge `GET /books/:id/notes`. Sa clé `['notes', 'ouvrage', id]` isole les notes de chaque ouvrage des fiches et des listes. Le signal d’annulation fourni par TanStack Query traverse `recupererNotes` et le client HTTP commun.
+
+`notes-api.ts` valide le tableau complet et chacun de ses éléments, vérifie que chaque `livreId` correspond à la fiche demandée et conserve l’ordre de la réponse. La fiche compose ensuite la présentation pure des quatre états des notes : squelette, erreur avec réessai, vide contextualisé et liste en succès. Les dates et heures sont formatées en français dans le domaine. Une erreur propre aux notes reste confinée à cette section et ne remplace jamais les données bibliographiques déjà chargées. L’ajout et la suppression de notes ne sont pas livrés par ce parcours de consultation et restent à venir.
 
 ## Retour au fonds
 
