@@ -2,7 +2,7 @@
 
 ## Statut
 
-Accepté lors du cadrage du lot 1, non implémenté. Les règles d’envoi, d’échec partiel et de sélection sont validées. Ce document ne vaut pas autorisation de démarrer l’implémentation.
+Accepté et implémenté pour la suppression directe depuis les fiches dans le ticket #7. La sélection depuis la liste reste hors de ce ticket.
 
 ## Contexte
 
@@ -21,7 +21,7 @@ Le parcours retenu doit permettre plusieurs suppressions successives tout en con
 
 ## Décision
 
-Dans la liste, proposer des cases à cocher et une barre « N sélectionnés — Supprimer ». Limiter la sélection à la page affichée et la remettre à zéro au changement de page. Conserver une action directe sur la fiche détaillée, mais aucune action de suppression dans le formulaire. Aucune autre action de masse n’est prévue au lot 1.
+Le ticket #7 conserve une action directe sur la fiche détaillée, mais aucune action de suppression dans le formulaire. La sélection groupée depuis la liste sera livrée séparément et n’est pas annoncée comme disponible ici.
 
 Une confirmation récapitule les ouvrages concernés. Après confirmation, les masquer temporairement et les ajouter au groupe en attente. Chaque ajout confirmé remet le compteur commun à cinq secondes ; les premiers ouvrages peuvent donc rester annulables plus longtemps, jamais moins de cinq secondes.
 
@@ -39,7 +39,8 @@ Fermer ou recharger le document avant l’envoi abandonne les intentions non env
 - Une nouvelle suppression prolonge l’attente des ouvrages précédents. L’action d’annulation porte sur le groupe entier, pas uniquement sur le dernier ouvrage.
 - Les intentions non envoyées ne survivent pas à un rechargement ; ce mécanisme n’est pas une file de mutations persistante ou hors ligne.
 - Les DELETE peuvent produire des résultats différents au sein du groupe. Aucun retour arrière atomique du groupe n’est promis.
-- Les tests devront vérifier le délai commun, sa remise à cinq secondes, l’annulation de tout le groupe et l’absence d’envoi anticipé. Ces comportements ne sont pas encore implémentés ni testés.
+- Les règles pures et le parcours avec transport simulé vérifient le délai commun, sa remise à cinq secondes, l’annulation totale, l’absence d’envoi anticipé, les résultats partiels et le réessai ciblé.
+- Le groupe vit uniquement dans le provider React racine : la navigation interne le conserve, tandis qu’une fermeture ou un rechargement l’abandonne sans forcer de DELETE.
 
 ## Références
 

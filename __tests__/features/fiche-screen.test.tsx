@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import type { PropsWithChildren } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { FicheScreen } from '../../features/books/fiche-screen';
+import { SuppressionsProvider } from '../../features/books/suppressions-provider';
 
 const ID = '33575fa9-7968-45b3-8447-ec994a0b8401';
 const DELAI_ATTENTE_REESSAI_MS = 3_000;
@@ -25,7 +26,9 @@ const ouvrage = {
 const rendreFiche = (identifiant = ID) => {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const wrapper = ({ children }: PropsWithChildren) => (
-    <QueryClientProvider client={client}>{children}</QueryClientProvider>
+    <QueryClientProvider client={client}>
+      <SuppressionsProvider>{children}</SuppressionsProvider>
+    </QueryClientProvider>
   );
   const retour = vi.fn();
   render(<FicheScreen id={identifiant} retour={retour} />, { wrapper });

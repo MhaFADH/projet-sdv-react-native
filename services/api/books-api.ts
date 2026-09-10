@@ -88,3 +88,6 @@ export const patchBookReadStatus = async (id: string, lu: boolean): Promise<Ouvr
   }
   return resultat.data;
 };
+
+export const deleteBook = async (id: string, signal?: AbortSignal): Promise<void> =>
+  clientHttp.supprimer(`/books/${encodeURIComponent(id)}`, { signal });
