@@ -65,7 +65,7 @@ Pour le lot hors ligne, les mutations sont persistées, horodatées, rejouées d
 - Utiliser TanStack Query pour l'état serveur, avec des clés de cache structurées et une invalidation ciblée après mutation.
 - Utiliser React Hook Form avec le même schéma Zod que la validation métier.
 - Chaque écran de données couvre chargement par squelette, erreur avec réessai, vide contextualisé et succès.
-- Une suppression demande confirmation et reste annulable pendant cinq secondes.
+- Une suppression demande confirmation et reste annulable pendant cinq secondes. Exception validée au lot 2 : la suppression d'une note de lecture est envoyée immédiatement après confirmation, sans annulation ni ajout au groupe de suppressions d'ouvrages. Voir `docs/LOT-2.md`.
 - Les bascules `favori` et `lu` sont optimistes avec restauration en cas d'échec.
 - Les éléments interactifs ont un rôle, un libellé, un état accessible et une zone d'au moins 44 points.
 - Les couleurs viennent de `theme/`. À partir du lot 3, toutes les chaînes visibles passent aussi par l'internationalisation.
