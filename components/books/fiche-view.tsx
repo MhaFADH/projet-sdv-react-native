@@ -4,6 +4,7 @@ import {
   ControleStatutLecture,
   type ErreurStatutLecture,
 } from '@/components/books/controle-statut-lecture';
+import { Bouton } from '@/components/bouton';
 import { EtatAbsence, EtatErreur, SqueletteDonnees } from '@/components/etats-donnees';
 import { libelleEditeur, type Ouvrage } from '@/domain/ouvrage';
 import { theme } from '@/theme/tokens';
@@ -16,6 +17,7 @@ type EtatFiche =
   | {
       type: 'succes';
       ouvrage: Ouvrage;
+      corriger: () => void;
       basculerStatut: () => void;
       statutEnCours: boolean;
       erreurStatut?: ErreurStatutLecture;
@@ -83,6 +85,7 @@ const FicheDetail = (etat: EtatSucces) => (
           : 'Supprimer cet ouvrage'}
       </Text>
     </Pressable>
+    <Bouton action={etat.corriger} libelle="Corriger cet ouvrage" />
   </View>
 );
 
@@ -141,7 +144,11 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.md,
     backgroundColor: theme.colors.surface,
   },
-  titre: { color: theme.colors.text, fontSize: theme.typography.pageTitle, fontWeight: '700' },
+  titre: {
+    color: theme.colors.text,
+    fontSize: theme.typography.pageTitle,
+    fontWeight: '700',
+  },
   renseignement: { gap: theme.spacing.xs },
   libelle: {
     color: theme.colors.primary,

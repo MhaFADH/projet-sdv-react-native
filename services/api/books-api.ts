@@ -7,7 +7,7 @@ import {
   type PageOuvrages,
   TRI_FONDS,
 } from '@/domain/ouvrage';
-import type { OuvrageSaisi } from '@/domain/saisie-ouvrage';
+import type { CorrectionOuvrage, OuvrageSaisi } from '@/domain/saisie-ouvrage';
 import { clientHttp } from './client-http';
 import { creerErreurValidation } from './erreurs';
 
@@ -57,7 +57,9 @@ export const fetchBooksPage = async (page: number, signal?: AbortSignal): Promis
 };
 
 export const fetchBook = async (id: string, signal?: AbortSignal): Promise<Ouvrage> => {
-  const corps = await clientHttp.get(`/books/${encodeURIComponent(id)}`, { signal });
+  const corps = await clientHttp.get(`/books/${encodeURIComponent(id)}`, {
+    signal,
+  });
   const resultat = ouvrageSchema.safeParse(corps);
   if (!resultat.success || resultat.data.id !== id) {
     throw creerErreurValidation('La réponse du serveur pour cette fiche est invalide.');
@@ -81,7 +83,9 @@ export const createBook = async (saisie: OuvrageSaisi): Promise<Ouvrage> => {
 };
 
 export const patchBookReadStatus = async (id: string, lu: boolean): Promise<Ouvrage> => {
-  const corps = await clientHttp.patch(`/books/${encodeURIComponent(id)}`, { lu });
+  const corps = await clientHttp.patch(`/books/${encodeURIComponent(id)}`, {
+    lu,
+  });
   const resultat = ouvrageSchema.safeParse(corps);
   if (!resultat.success || resultat.data.id !== id) {
     throw creerErreurValidation('La réponse du serveur après modification du statut est invalide.');
@@ -91,3 +95,12 @@ export const patchBookReadStatus = async (id: string, lu: boolean): Promise<Ouvr
 
 export const deleteBook = async (id: string, signal?: AbortSignal): Promise<void> =>
   clientHttp.supprimer(`/books/${encodeURIComponent(id)}`, { signal });
+
+export const patchBook = async (id: string, correction: CorrectionOuvrage): Promise<Ouvrage> => {
+  const corps = await clientHttp.patch(`/books/${encodeURIComponent(id)}`, correction);
+  const resultat = ouvrageSchema.safeParse(corps);
+  if (!resultat.success || resultat.data.id !== id) {
+    throw creerErreurValidation('La réponse du serveur pour l’ouvrage corrigé est invalide.');
+  }
+  return resultat.data;
+};

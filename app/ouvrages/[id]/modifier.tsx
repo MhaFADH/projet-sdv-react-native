@@ -1,13 +1,13 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FicheScreen } from '@/features/books/fiche-screen';
+import { CorrectionOuvrageScreen } from '@/features/books/correction-ouvrage-screen';
 import { theme } from '@/theme/tokens';
 
-const FicheRoute = () => {
+const CorrectionRoute = () => {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const retour = () => {
+  const retourAuFonds = () => {
     if (router.canGoBack()) {
       router.back();
       return;
@@ -17,12 +17,12 @@ const FicheRoute = () => {
 
   return (
     <SafeAreaView edges={['top', 'bottom']} style={styles.page}>
-      <FicheScreen
-        corriger={() =>
-          router.push({ pathname: '/ouvrages/[id]/modifier', params: { id: id ?? '' } })
-        }
+      <CorrectionOuvrageScreen
         id={id ?? ''}
-        retour={retour}
+        ouvrirOuvrage={(ouvrageId: string) =>
+          router.push({ pathname: '/ouvrages/[id]', params: { id: ouvrageId } })
+        }
+        retourAuFonds={retourAuFonds}
       />
     </SafeAreaView>
   );
@@ -35,4 +35,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default FicheRoute;
+export default CorrectionRoute;

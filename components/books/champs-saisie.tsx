@@ -71,6 +71,7 @@ export const BasculeStatut = ({ lu, modifier, desactive }: BasculeStatutProps) =
       accessibilityLabel="Statut de lecture"
       accessibilityRole="switch"
       accessibilityState={{ checked: lu, disabled: desactive }}
+      aria-checked={lu}
       accessibilityValue={{ text: libelleStatutLecture(lu) }}
       disabled={desactive}
       onPress={() => modifier(!lu)}

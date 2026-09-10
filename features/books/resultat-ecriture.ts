@@ -5,20 +5,16 @@ import {
   STATUT_ERREUR_SERVEUR_MINIMALE,
   STATUT_INDISPONIBLE,
 } from '@/services/api/erreurs';
+import type { TextesEcriture } from './textes-ecriture';
 
-const MESSAGE_SANS_REPONSE =
-  'Aucune réponse du serveur : l’ouvrage a peut-être été créé. Vérifiez le fonds avant de réessayer.';
-const MESSAGE_REPONSE_INEXPLOITABLE =
-  'La réponse du serveur est inexploitable : l’ouvrage a peut-être été créé. Vérifiez le fonds avant de réessayer.';
-
-export type ResultatCreation =
+export type ResultatEcriture =
   | { type: 'refus'; parChamp: Partial<Record<ChampSaisieOuvrage, string>>; message?: string }
   | { type: 'indisponible'; message: string }
   | { type: 'incertain'; message: string };
 
 const interpreterRefus = (
   erreur: Extract<ErreurApplication, { type: 'validation' }>,
-): ResultatCreation => {
+): ResultatEcriture => {
   const { parChamp, horsFormulaire } = repartirRefusServeur(erreur.champs);
   const messages = horsFormulaire.length > 0 ? horsFormulaire : [];
   if (Object.keys(parChamp).length === 0 && messages.length === 0) messages.push(erreur.message);
@@ -30,14 +26,17 @@ const interpreterRefus = (
   };
 };
 
-export const interpreterEchecCreation = (cause: unknown): ResultatCreation => {
+export const interpreterEchecEcriture = (
+  cause: unknown,
+  textes: TextesEcriture,
+): ResultatEcriture => {
   if (!estErreurApplication(cause)) {
-    return { type: 'incertain', message: MESSAGE_REPONSE_INEXPLOITABLE };
+    return { type: 'incertain', message: textes.incertainReponseInexploitable };
   }
 
   if (cause.type === 'validation') {
     if (cause.champs === undefined) {
-      return { type: 'incertain', message: MESSAGE_REPONSE_INEXPLOITABLE };
+      return { type: 'incertain', message: textes.incertainReponseInexploitable };
     }
     return interpreterRefus(cause);
   }
@@ -47,7 +46,7 @@ export const interpreterEchecCreation = (cause: unknown): ResultatCreation => {
       return { type: 'indisponible', message: cause.message };
     }
     if (cause.statut === undefined || cause.statut >= STATUT_ERREUR_SERVEUR_MINIMALE) {
-      return { type: 'incertain', message: MESSAGE_SANS_REPONSE };
+      return { type: 'incertain', message: textes.incertainSansReponse };
     }
   }
 

@@ -32,16 +32,19 @@ const creerOuvrage = (id: string) => ({
 });
 
 const rendreFiche = (id: string) => {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
   const wrapper = ({ children }: PropsWithChildren) => (
     <QueryClientProvider client={client}>
       <SuppressionsProvider>{children}</SuppressionsProvider>
     </QueryClientProvider>
   );
-  const vue = render(<FicheScreen id={id} retour={vi.fn()} />, { wrapper });
+  const vue = render(<FicheScreen id={id} retour={vi.fn()} corriger={vi.fn()} />, { wrapper });
   return {
     client,
-    naviguer: (nouvelId: string) => vue.rerender(<FicheScreen id={nouvelId} retour={vi.fn()} />),
+    naviguer: (nouvelId: string) =>
+      vue.rerender(<FicheScreen id={nouvelId} retour={vi.fn()} corriger={vi.fn()} />),
   };
 };
 
@@ -165,7 +168,11 @@ describe('parcours de suppression différée', () => {
       total: 2,
       totalPages: 1,
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Réessayer la suppression de 1 ouvrage' }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Réessayer la suppression de 1 ouvrage',
+      }),
+    );
     expect(screen.getByRole('dialog')).toHaveTextContent('Germinal');
     fireEvent.click(screen.getByRole('button', { name: 'Confirmer la suppression' }));
     await act(async () => void (await vi.advanceTimersByTimeAsync(4_999)));

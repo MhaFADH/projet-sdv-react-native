@@ -205,4 +205,27 @@ describe('retour de succès et temporisation', () => {
 
     expect(depart()).toBe(true);
   });
+
+  it('vide de nouveau le formulaire après une seconde création confirmée', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockImplementation(async (_url, init) => {
+      const corps: unknown = JSON.parse(String((init as RequestInit).body));
+      const titre = (corps as { titre: string }).titre;
+      return new Response(JSON.stringify({ ...ouvrageCree, titre }), { status: 201 });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const { client } = rendreFormulaire();
+
+    remplirSaisieValide('Premier ouvrage');
+    enregistrer();
+    expect(await screen.findByText('« Premier ouvrage » a été ajouté au fonds.')).toBeVisible();
+    expect(screen.getByRole('textbox', { name: 'Titre' })).toHaveValue('');
+
+    remplirSaisieValide('Second ouvrage');
+    enregistrer();
+
+    expect(await screen.findByText('« Second ouvrage » a été ajouté au fonds.')).toBeVisible();
+    expect(screen.getByRole('textbox', { name: 'Titre' })).toHaveValue('');
+    expect(screen.getByRole('textbox', { name: 'Année de publication' })).toHaveValue('');
+    client.clear();
+  });
 });

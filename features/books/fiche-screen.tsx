@@ -11,9 +11,10 @@ const ABSENCE_PAR_DEFAUT = "Cet ouvrage n'existe pas ou plus.";
 type FicheScreenProps = {
   id: string;
   retour: () => void;
+  corriger: () => void;
 };
 
-export const FicheScreen = ({ id, retour }: FicheScreenProps) => {
+export const FicheScreen = ({ id, retour, corriger }: FicheScreenProps) => {
   const requete = useBook(id);
   const basculeStatut = useToggleBookReadStatus(id);
   const { confirmerSuppressions, estMasque, suppressionDesactivee } = useSuppressions();
@@ -64,6 +65,7 @@ export const FicheScreen = ({ id, retour }: FicheScreenProps) => {
           erreurStatut: basculeStatut.erreur,
           demanderSuppression: () => setConfirmationVisible(true),
           suppressionDesactivee,
+          corriger,
         }}
         retour={retour}
       />

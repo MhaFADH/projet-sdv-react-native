@@ -2,7 +2,11 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { FicheView } from '../../components/books/fiche-view';
 
-const actionStatut = { basculerStatut: vi.fn(), statutEnCours: false };
+const actionStatut = {
+  basculerStatut: vi.fn(),
+  statutEnCours: false,
+  corriger: vi.fn(),
+};
 
 const ouvrage = {
   id: '33575fa9-7968-45b3-8447-ec994a0b8401',
@@ -25,6 +29,7 @@ const etatSucces = (valeur = ouvrage) => ({
   ...actionStatut,
   demanderSuppression: vi.fn(),
   suppressionDesactivee: false,
+  corriger: vi.fn(),
 });
 
 describe('présentation de la fiche', () => {
@@ -39,7 +44,11 @@ describe('présentation de la fiche', () => {
     const reessayer = vi.fn();
     render(
       <FicheView
-        etat={{ type: 'erreur', message: 'Le serveur est injoignable.', reessayer }}
+        etat={{
+          type: 'erreur',
+          message: 'Le serveur est injoignable.',
+          reessayer,
+        }}
         retour={vi.fn()}
       />,
     );
@@ -57,7 +66,9 @@ describe('présentation de la fiche', () => {
     );
 
     expect(
-      screen.getByRole('heading', { name: "Cette fiche n'est plus disponible" }),
+      screen.getByRole('heading', {
+        name: "Cette fiche n'est plus disponible",
+      }),
     ).toBeVisible();
     expect(screen.getByRole('alert')).toHaveTextContent('Livre inconnu.');
     expect(screen.queryByText('Auteur')).not.toBeInTheDocument();
@@ -73,12 +84,16 @@ describe('présentation de la fiche', () => {
     expect(screen.getByText('Victor Havard')).toBeVisible();
     expect(screen.getByText('1885')).toBeVisible();
     expect(screen.getByText('Lu')).toBeVisible();
-    const boutonSuppression = screen.getByRole('button', { name: 'Supprimer Bel-Ami' });
+    const boutonSuppression = screen.getByRole('button', {
+      name: 'Supprimer Bel-Ami',
+    });
     expect(boutonSuppression).toHaveStyle({ minHeight: '44px' });
     fireEvent.click(boutonSuppression);
     expect(etat.demanderSuppression).toHaveBeenCalledOnce();
 
-    const boutonRetour = screen.getByRole('button', { name: 'Retour au fonds' });
+    const boutonRetour = screen.getByRole('button', {
+      name: 'Retour au fonds',
+    });
     expect(boutonRetour).toHaveStyle({ minHeight: '44px' });
     expect(boutonRetour).toHaveAttribute('tabindex', '0');
     boutonRetour.focus();
@@ -109,7 +124,9 @@ describe('présentation de la fiche', () => {
       />,
     );
 
-    const bascule = screen.getByRole('switch', { name: 'Marquer comme non lu' });
+    const bascule = screen.getByRole('switch', {
+      name: 'Marquer comme non lu',
+    });
     expect(bascule).toHaveAttribute('aria-checked', 'true');
     expect(bascule).toHaveStyle({ minHeight: '44px' });
     expect(bascule).toHaveAttribute('tabindex', '0');
@@ -120,10 +137,17 @@ describe('présentation de la fiche', () => {
   });
 
   it('affiche le chargement dans le bouton sans modifier son contenu dimensionnant', () => {
-    render(<FicheView etat={{ ...etatSucces(), statutEnCours: true }} retour={vi.fn()} />);
+    render(
+      <FicheView
+        etat={{ ...etatSucces(), basculerStatut: vi.fn(), statutEnCours: true }}
+        retour={vi.fn()}
+      />,
+    );
 
     expect(screen.getByLabelText('Enregistrement du statut en cours')).toBeVisible();
-    expect(screen.getByText('Marquer comme non lu')).toHaveStyle({ opacity: '0' });
+    expect(screen.getByText('Marquer comme non lu')).toHaveStyle({
+      opacity: '0',
+    });
   });
 
   it('rend la restauration et son réessai accessibles après un refus', () => {
@@ -148,5 +172,15 @@ describe('présentation de la fiche', () => {
     expect(bouton).toHaveStyle({ minHeight: '44px' });
     fireEvent.click(bouton);
     expect(reessayer).toHaveBeenCalledOnce();
+  });
+
+  it('propose la correction de l’ouvrage consulté', () => {
+    const corriger = vi.fn();
+    render(<FicheView etat={{ ...etatSucces(), corriger }} retour={vi.fn()} />);
+
+    const bouton = screen.getByRole('button', { name: 'Corriger cet ouvrage' });
+    fireEvent.click(bouton);
+
+    expect(corriger).toHaveBeenCalledOnce();
   });
 });

@@ -1,5 +1,9 @@
 import { z } from 'zod';
-import { ANNEE_PUBLICATION_MINIMALE, NOMBRE_ANNEES_FUTURES_AUTORISEES } from './ouvrage';
+import {
+  ANNEE_PUBLICATION_MINIMALE,
+  NOMBRE_ANNEES_FUTURES_AUTORISEES,
+  type Ouvrage,
+} from './ouvrage';
 
 export const LONGUEUR_MAXIMALE_TEXTE = 200;
 
@@ -51,6 +55,38 @@ export const SAISIE_OUVRAGE_VIDE: SaisieOuvrage = {
   editeur: '',
   annee: '',
   lu: false,
+};
+
+export type CorrectionOuvrage = Partial<OuvrageSaisi>;
+
+type OuvrageEditable = Pick<Ouvrage, 'titre' | 'auteur' | 'editeur' | 'annee' | 'lu'>;
+
+export const referenceDepuisOuvrage = (ouvrage: OuvrageEditable): OuvrageSaisi => ({
+  titre: ouvrage.titre,
+  auteur: ouvrage.auteur,
+  editeur: ouvrage.editeur,
+  annee: ouvrage.annee,
+  lu: ouvrage.lu,
+});
+
+export const saisieDepuisOuvrage = (ouvrage: OuvrageEditable): SaisieOuvrage => ({
+  ...referenceDepuisOuvrage(ouvrage),
+  annee: String(ouvrage.annee),
+});
+
+export const correctionOuvrage = (
+  reference: OuvrageSaisi,
+  valeurs: OuvrageSaisi,
+): CorrectionOuvrage => {
+  const correction: CorrectionOuvrage = {};
+
+  if (valeurs.titre !== reference.titre) correction.titre = valeurs.titre;
+  if (valeurs.auteur !== reference.auteur) correction.auteur = valeurs.auteur;
+  if (valeurs.editeur !== reference.editeur) correction.editeur = valeurs.editeur;
+  if (valeurs.annee !== reference.annee) correction.annee = valeurs.annee;
+  if (valeurs.lu !== reference.lu) correction.lu = valeurs.lu;
+
+  return correction;
 };
 
 export type RefusServeur = {

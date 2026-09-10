@@ -11,12 +11,12 @@ type AvisIndisponibleProps = {
 
 type AvisIncertainProps = {
   message: string;
-  verifierLeFonds: () => void;
+  avertissement: string;
+  libelleVerifier: string;
+  libelleReessayer: string;
+  verifier: () => void;
   reessayer: () => void;
 };
-
-const AVERTISSEMENT_DOUBLON =
-  'Un nouvel envoi peut créer un second ouvrage identique : la création n’est pas rejouable sans risque de doublon.';
 
 const Cadre = ({ children }: PropsWithChildren) => (
   <View accessibilityRole="alert" style={styles.cadre}>
@@ -49,17 +49,20 @@ export const AvisIndisponible = ({
   </Cadre>
 );
 
-export const AvisIncertain = ({ message, verifierLeFonds, reessayer }: AvisIncertainProps) => (
+export const AvisIncertain = ({
+  message,
+  avertissement,
+  libelleVerifier,
+  libelleReessayer,
+  verifier,
+  reessayer,
+}: AvisIncertainProps) => (
   <Cadre>
     <Text style={styles.message}>{message}</Text>
-    <Text style={styles.message}>{AVERTISSEMENT_DOUBLON}</Text>
+    <Text style={styles.message}>{avertissement}</Text>
     <View style={styles.actions}>
-      <Bouton action={verifierLeFonds} libelle="Vérifier dans le fonds" variante="secondaire" />
-      <Bouton
-        action={reessayer}
-        indication={AVERTISSEMENT_DOUBLON}
-        libelle="Réessayer malgré le risque de doublon"
-      />
+      <Bouton action={verifier} libelle={libelleVerifier} variante="secondaire" />
+      <Bouton action={reessayer} indication={avertissement} libelle={libelleReessayer} />
     </View>
   </Cadre>
 );
