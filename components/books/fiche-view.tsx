@@ -1,5 +1,5 @@
 import type { PropsWithChildren } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { EtatAbsence, EtatErreur, SqueletteDonnees } from '@/components/etats-donnees';
 import { libelleEditeur, libelleStatutLecture, type Ouvrage } from '@/domain/ouvrage';
 import { theme } from '@/theme/tokens';
@@ -38,7 +38,9 @@ const CadreFiche = ({ retour, children }: PropsWithChildren<Pick<FicheViewProps,
       onPress={retour}
       style={styles.boutonRetour}
     >
-      <Text style={styles.texteBoutonRetour}>← Retour au fonds</Text>
+      <Text selectable={false} style={styles.texteBoutonRetour}>
+        ← Retour au fonds
+      </Text>
     </Pressable>
     {children}
   </ScrollView>
@@ -72,13 +74,21 @@ const ControleStatutLecture = ({
         onPress={basculerStatut}
         style={[styles.boutonStatut, statutEnCours && styles.boutonDesactive]}
       >
-        <Text style={styles.texteBoutonStatut}>{action}</Text>
-      </Pressable>
-      {statutEnCours ? (
-        <Text accessibilityLiveRegion="polite" style={styles.messageStatut}>
-          Enregistrement du statut en cours…
+        <Text
+          selectable={false}
+          style={[styles.texteBoutonStatut, statutEnCours && styles.texteMasque]}
+        >
+          {action}
         </Text>
-      ) : null}
+        {statutEnCours ? (
+          <ActivityIndicator
+            accessibilityLabel="Enregistrement du statut en cours"
+            color={theme.colors.primaryText}
+            size="small"
+            style={styles.indicateurStatut}
+          />
+        ) : null}
+      </Pressable>
       {erreurStatut ? (
         <View accessibilityRole="alert" style={styles.erreurStatut}>
           <Text style={styles.texteErreur}>{erreurStatut.message}</Text>
@@ -88,7 +98,9 @@ const ControleStatutLecture = ({
             onPress={erreurStatut.reessayer}
             style={styles.boutonReessai}
           >
-            <Text style={styles.texteBoutonReessai}>Réessayer</Text>
+            <Text selectable={false} style={styles.texteBoutonReessai}>
+              Réessayer
+            </Text>
           </Pressable>
         </View>
       ) : null}
@@ -205,10 +217,8 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.body,
     fontWeight: '700',
   },
-  messageStatut: {
-    color: theme.colors.textMuted,
-    fontSize: theme.typography.caption,
-  },
+  texteMasque: { opacity: 0 },
+  indicateurStatut: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 },
   erreurStatut: {
     gap: theme.spacing.sm,
     padding: theme.spacing.md,

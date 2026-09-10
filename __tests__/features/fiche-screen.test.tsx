@@ -127,7 +127,9 @@ describe('parcours de la fiche', () => {
         'true',
       ),
     );
-    expect(screen.getByText('Enregistrement du statut en cours…')).toBeVisible();
+    expect(
+      screen.getByRole('progressbar', { name: 'Enregistrement du statut en cours' }),
+    ).toBeVisible();
     const appelPatch = fetchMock.mock.calls.find((appel) => appel[1]?.method === 'PATCH');
     expect(appelPatch).toEqual([
       `http://localhost:3000/books/${ID}`,

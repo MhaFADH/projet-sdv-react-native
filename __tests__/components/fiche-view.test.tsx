@@ -116,6 +116,18 @@ describe('présentation de la fiche', () => {
     expect(basculerStatut).toHaveBeenCalledOnce();
   });
 
+  it('affiche le chargement dans le bouton sans modifier son contenu dimensionnant', () => {
+    render(
+      <FicheView
+        etat={{ type: 'succes', ouvrage, basculerStatut: vi.fn(), statutEnCours: true }}
+        retour={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByLabelText('Enregistrement du statut en cours')).toBeVisible();
+    expect(screen.getByText('Marquer comme non lu')).toHaveStyle({ opacity: '0' });
+  });
+
   it('rend la restauration et son réessai accessibles après un refus', () => {
     const reessayer = vi.fn();
     render(
