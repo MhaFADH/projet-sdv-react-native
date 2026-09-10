@@ -2,7 +2,7 @@
 
 ## Statut
 
-Accepté. Implémenté partiellement par le ticket #2 pour la consultation paginée du fonds.
+Accepté. Implémenté partiellement : ticket #2 pour la consultation paginée, ticket #3 pour la fiche, ticket #4 pour la première mutation et son invalidation.
 
 ## Contexte
 
@@ -33,14 +33,16 @@ Ce choix n’annonce ni cache persistant ni rejeu hors ligne pour le lot 1.
 
 Le ticket #2 livre TanStack Query pour `GET /books`, une clé de liste contenant la page, la limite, le tri et l’ordre, ainsi que la transmission du signal d’annulation au client HTTP. Les réponses sont validées à l’exécution avant leur entrée dans le cache. Le hook et l’arrivée tardive d’une ancienne page sont couverts par des tests avec le transport simulé.
 
-Les clés de fiche, les mutations, les invalidations après écriture et la bascule optimiste lu/non lu restent des décisions prévues pour les tickets fonctionnels suivants. Elles ne sont pas présentées comme disponibles dans l’application actuelle.
+Le ticket #3 ajoute la clé de fiche paramétrée par l’identifiant. Le ticket #4 ajoute la première mutation : la création passe par `useMutation` sans réessai automatique, alimente la clé de la fiche créée avec la réponse validée et invalide les clés de liste par leur préfixe commun `['ouvrages', 'liste']`, sans supposer la page d’arrivée d’un ouvrage dans le tri serveur. Ces comportements sont couverts par les tests du parcours d’ajout avec transport simulé.
+
+La bascule optimiste lu/non lu, les mises à jour et les suppressions restent des décisions prévues pour les tickets suivants. Elles ne sont pas présentées comme disponibles dans l’application actuelle.
 
 ## Conséquences
 
 - La liste et la fiche disposent d’un mécanisme commun de cache et de mise à jour, au lieu de copies de l’état serveur gérées indépendamment par chaque écran.
 - La cohérence dépend de clés correctes, d’invalidations ciblées et de restaurations optimistes testées ; la bibliothèque ne remplace pas ces règles applicatives.
 - Un cache de données consultées ne constitue pas une sauvegarde de formulaire ni une garantie de fonctionnement hors ligne.
-- Le hook paginé est vérifié avec un transport simulé ; les mutations futures devront apporter leurs propres tests d’invalidation et de restauration.
+- Le hook paginé et la mutation de création sont vérifiés avec un transport simulé ; les mutations suivantes devront apporter leurs propres tests d’invalidation et de restauration.
 
 ## Références
 

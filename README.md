@@ -1,6 +1,6 @@
 # BookList Pro
 
-BookList Pro numérise le cahier de lecture des Comptoirs du Livre. Cette version livre la consultation du fonds par pages de vingt ouvrages, triées par titre croissant par l’API, et la consultation de la fiche d’un ouvrage.
+BookList Pro numérise le cahier de lecture des Comptoirs du Livre. Cette version livre la consultation du fonds par pages de vingt ouvrages, triées par titre croissant par l’API, la consultation de la fiche d’un ouvrage et l’ajout d’un ouvrage protégé contre la perte de saisie.
 
 ## Prérequis
 
@@ -47,9 +47,16 @@ Pour tester depuis un appareil mobile, remplacer `localhost` dans `.env.local` p
 - ouverture de la fiche d’un ouvrage depuis la liste (`/ouvrages/<identifiant>`) avec `GET /books/:id` validé ;
 - fiche en squelette, erreur avec réessai, absence contextualisée sur `404` et succès ;
 - retour au fonds qui retrouve la page consultée et la réactualise, ou affiche la dernière page disponible si elle a disparu ;
-- annulation des requêtes obsolètes et ErrorBoundary global.
+- annulation des requêtes obsolètes et ErrorBoundary global ;
+- ajout d’un ouvrage depuis le fonds (`/ouvrages/nouveau`) : titre, auteur, éditeur facultatif, année vide à l’ouverture et statut « Non lu » ;
+- validation React Hook Form et Zod partagée avec les règles métier, erreurs associées aux champs ;
+- création par `POST /books` validée à l’exécution, champs et soumission verrouillés pendant l’envoi ;
+- refus `422` reporté sur les champs concernés, indisponibilité `503` réessayable après temporisation, saisie toujours conservée ;
+- création au résultat inconnu signalée sans réessai automatique, avec vérification du fonds ou réessai manuel averti du risque de doublon ;
+- confirmation avant abandon volontaire d’une saisie modifiée et avertissement de départ du navigateur, sans brouillon persistant ;
+- après création confirmée : formulaire vidé, statut remis à « Non lu », toast de cinq secondes contenant le bouton vers la fiche, suspendu au survol ou au focus clavier, et invalidation ciblée des listes.
 
-L’ajout, la modification, la suppression, la bascule du statut de lecture, l’authentification et le mode hors ligne ne font pas partie de ces tickets.
+La modification, la suppression, la bascule du statut de lecture depuis la fiche, l’authentification et le mode hors ligne ne font pas partie de ces tickets.
 
 ## Vérifications
 
@@ -66,10 +73,11 @@ npx expo install --check
 
 - `app/` compose les routes et les providers ;
 - `components/` contient la présentation pure ;
-- `features/books/` compose les parcours de consultation du fonds et de la fiche ;
+- `features/books/` compose les parcours de consultation du fonds, de la fiche et d’ajout d’un ouvrage ;
 - `hooks/` porte l’intégration React avec TanStack Query ;
 - `services/api/` centralise HTTP, validation et erreurs ;
+- `services/plateforme/` porte les capacités dépendant de la plateforme derrière une interface unique ;
 - `domain/` contient les types et constantes métier purs ;
 - `theme/` centralise les tokens visuels.
 
-Le détail du flux est décrit dans [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) et la décision TanStack Query dans [`docs/ADR/001-gestion-etat-serveur.md`](docs/ADR/001-gestion-etat-serveur.md).
+Le détail du flux est décrit dans [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), la décision TanStack Query dans [`docs/ADR/001-gestion-etat-serveur.md`](docs/ADR/001-gestion-etat-serveur.md) et la protection de la saisie dans [`docs/ADR/005-protection-saisie.md`](docs/ADR/005-protection-saisie.md).

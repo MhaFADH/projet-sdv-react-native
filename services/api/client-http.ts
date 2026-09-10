@@ -2,10 +2,11 @@ import { creerErreurValidation, type ErreurApplication, traduireErreurHttp } fro
 
 const DELAI_EXPIRATION_MS = 10_000;
 const EN_TETES_JSON = { Accept: 'application/json' } as const;
+const EN_TETES_ENVOI_JSON = { ...EN_TETES_JSON, 'Content-Type': 'application/json' } as const;
 
 type ParametreRequete = string | number | boolean | undefined;
 
-type OptionsLecture = {
+type OptionsRequete = {
   parametres?: Record<string, ParametreRequete>;
   signal?: AbortSignal;
 };
@@ -65,7 +66,11 @@ const erreurTransport = (expiree: boolean, annulee: boolean): ErreurApplication 
   };
 };
 
-const get = async (chemin: string, options: OptionsLecture = {}): Promise<unknown> => {
+const envoyer = async (
+  init: Pick<RequestInit, 'method' | 'headers' | 'body'>,
+  chemin: string,
+  options: OptionsRequete,
+): Promise<unknown> => {
   const url = construireUrl(chemin, options.parametres ?? {});
   const controleur = new AbortController();
   let expiree = false;
@@ -81,11 +86,7 @@ const get = async (chemin: string, options: OptionsLecture = {}): Promise<unknow
   let reponse: Response;
   let corps: unknown;
   try {
-    reponse = await fetch(url, {
-      method: 'GET',
-      headers: EN_TETES_JSON,
-      signal: controleur.signal,
-    });
+    reponse = await fetch(url, { ...init, signal: controleur.signal });
     corps = await lireCorps(reponse);
   } catch {
     throw erreurTransport(expiree, options.signal?.aborted ?? false);
@@ -98,4 +99,14 @@ const get = async (chemin: string, options: OptionsLecture = {}): Promise<unknow
   return corps;
 };
 
-export const clientHttp = { get };
+const get = (chemin: string, options: OptionsRequete = {}): Promise<unknown> =>
+  envoyer({ method: 'GET', headers: EN_TETES_JSON }, chemin, options);
+
+const post = (chemin: string, corps: unknown, options: OptionsRequete = {}): Promise<unknown> =>
+  envoyer(
+    { method: 'POST', headers: EN_TETES_ENVOI_JSON, body: JSON.stringify(corps) },
+    chemin,
+    options,
+  );
+
+export const clientHttp = { get, post };

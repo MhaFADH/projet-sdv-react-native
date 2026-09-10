@@ -2,7 +2,7 @@
 
 ## Statut
 
-Accepté lors du cadrage du lot 1, non implémenté. Ce document ne vaut pas autorisation de démarrer l’implémentation.
+Accepté lors du cadrage du lot 1. Implémenté pour la création d’un ouvrage par le ticket #4 ; les décisions relatives à la modification restent à appliquer par le ticket correspondant.
 
 ## Contexte
 
@@ -38,7 +38,20 @@ Aucun brouillon persistant ni acceptation d’écriture hors ligne n’est prév
 - Le verrouillage pendant l’envoi suspend temporairement la saisie, mais évite les doubles soumissions et le vidage de modifications plus récentes.
 - La récupération après fermeture involontaire, rechargement sans protection effective ou arrêt brutal n’est pas garantie. Cette limite est acceptée ; aucune promesse de conservation durable n’est faite.
 - Le réessai manuel d’une création incertaine peut encore produire un doublon. Désactiver le bouton pendant l’envoi ne rend pas le POST idempotent.
-- Les tests devront couvrir la conservation des valeurs sur erreur, le verrouillage pendant l’envoi, le vidage après création seulement et l’absence de réessai automatique d’une création incertaine. Ils ne sont pas encore implémentés.
+- Les tests couvrent, pour la création, les limites des champs, le succès, le refus `422` par champ, l’indisponibilité `503` avec temporisation, la coupure et le délai d’expiration dépassé, l’absence de réessai automatique, le verrouillage pendant l’envoi, la double soumission empêchée, l’abandon confirmé, la remise à vide après création seulement et le toast avec ses suspensions sous horloge contrôlée.
+
+## État de l’implémentation
+
+Le ticket #4 livre ces décisions pour la création :
+
+- schéma `domain/saisie-ouvrage.ts` partagé entre React Hook Form et les règles métier ;
+- champs et soumission verrouillés pendant l’envoi, avec un verrou de rendu contre la double soumission ;
+- refus `422` reportés sur les champs, `503` réessayable après temporisation, valeurs jamais effacées ;
+- résultat inconnu — coupure ou délai d’expiration sans statut HTTP — présenté comme tel, avec vérification du fonds ou réessai manuel averti du risque de doublon ;
+- confirmation avant abandon volontaire et avertissement `beforeunload` via `services/plateforme/avertissement-depart`, sans brouillon persistant ni récupération après arrêt brutal ;
+- après création confirmée : maintien dans le formulaire, champs vidés, statut remis à « Non lu », aucune redirection automatique.
+
+La conservation des valeurs après une modification confirmée n’est pas encore livrée : aucun parcours de correction n’existe dans l’application.
 
 ## Références
 

@@ -34,6 +34,7 @@ const FondsControle = ({ pageInitiale, ouvrirOuvrage }: FondsControleProps) => {
   const changerPage = useCallback((page: number) => setPageDemandee(page), []);
   return (
     <FondsScreen
+      ajouterOuvrage={vi.fn()}
       changerPage={changerPage}
       ouvrirOuvrage={ouvrirOuvrage}
       pageDemandee={pageDemandee}

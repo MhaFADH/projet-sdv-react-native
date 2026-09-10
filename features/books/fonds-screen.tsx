@@ -7,9 +7,15 @@ type FondsScreenProps = {
   pageDemandee: number;
   changerPage: (page: number) => void;
   ouvrirOuvrage: (id: string) => void;
+  ajouterOuvrage: () => void;
 };
 
-export const FondsScreen = ({ pageDemandee, changerPage, ouvrirOuvrage }: FondsScreenProps) => {
+export const FondsScreen = ({
+  pageDemandee,
+  changerPage,
+  ouvrirOuvrage,
+  ajouterOuvrage,
+}: FondsScreenProps) => {
   const requete = useBooksPage(pageDemandee);
   const dernierePageDisponible = requete.data?.totalPages;
 
@@ -19,11 +25,12 @@ export const FondsScreen = ({ pageDemandee, changerPage, ouvrirOuvrage }: FondsS
   }, [changerPage, dernierePageDisponible, pageDemandee]);
 
   if (requete.isPending || pageDemandee > (dernierePageDisponible ?? pageDemandee))
-    return <FondsView etat={{ type: 'chargement' }} />;
+    return <FondsView ajouterOuvrage={ajouterOuvrage} etat={{ type: 'chargement' }} />;
 
   if (requete.isError) {
     return (
       <FondsView
+        ajouterOuvrage={ajouterOuvrage}
         etat={{
           type: 'erreur',
           message: requete.error.message,
@@ -39,6 +46,7 @@ export const FondsScreen = ({ pageDemandee, changerPage, ouvrirOuvrage }: FondsS
 
   return (
     <FondsView
+      ajouterOuvrage={ajouterOuvrage}
       etat={{
         type: 'succes',
         page: requete.data,

@@ -29,7 +29,7 @@ const ouvrageNonLu = {
 
 describe('présentation du fonds', () => {
   it('affiche un squelette accessible pendant le chargement', () => {
-    render(<FondsView etat={{ type: 'chargement' }} />);
+    render(<FondsView ajouterOuvrage={vi.fn()} etat={{ type: 'chargement' }} />);
 
     expect(screen.getByRole('progressbar', { name: 'Chargement des ouvrages' })).toBeVisible();
     expect(screen.getAllByTestId('ligne-squelette')).toHaveLength(5);
@@ -38,7 +38,10 @@ describe('présentation du fonds', () => {
   it('affiche une erreur exploitable et permet de réessayer', () => {
     const reessayer = vi.fn();
     render(
-      <FondsView etat={{ type: 'erreur', message: 'Le serveur est injoignable.', reessayer }} />,
+      <FondsView
+        ajouterOuvrage={vi.fn()}
+        etat={{ type: 'erreur', message: 'Le serveur est injoignable.', reessayer }}
+      />,
     );
 
     expect(screen.getByRole('alert')).toHaveTextContent('Le serveur est injoignable.');
@@ -51,6 +54,7 @@ describe('présentation du fonds', () => {
   it("explique que le fonds est vide sans proposer d'accès fictif à l'ajout", () => {
     render(
       <FondsView
+        ajouterOuvrage={vi.fn()}
         etat={{
           type: 'succes',
           page: { items: [], page: 1, limit: 20, total: 0, totalPages: 1 },
@@ -69,6 +73,7 @@ describe('présentation du fonds', () => {
   it("ne confond pas une page devenue vide avec l'ensemble du fonds", () => {
     render(
       <FondsView
+        ajouterOuvrage={vi.fn()}
         etat={{
           type: 'succes',
           page: { items: [], page: 2, limit: 20, total: 20, totalPages: 1 },
@@ -88,6 +93,7 @@ describe('présentation du fonds', () => {
     const pageSuivante = vi.fn();
     render(
       <FondsView
+        ajouterOuvrage={vi.fn()}
         etat={{
           type: 'succes',
           page: {
@@ -123,6 +129,7 @@ describe('présentation du fonds', () => {
   it('empêche de dépasser la dernière page serveur', () => {
     render(
       <FondsView
+        ajouterOuvrage={vi.fn()}
         etat={{
           type: 'succes',
           page: { items: [ouvrageLu], page: 2, limit: 20, total: 40, totalPages: 2 },
@@ -141,6 +148,7 @@ describe('présentation du fonds', () => {
     const ouvrirOuvrage = vi.fn();
     render(
       <FondsView
+        ajouterOuvrage={vi.fn()}
         etat={{
           type: 'succes',
           page: {
@@ -166,5 +174,28 @@ describe('présentation du fonds', () => {
     fireEvent.click(acces);
 
     expect(ouvrirOuvrage).toHaveBeenCalledExactlyOnceWith(ouvrageNonLu.id);
+  });
+
+  it('propose l’ajout d’un ouvrage, y compris lorsque le fonds est vide', () => {
+    const ajouterOuvrage = vi.fn();
+    render(
+      <FondsView
+        ajouterOuvrage={ajouterOuvrage}
+        etat={{
+          type: 'succes',
+          page: { items: [], page: 1, limit: 20, total: 0, totalPages: 1 },
+          pagePrecedente: vi.fn(),
+          pageSuivante: vi.fn(),
+          ouvrirOuvrage: vi.fn(),
+        }}
+      />,
+    );
+
+    const ajout = screen.getByRole('button', { name: 'Ajouter un ouvrage' });
+    expect(screen.getByRole('heading', { name: 'Le fonds est vide' })).toBeVisible();
+    expect(ajout).toHaveStyle({ minHeight: '44px' });
+    fireEvent.click(ajout);
+
+    expect(ajouterOuvrage).toHaveBeenCalledOnce();
   });
 });

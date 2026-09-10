@@ -1,13 +1,16 @@
 import { z } from 'zod';
 
+export const STATUT_INDISPONIBLE = 503;
+export const STATUT_ERREUR_SERVEUR_MINIMALE = 500;
+
 const STATUT_HTTP = {
   nonAuthentifie: 401,
   interdit: 403,
   introuvable: 404,
   conflit: 409,
   validation: 422,
-  indisponible: 503,
-  erreurServeurMinimale: 500,
+  indisponible: STATUT_INDISPONIBLE,
+  erreurServeurMinimale: STATUT_ERREUR_SERVEUR_MINIMALE,
 } as const;
 
 const reponseErreurSchema = z.object({
@@ -95,6 +98,15 @@ export const traduireErreurHttp = (statut: number, corps: unknown): ErreurApplic
     statut,
   };
 };
+
+const TYPES_ERREUR = ['reseau', 'introuvable', 'validation', 'conflit', 'authentification'];
+
+export const estErreurApplication = (cause: unknown): cause is ErreurApplication =>
+  typeof cause === 'object' &&
+  cause !== null &&
+  'type' in cause &&
+  typeof (cause as { type: unknown }).type === 'string' &&
+  TYPES_ERREUR.includes((cause as { type: string }).type);
 
 export const creerErreurValidation = (message: string): ErreurApplication => ({
   type: 'validation',
