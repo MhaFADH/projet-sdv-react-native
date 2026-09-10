@@ -92,4 +92,6 @@ npx expo install --check
 - `domain/` contient les types et constantes métier purs ;
 - `theme/` centralise les tokens visuels.
 
-Le détail du flux est décrit dans [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), la décision TanStack Query dans [`docs/ADR/001-gestion-etat-serveur.md`](docs/ADR/001-gestion-etat-serveur.md) et la protection de la saisie dans [`docs/ADR/005-protection-saisie.md`](docs/ADR/005-protection-saisie.md).
+Le détail du flux est décrit dans [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), la décision TanStack Query dans [`docs/ADR/001-gestion-etat-serveur.md`](docs/ADR/001-gestion-etat-serveur.md), la suppression différée dans [`docs/ADR/004-suppression-differee.md`](docs/ADR/004-suppression-differee.md) et la protection de la saisie dans [`docs/ADR/005-protection-saisie.md`](docs/ADR/005-protection-saisie.md).
+
+Le compte rendu de recette du lot 1, avec ce qui est automatisé, vérifié manuellement ou non vérifié, est dans [`docs/RECETTE-LOT-1.md`](docs/RECETTE-LOT-1.md).

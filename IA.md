@@ -162,3 +162,49 @@ Réalisée avec Chrome sans interface piloté par le protocole DevTools, contre 
 - confirmer masque les deux lignes et affiche le bandeau global pour deux ouvrages ;
 - « Annuler tout » restaure les vingt lignes et aucun DELETE n’est observé après expiration du délai ;
 - dans un second passage, confirmer les vingt ouvrages masque toute la page tout en conservant « Suivant » actif ; la navigation affiche vingt ouvrages non sélectionnés en page 2 et l’annulation globale n’envoie aucun DELETE.
+
+## Intervention — issue #9
+
+- Outil : Claude Code.
+- Fournisseur : Anthropic.
+- Modèle : `claude-opus-5[1m]`.
+- Périmètre : issue GitHub #9, recette du lot 1 et transmission.
+
+### Demandes reçues
+
+1. `/mattpocock-skills:implement https://github.com/MhaFADH/projet-sdv-react-native/issues/9 tu as accès à GitHub CLI pour lire le ticket correspondant`
+
+### Actions réalisées avec l'IA
+
+- lecture du ticket #9 via GitHub CLI, de `AGENTS.md`, du contrat de l'API voisine
+  et du code des parcours déjà livrés ;
+- exécution du scénario nominal complet dans Chrome piloté par le protocole
+  DevTools, contre l'API locale sans authentification ;
+- recette en mode dégradé contre une seconde instance de l'API lancée avec
+  `CHAOS_LATENCE` et `CHAOS_ECHEC`, puis arrêtée ;
+- vérification clavier, petit écran et cibles de 44 points ;
+- exécution du lint, du typage, des tests, de la couverture, de `knip` et du
+  contrôle des versions Expo ;
+- rédaction de `docs/RECETTE-LOT-1.md`.
+
+### Défauts constatés et corrections réelles
+
+- Le document web était servi avec `<html lang="en">` alors que toutes les chaînes
+  visibles sont en français. Ajout de `app/+html.tsx` déclarant `lang="fr"`, avec un
+  test de non-régression sur l'arbre d'éléments de l'enveloppe.
+- Diagnostic erroné de l'agent : une bascule bloquée sur sa valeur optimiste après
+  un 503 a d'abord été attribuée au `networkMode` de TanStack Query, et une
+  modification a été introduite sur cette base. La cause réelle était l'onglet
+  d'automatisation, masqué (`document.hidden`), TanStack Query suspendant ses
+  réessais hors focus. La modification a été entièrement annulée et les mesures
+  refaites dans un onglet visible, où le comportement documenté est conforme.
+- Passer `EXPO_PUBLIC_API_URL` par l'environnement du shell est sans effet : Expo
+  charge `.env`, dont la valeur l'emporte. Les premières mesures en mode dégradé
+  visaient donc l'API nominale et ont été refaites avec un `.env.local`.
+
+### Vérification navigateur
+
+Détaillée dans [`docs/RECETTE-LOT-1.md`](docs/RECETTE-LOT-1.md), qui distingue
+explicitement ce qui est automatisé, vérifié manuellement et non vérifié.
+
+Aucun prompt, défaut ou résultat non observé n'est ajouté à ce document.
