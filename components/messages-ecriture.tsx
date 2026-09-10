@@ -18,23 +18,32 @@ type AvisIncertainProps = {
   reessayer: () => void;
 };
 
+export type AvisEcriture =
+  | { type: 'refus'; message: string }
+  | { type: 'indisponible'; message: string; secondesRestantes: number; reessayer: () => void }
+  | {
+      type: 'incertain';
+      message: string;
+      avertissement: string;
+      libelleVerifier: string;
+      libelleReessayer: string;
+      verifier: () => void;
+      reessayer: () => void;
+    };
+
 const Cadre = ({ children }: PropsWithChildren) => (
   <View accessibilityRole="alert" style={styles.cadre}>
     {children}
   </View>
 );
 
-export const AvisRefus = ({ message }: { message: string }) => (
+const AvisRefus = ({ message }: { message: string }) => (
   <Cadre>
     <Text style={styles.message}>{message}</Text>
   </Cadre>
 );
 
-export const AvisIndisponible = ({
-  message,
-  secondesRestantes,
-  reessayer,
-}: AvisIndisponibleProps) => (
+const AvisIndisponible = ({ message, secondesRestantes, reessayer }: AvisIndisponibleProps) => (
   <Cadre>
     <Text style={styles.message}>{message} Votre saisie est conservée.</Text>
     <Bouton
@@ -49,7 +58,7 @@ export const AvisIndisponible = ({
   </Cadre>
 );
 
-export const AvisIncertain = ({
+const AvisIncertain = ({
   message,
   avertissement,
   libelleVerifier,
@@ -85,3 +94,9 @@ const styles = StyleSheet.create({
     gap: theme.spacing.sm,
   },
 });
+
+export const AvisEcritureView = ({ avis }: { avis: AvisEcriture }) => {
+  if (avis.type === 'refus') return <AvisRefus message={avis.message} />;
+  if (avis.type === 'indisponible') return <AvisIndisponible {...avis} />;
+  return <AvisIncertain {...avis} />;
+};

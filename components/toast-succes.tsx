@@ -2,14 +2,19 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Bouton } from '@/components/bouton';
 import { theme } from '@/theme/tokens';
 
-type ToastSuccesProps = {
-  message: string;
-  ouvrirFiche: () => void;
-  suspendre: () => void;
-  reprendre: () => void;
+export type ActionToast = {
+  libelle: string;
+  executer: () => void;
 };
 
-export const ToastSucces = ({ message, ouvrirFiche, suspendre, reprendre }: ToastSuccesProps) => (
+type ToastSuccesProps = {
+  message: string;
+  suspendre: () => void;
+  reprendre: () => void;
+  action?: ActionToast;
+};
+
+export const ToastSucces = ({ message, suspendre, reprendre, action }: ToastSuccesProps) => (
   <Pressable
     onHoverIn={suspendre}
     onHoverOut={reprendre}
@@ -19,13 +24,15 @@ export const ToastSucces = ({ message, ouvrirFiche, suspendre, reprendre }: Toas
   >
     <View style={styles.contenu}>
       <Text style={styles.message}>{message}</Text>
-      <Bouton
-        action={ouvrirFiche}
-        libelle="Ouvrir la fiche"
-        onBlur={reprendre}
-        onFocus={suspendre}
-        variante="secondaire"
-      />
+      {action === undefined ? null : (
+        <Bouton
+          action={action.executer}
+          libelle={action.libelle}
+          onBlur={reprendre}
+          onFocus={suspendre}
+          variante="secondaire"
+        />
+      )}
     </View>
   </Pressable>
 );

@@ -1,25 +1,27 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { Ouvrage } from '@/domain/ouvrage';
 
 const DUREE_TOAST_MS = 5_000;
 
-export type ToastSucces = {
+type Annonce<Contenu> = {
   cle: number;
-  ouvrageId: string;
-  titre: string;
+  contenu: Contenu;
 };
 
-export const useToastSucces = () => {
-  const [toast, setToast] = useState<ToastSucces | null>(null);
+/**
+ * Socle unique des notifications de succès : une annonce visible cinq secondes,
+ * suspendue tant que le libraire survole ou parcourt le toast au clavier.
+ */
+export const useToastSucces = <Contenu>() => {
+  const [toast, setToast] = useState<Annonce<Contenu> | null>(null);
   const [suspensions, setSuspensions] = useState(0);
   const restantMs = useRef(DUREE_TOAST_MS);
   const compteur = useRef(0);
 
-  const annoncer = useCallback((ouvrage: Ouvrage) => {
+  const annoncer = useCallback((contenu: Contenu) => {
     restantMs.current = DUREE_TOAST_MS;
     compteur.current += 1;
     setSuspensions(0);
-    setToast({ cle: compteur.current, ouvrageId: ouvrage.id, titre: ouvrage.titre });
+    setToast({ cle: compteur.current, contenu });
   }, []);
 
   const suspendre = useCallback(() => setSuspensions((nombre) => nombre + 1), []);

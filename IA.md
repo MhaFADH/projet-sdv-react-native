@@ -207,4 +207,160 @@ Réalisée avec Chrome sans interface piloté par le protocole DevTools, contre 
 Détaillée dans [`docs/RECETTE-LOT-1.md`](docs/RECETTE-LOT-1.md), qui distingue
 explicitement ce qui est automatisé, vérifié manuellement et non vérifié.
 
+## Intervention — issue #17
+
+- Outil : Claude Code.
+- Fournisseur : Anthropic.
+- Modèle : `claude-opus-5[1m]`.
+- Périmètre : issue GitHub #17, ajout d'une note de lecture sans perte de saisie.
+
+### Demandes reçues
+
+1. `/mattpocock-skills:implement https://github.com/MhaFADH/projet-sdv-react-native/issues/17 https://github.com/MhaFADH/projet-sdv-react-native/issues/19 j'ai besoin que tu implémentes ces deux tickets en parallèle. Tu disposes du CLI GitHub pour lire le contenu des tickets. Quand tu finiras, on fera une PR pour la première, une fois merge on fera un rebase sur la deuxième puis on fera une PR.`
+2. Réponse à une question de l'agent sur le découpage git, l'agent ne pouvant ni
+   créer de branche ni commiter : périmètre réduit à l'issue #17 seule, l'issue #19
+   étant reportée après le merge et le rebase par le responsable.
+
+### Actions réalisées avec l'IA
+
+- lecture des tickets #17 et #19 via GitHub CLI, de la spécification du lot 2, des
+  instructions du projet, du contrat `POST /books/:id/notes` du README de l'API et
+  de son validateur `src/routes-livres.js` ;
+- écriture du schéma `domain/saisie-note.ts` et de ses tests avant implémentation ;
+- extension de `notes-api.ts` à l'ajout avec validation Zod de la réponse `201` et
+  contrôle du rattachement à l'ouvrage, et ses tests de service ;
+- généralisation du socle de notification et de retour d'écriture du lot 1 plutôt
+  que création d'un second socle : `useToastSucces` rendu paramétrable par le
+  contenu annoncé, action du toast rendue facultative, et déplacement de
+  `toast-succes.tsx`, `confirmation-abandon.tsx` et `messages-creation.tsx`
+  (renommé `messages-ecriture.tsx`) à la racine de `components/` ;
+- ajout de `hooks/use-ajouter-note.ts`, de `features/notes/` (textes, interprétation
+  des échecs, états de présentation des notes, coordination de la saisie) et des
+  composants purs `champ-note.tsx`, `formulaire-note-view.tsx` et
+  `vue-section-notes.tsx` ;
+- déplacement de la détention de la saisie dans `FicheScreen`, la section des notes
+  étant passée à `FicheView` par une prop de composition ;
+- tests de parcours avec TanStack Query réel, transport simulé, réponses différées
+  et horloge contrôlée ;
+- exécution du formatage, du lint, de `biome ci`, du typage, des tests, de la
+  couverture et de `knip`, puis recette navigateur ;
+- mise à jour du README, de `docs/ARCHITECTURE.md` et de l'ADR 005.
+
+### Défauts constatés et corrections réelles
+
+- Le message de blocage de l'ajout portait `accessibilityRole="alert"` et faisait
+  apparaître un second élément de rôle `alert` sur une fiche masquée par une
+  suppression en attente, ce qui a fait échouer un test existant du lot 1
+  (`suppressions-provider`). Le message est devenu un `role="status"`, qui décrit
+  correctement un état persistant, et la section des notes n'est plus rendue tant
+  que l'ouvrage est masqué : la saisie étant détenue par l'écran de la fiche, elle
+  revient intacte après « Annuler tout », ce qu'un test vérifie désormais.
+- Le premier test de verrouillage attribuait `disabled` au champ pendant l'envoi.
+  React Native Web traduit `editable={false}` en `readonly` sur le `textarea` ; les
+  assertions ont été corrigées, `toBeEnabled` étant par ailleurs vrai pour un champ
+  en lecture seule et donc sans valeur de preuve ici.
+- Le libellé du bouton d'envoi contenait une condition sans effet
+  (`enEnvoi ? libelleEnvoyer : libelleEnvoyer`), résidu d'une bascule de libellé
+  déjà assurée par le hook. Elle a été retirée.
+- Le compteur de caractères utilisait `Intl.NumberFormat('fr-FR')`, dont l'espace
+  d'exposant varie selon la version d'ICU et rendait les assertions fragiles. Il
+  affiche désormais les nombres bruts.
+- `knip` a signalé sept exports inutilisés introduits par cette itération
+  (`AvisRefus`, `AvisIndisponible`, `AvisIncertain`, `ControleSaisieNote` et trois
+  fixtures de test). Ils ont été rendus locaux à leur module.
+- Un module `features/notes/blocage-note.ts` avait été introduit pour calculer les
+  causes de blocage de l'envoi. Après le retrait des cas « identifiant inutilisable »
+  et « ouvrage masqué », il ne restait qu'une condition sur le `404` : le module a
+  été supprimé et la règle intégrée à `useSaisieNote`.
+- La revue Spec a relevé un défaut réel introduit par ce même retrait : en état
+  masqué, la section des notes n'était plus montée, donc `ConfirmationAbandon` non
+  plus. Un clic sur « Retour au fonds » avec une saisie en cours positionnait le
+  départ en attente sans rien afficher — bouton sans effet visible — et la
+  confirmation resurgissait hors contexte après l'annulation de la suppression. Le
+  libraire voyait par ailleurs sa saisie disparaître sans explication. La section
+  reste désormais montée dans tous les états où une saisie peut exister, avec la
+  raison du blocage énoncée ; deux tests de non-régression couvrent la saisie
+  conservée et visible en état masqué et la confirmation d'abandon atteignable.
+- La revue Standards a relevé que le message de blocage affiché avant tout envoi
+  réutilisait le texte du refus consécutif à un `404` (« la note n'a pas été
+  enregistrée »), alors que rien n'avait été envoyé. Deux textes distincts existent
+  désormais : `blocageOuvrageIntrouvable` et `blocageOuvrageMasque` pour la
+  suspension de l'envoi, `refusIntrouvable` pour le refus après envoi.
+- La revue Spec a relevé que le verrouillage pendant l'envoi était incomplet : le
+  bouton « Effacer la saisie » restait actif et permettait de vider le champ pendant
+  un `POST` en vol. Il est désormais désactivé comme la soumission, avec son
+  assertion dans le test de verrouillage.
+- La revue Standards a relevé un paramètre `signal?: AbortSignal` mort sur
+  `ajouterNote` : `useAjouterNote` ne le fournissait jamais, seul son test
+  l'exerçait. Le paramètre et ce test ont été retirés, et le choix est documenté :
+  ce `POST` n'est volontairement pas annulable, abandonner la requête en vol
+  produirait exactement le résultat incertain que le parcours cherche à éviter.
+- La revue Standards a relevé un `nativeID` dérivé de la constante d'erreur et
+  jamais référencé sur le libellé du champ, ainsi qu'un libellé de bouton
+  conditionnel sans effet. Les deux ont été retirés. La fonction de garde d'abandon,
+  nommée `proteger`, a été renommée `partir` pour porter le même nom que son
+  équivalent du lot 1.
+- La revue Spec a relevé que le dépassement du délai d'expiration n'était couvert
+  qu'indirectement. Le cas `cause: 'expiration'` est désormais explicite dans les
+  tests d'interprétation.
+- Deux constats de revue n'ont pas été suivis, par discipline de périmètre :
+  la duplication entre `features/notes/resultat-note.ts` et
+  `features/books/resultat-ecriture.ts` (et entre les deux répartitions de refus
+  serveur), qui demanderait un module d'interprétation partagé touchant le code des
+  tickets #4 et #5 ; et la fusion de `components/notes/champ-note.tsx` avec
+  `components/books/champs-saisie.tsx`, qui ajouterait des drapeaux à un composant
+  du lot 1. Le message du refus `422` reste celui du serveur, comme pour les
+  ouvrages, plutôt que reformulé côté client.
+
+### Vérification navigateur
+
+Réalisée avec Chrome piloté depuis la session, contre `npx expo start --web` et
+l'API locale sans authentification, sur la fiche
+`/ouvrages/36bc0df6-53d9-4777-ae6a-4ac45efe56dc` (« Des Cite des cendres »,
+3 notes existantes) :
+
+- le formulaire s'affiche au-dessus des notes, avec le compteur « 0 / 1000
+  caractères » ;
+- une soumission vide affiche « Le contenu de la note est obligatoire. » ;
+- une note saisie et soumise entièrement au clavier (`Tab` puis `Entrée`) affiche la
+  confirmation « La note a été ajoutée à cette fiche. », vide le champ, ajoute la
+  note en tête avec sa date française et reste sur la fiche ;
+- côté API, `GET /books/:id/notes` passe à 4 notes et ne contient qu'une seule
+  occurrence du contenu envoyé : la soumission vide n'a émis aucune requête et la
+  soumission clavier exactement une ;
+- « Effacer la saisie » n'apparaît qu'une fois la saisie renseignée, et le compteur
+  suit la longueur normalisée (44 / 1000 pour la saisie de recette) ;
+- transport simulé dans la page pour le seul `POST` : une réponse `503` affiche
+  « Service temporairement indisponible. Votre saisie est conservée. » avec un
+  réessai temporisé désactivé ; une requête rejetée affiche « Aucune réponse du
+  serveur : la note a peut-être été enregistrée. » avec l'avertissement de doublon,
+  « Actualiser les notes » et « Renvoyer malgré le risque de doublon » ; un `422`
+  affiche « contenu obligatoire, 1000 caracteres maximum » sous le champ ;
+- dans les trois cas, le texte saisi reste intact et aucune confirmation de succès
+  n'est affichée ;
+- « Actualiser les notes » conserve la saisie et l'avertissement de doublon ;
+- après ces trois échecs simulés, l'API contient toujours 4 notes : aucun envoi
+  fantôme, aucun doublon ;
+- une saisie non envoyée déclenche la confirmation « Abandonner cette saisie ? »
+  aussi bien depuis « Effacer la saisie » que depuis « Retour au fonds », qui ne
+  navigue pas tant que l'abandon n'est pas confirmé ; « Poursuivre la saisie »
+  conserve le texte, « Abandonner la saisie » ramène au fonds ;
+- aucune erreur ni exception dans la console.
+
+Après les corrections issues des revues, deux écrans dont le texte avait changé ont
+été revérifiés. Sur `/ouvrages/ouvrage-inexistant-recette-17`, la fiche affiche
+« Cette fiche n'est plus disponible » et le formulaire affiche « Cet ouvrage n'existe
+pas ou plus : aucune note ne peut lui être ajoutée. Votre texte reste affiché pour
+être recopié. », avec « Ajouter la note » désactivé et le champ resté modifiable.
+
+Non vérifiés en navigateur, couverts par les tests automatisés : la coexistence du
+toast de note avec le bandeau de suppression d'un autre ouvrage, ainsi que la saisie
+conservée, visible et expliquée pendant une suppression en attente puis retrouvée
+après « Annuler tout » — ce parcours déclenchant un `DELETE` réel sur la base locale
+au bout de cinq secondes, il n'a pas été exécuté en navigateur. Le rendu sur petit
+écran et l'avertissement `beforeunload` ne sont pas non plus vérifiés en navigateur.
+
+Une note de recette créée pendant ces vérifications reste dans la base locale de
+l'API : « Recette navigateur ticket 17 : note ajoutée au clavier. »
+
 Aucun prompt, défaut ou résultat non observé n'est ajouté à ce document.

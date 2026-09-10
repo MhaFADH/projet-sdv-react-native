@@ -2,10 +2,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import type {
-  AvisEcriture,
   FormulaireOuvrageViewProps,
   ToastEcriture,
 } from '@/components/books/formulaire-ouvrage-view';
+import type { AvisEcriture } from '@/components/messages-ecriture';
 import type { Ouvrage } from '@/domain/ouvrage';
 import {
   type ChampSaisieOuvrage,
@@ -41,7 +41,7 @@ export const useSaisieOuvrage = ({
   ouvrirOuvrage,
 }: OptionsSaisieOuvrage): FormulaireOuvrageViewProps => {
   const temporisation = useTemporisation();
-  const succes = useToastSucces();
+  const succes = useToastSucces<Ouvrage>();
   const [resultat, setResultat] = useState<ResultatEcriture | null>(null);
   const [departEnAttente, setDepartEnAttente] = useState<(() => void) | null>(null);
   const [enregistrement, setEnregistrement] = useState<{
@@ -132,8 +132,11 @@ export const useSaisieOuvrage = ({
 
     return {
       cle: annonce.cle,
-      message: textes.messageSucces(annonce.titre),
-      ouvrirFiche: () => partir(() => ouvrirOuvrage(annonce.ouvrageId)),
+      message: textes.messageSucces(annonce.contenu.titre),
+      action: {
+        libelle: 'Ouvrir la fiche',
+        executer: () => partir(() => ouvrirOuvrage(annonce.contenu.id)),
+      },
       suspendre: succes.suspendre,
       reprendre: succes.reprendre,
     };
