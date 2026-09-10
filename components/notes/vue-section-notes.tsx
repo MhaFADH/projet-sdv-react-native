@@ -1,17 +1,40 @@
 import { StyleSheet, View } from 'react-native';
 import { theme } from '@/theme/tokens';
+import {
+  ConfirmationSuppressionNote,
+  type DemandeSuppressionNote,
+} from './confirmation-suppression-note';
 import { FormulaireNoteView, type FormulaireNoteViewProps } from './formulaire-note-view';
+import type { CommandesSuppressionNote } from './vue-liste-notes';
 import { type EtatNotes, VueListeNotes } from './vue-liste-notes';
+
+type ListeSectionNotes = {
+  etat: EtatNotes;
+  titreOuvrage: string;
+  suppression: CommandesSuppressionNote;
+  messageListe: string | null;
+  confirmation: DemandeSuppressionNote | null;
+};
 
 type VueSectionNotesProps = {
   formulaire: FormulaireNoteViewProps;
-  liste: { etat: EtatNotes; titreOuvrage: string } | null;
+  liste: ListeSectionNotes | null;
 };
 
 export const VueSectionNotes = ({ formulaire, liste }: VueSectionNotesProps) => (
   <View style={styles.section}>
     <FormulaireNoteView {...formulaire} />
-    {liste === null ? null : <VueListeNotes etat={liste.etat} titreOuvrage={liste.titreOuvrage} />}
+    {liste === null ? null : (
+      <>
+        <VueListeNotes
+          etat={liste.etat}
+          messageListe={liste.messageListe}
+          suppression={liste.suppression}
+          titreOuvrage={liste.titreOuvrage}
+        />
+        <ConfirmationSuppressionNote demande={liste.confirmation} />
+      </>
+    )}
   </View>
 );
 

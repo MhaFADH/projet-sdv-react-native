@@ -17,3 +17,13 @@ const formatteurDateNote = new Intl.DateTimeFormat('fr-FR', {
 
 export const formaterDateNote = (createdAt: string): string =>
   formatteurDateNote.format(new Date(createdAt));
+
+const LONGUEUR_EXTRAIT_NOTE = 80;
+
+export const extraitNote = (contenu: string): string =>
+  contenu.length <= LONGUEUR_EXTRAIT_NOTE
+    ? contenu
+    : `${contenu.slice(0, LONGUEUR_EXTRAIT_NOTE).trimEnd()}…`;
+
+export const libelleNote = (note: NoteLecture): string =>
+  `note du ${formaterDateNote(note.createdAt)} : « ${extraitNote(note.contenu)} »`;

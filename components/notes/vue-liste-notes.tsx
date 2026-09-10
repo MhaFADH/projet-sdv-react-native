@@ -1,7 +1,9 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SqueletteDonnees } from '@/components/etats-donnees';
-import { formaterDateNote, type NoteLecture } from '@/domain/note-lecture';
+import type { NoteLecture } from '@/domain/note-lecture';
 import { theme } from '@/theme/tokens';
+import type { AvisSuppressionNote } from './avis-suppression-note';
+import { VueNote } from './vue-note';
 
 export type EtatNotes =
   | { type: 'chargement' }
@@ -9,19 +11,26 @@ export type EtatNotes =
   | { type: 'erreur'; message: string; reessayer: () => void; reessaiEnCours: boolean }
   | { type: 'succes'; notes: NoteLecture[] };
 
+export type CommandesSuppressionNote = {
+  libelle: string;
+  libelleEnvoiEnCours: string;
+  demander: (note: NoteLecture) => void;
+  enEnvoi: (noteId: string) => boolean;
+  avis: (noteId: string) => AvisSuppressionNote | null;
+};
+
 type ProprietesVueListeNotes = {
   etat: EtatNotes;
   titreOuvrage: string;
+  suppression: CommandesSuppressionNote;
+  messageListe: string | null;
 };
 
-const VueNote = ({ note }: { note: NoteLecture }) => (
-  <View role="listitem" style={styles.note}>
-    <Text style={styles.contenu}>{note.contenu}</Text>
-    <Text style={styles.date}>{formaterDateNote(note.createdAt)}</Text>
-  </View>
-);
-
-const ContenuNotes = ({ etat, titreOuvrage }: ProprietesVueListeNotes) => {
+const ContenuNotes = ({
+  etat,
+  titreOuvrage,
+  suppression,
+}: Omit<ProprietesVueListeNotes, 'messageListe'>) => {
   if (etat.type === 'chargement') {
     return (
       <SqueletteDonnees libelle={`Chargement des notes de ${titreOuvrage}`} nombreLignes={2} />
@@ -55,18 +64,38 @@ const ContenuNotes = ({ etat, titreOuvrage }: ProprietesVueListeNotes) => {
   return (
     <View accessibilityLabel={`Notes de lecture de ${titreOuvrage}`} role="list">
       {etat.notes.map((note) => (
-        <VueNote key={note.id} note={note} />
+        <VueNote
+          key={note.id}
+          note={note}
+          suppression={{
+            libelle: suppression.libelle,
+            libelleEnvoiEnCours: suppression.libelleEnvoiEnCours,
+            enEnvoi: suppression.enEnvoi(note.id),
+            demander: () => suppression.demander(note),
+            avis: suppression.avis(note.id),
+          }}
+        />
       ))}
     </View>
   );
 };
 
-export const VueListeNotes = ({ etat, titreOuvrage }: ProprietesVueListeNotes) => (
+export const VueListeNotes = ({
+  etat,
+  titreOuvrage,
+  suppression,
+  messageListe,
+}: ProprietesVueListeNotes) => (
   <View style={styles.section}>
     <Text accessibilityRole="header" style={styles.titre}>
       Notes de lecture
     </Text>
-    <ContenuNotes etat={etat} titreOuvrage={titreOuvrage} />
+    {messageListe === null ? null : (
+      <Text role="status" style={styles.messageListe}>
+        {messageListe}
+      </Text>
+    )}
+    <ContenuNotes etat={etat} suppression={suppression} titreOuvrage={titreOuvrage} />
   </View>
 );
 
@@ -84,20 +113,11 @@ const styles = StyleSheet.create({
     fontSize: theme.typography.sectionTitle,
     fontWeight: '700',
   },
-  note: {
-    gap: theme.spacing.sm,
-    paddingVertical: theme.spacing.md,
-    borderBottomWidth: theme.borderWidth,
-    borderBottomColor: theme.colors.border,
-  },
-  contenu: {
+  messageListe: {
     color: theme.colors.text,
     fontSize: theme.typography.body,
     lineHeight: theme.typography.bodyLineHeight,
-  },
-  date: {
-    color: theme.colors.textMuted,
-    fontSize: theme.typography.metadata,
+    fontWeight: '600',
   },
   message: {
     color: theme.colors.text,

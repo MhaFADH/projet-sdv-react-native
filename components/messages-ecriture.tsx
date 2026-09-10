@@ -31,6 +31,9 @@ export type AvisEcriture =
       reessayer: () => void;
     };
 
+export const libelleReessaiTemporise = (secondesRestantes: number, libelle: string): string =>
+  secondesRestantes > 0 ? `Réessayer dans ${secondesRestantes} s` : libelle;
+
 const Cadre = ({ children }: PropsWithChildren) => (
   <View accessibilityRole="alert" style={styles.cadre}>
     {children}
@@ -49,11 +52,7 @@ const AvisIndisponible = ({ message, secondesRestantes, reessayer }: AvisIndispo
     <Bouton
       action={reessayer}
       desactive={secondesRestantes > 0}
-      libelle={
-        secondesRestantes > 0
-          ? `Réessayer dans ${secondesRestantes} s`
-          : 'Réessayer l’enregistrement'
-      }
+      libelle={libelleReessaiTemporise(secondesRestantes, 'Réessayer l’enregistrement')}
     />
   </Cadre>
 );

@@ -5,10 +5,6 @@ import type { ErreurApplication } from '@/services/api/erreurs';
 import { ajouterNote } from '@/services/api/notes-api';
 import { clesNotes } from './cles-notes';
 
-/**
- * `POST /books/:id/notes` n'est pas idempotent : aucun réessai automatique,
- * et seules les notes de l'ouvrage concerné sont mises à jour dans le cache.
- */
 export const useAjouterNote = (livreId: string) => {
   const client = useQueryClient();
 

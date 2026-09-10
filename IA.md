@@ -363,4 +363,184 @@ au bout de cinq secondes, il n'a pas été exécuté en navigateur. Le rendu sur
 Une note de recette créée pendant ces vérifications reste dans la base locale de
 l'API : « Recette navigateur ticket 17 : note ajoutée au clavier. »
 
+## Intervention — issue #19
+
+- Outil : Claude Code.
+- Fournisseur : Anthropic.
+- Modèle : `claude-opus-5[1m]`.
+- Périmètre : issue GitHub #19, suppression d'une note après confirmation.
+
+### Demandes reçues
+
+1. `/mattpocock-skills:implement https://github.com/MhaFADH/projet-sdv-react-native/issues/17 https://github.com/MhaFADH/projet-sdv-react-native/issues/19 j'ai besoin que tu implémentes ces deux tickets en parallèle. Tu disposes du CLI GitHub pour lire le contenu des tickets. Quand tu finiras, on fera une PR pour la première, une fois merge on fera un rebase sur la deuxième puis on fera une PR.`
+2. `C'est bon j'ai merge et rebase #17 fais #19 à présent`
+
+### Actions réalisées avec l'IA
+
+- lecture de l'issue #19 via GitHub CLI, de la section « Suppression des notes : exception
+  validée » du cadrage du lot 2, de l'ADR 004, du contrat `DELETE /books/:livreId/notes/:noteId`
+  du README de l'API et de la route effective dans `src/routes-livres.js` ;
+- vérification que le ticket #16, mergé entre-temps, ne touche ni les notes ni la section
+  des notes de la fiche ;
+- extraction de la classification commune des écritures échouées dans
+  `services/api/issue-ecriture.ts`, puis réécriture des interpréteurs de la création
+  d'ouvrage et de l'ajout de note par-dessus, leurs tests existants restant inchangés ;
+- ajout de `supprimerNote` traduisant le `204 | 404` documenté en deux issues, de
+  `hooks/use-supprimer-note.ts`, de `features/notes/` (textes, interprétation des échecs,
+  coordination) et des composants purs `vue-note.tsx`, `avis-suppression-note.tsx` et
+  `confirmation-suppression-note.tsx` ;
+- ajout des aides de domaine `extraitNote` et `libelleNote` ;
+- extension du harnais de test des notes au `DELETE`, puis tests de parcours avec
+  TanStack Query réel, transport simulé, réponses différées et horloge contrôlée ;
+- exécution du formatage, du lint, de `biome ci`, du typage, des tests, de la couverture
+  et de `knip`, puis recette navigateur ;
+- mise à jour du README, de `docs/ARCHITECTURE.md` et de l'ADR 004.
+
+### Défauts constatés et corrections réelles
+
+- La recette navigateur a montré que deux notes créées dans la même minute produisaient des
+  libellés d'action strictement identiques (« Supprimer la note du 10 septembre 2026 à 20:28 »),
+  alors que le critère demande d'identifier clairement la note concernée. `libelleNote` intègre
+  désormais un extrait du contenu ; un test vérifie que deux notes de la même minute se
+  distinguent.
+- Le test de l'envoi immédiat après confirmation échouait : `mutateAsync` diffère l'appel d'une
+  microtâche, aucun `fetch` n'est donc parti dans le tour synchrone du clic. L'absence de fenêtre
+  d'annulation est maintenant prouvée en ne laissant tourner qu'un tour de microtâches, sans
+  avancer aucune horloge.
+- `waitFor` de Testing Library ne pilote pas les horloges factices de vitest : le test de
+  temporisation `503` restait bloqué jusqu'au délai d'expiration. Ce test s'appuie désormais sur
+  l'horloge réelle, l'horloge contrôlée restant utilisée là où elle est nécessaire, sur le
+  compteur du bandeau d'ouvrages.
+- Le premier test clavier supposait que jsdom convertit Entrée en clic sur un `button` natif :
+  ce n'est pas le cas. Il vérifie maintenant que les commandes sont des `button` focalisables aux
+  cibles de 44 points, l'activation clavier réelle étant vérifiée en recette navigateur.
+- Le hook de coordination contenait un repli `{ id: noteId } as NoteLecture` pour le réessai.
+  `envoyer` ne prend plus qu'un identifiant, ce qui supprime cette assertion de type.
+
+- La revue Spec a relevé un défaut réel : la temporisation était unique pour toute la section.
+  Supprimer une note pendant qu'une autre attendait après un `503` appelait `arreter()` et
+  annulait son compte à rebours, dont le bouton redevenait actif immédiatement ; deux `503`
+  simultanés partageaient aussi un seul compteur. Cela contredit « les autres notes restent
+  actionnables » et le retour attaché à la note. `hooks/use-temporisations.ts` tient désormais
+  une échéance par clé ; un test de non-régression vérifie qu'une suppression réussie ne touche
+  pas le compte à rebours d'une autre note, et la recette navigateur l'a confirmé.
+- La revue Spec a relevé que le message « Cette note n'est plus sur le serveur… » affirmait
+  « La liste a été actualisée », une promesse qui périme dès que la liste change. La phrase a
+  été retirée, et une vérification demandée depuis un avis incertain efface désormais ce message.
+- La revue Spec a relevé une surface morte : `enEnvoi` et `libelleEnvoiEnCours` de la
+  confirmation étaient inatteignables, `confirmer` fermant le dialogue avant l'envoi. Ces props
+  et leurs styles ont été retirés ; l'état d'envoi n'est présenté que là où il existe, sur
+  l'action de la note.
+- La revue Standards a relevé que le choix entre les deux formulations d'un résultat incertain
+  était recopié à l'identique dans les trois interpréteurs. `classerEchecEcriture` reçoit
+  maintenant ces deux textes et renvoie directement le message. Le libellé d'un réessai
+  temporisé a été extrait de la même façon dans `libelleReessaiTemporise`.
+- La revue Standards a relevé que `vue-note.tsx` codait en dur « Supprimer » et « Suppression en
+  cours » alors que les textes existaient, et que la vue interrogeait deux fois ses commandes par
+  sa propre clé. Les libellés viennent des textes et `VueListeNotes` résout les commandes par
+  note : la vue est devenue passive. Le type a été renommé `CommandesSuppressionNote`.
+- Deux constats de revue n'ont pas été suivis : la duplication des styles entre la confirmation
+  des notes et celle des ouvrages, ainsi que celle du cadre d'alerte entre
+  `avis-suppression-note.tsx` et `messages-ecriture.tsx`. Les factoriser demanderait une coque de
+  dialogue partagée touchant le composant du lot 1 ; seule la règle de libellé, qui est un
+  comportement et non une présentation, a été mise en commun. La revue Spec a par ailleurs
+  signalé que l'extraction de `services/api/issue-ecriture.ts` n'était pas demandée par le
+  ticket ; elle a vérifié l'équivalence branche par branche et les tests des lots précédents
+  passent inchangés. Ce choix est assumé : le ticket allait ajouter une troisième copie de la
+  règle qui porte l'invariant principal du produit.
+- Le premier essai de test de temporisation sous horloge factice restait bloqué : les timers
+  factices installés avant le chargement des notes n'arrivaient pas à piloter les minuteries
+  internes de TanStack Query. Ils sont désormais installés après le chargement et juste avant
+  l'échec attendu, ce qui rend le test déterministe et ramène sa durée de quatre secondes réelles
+  à moins d'une seconde.
+
+### Diagnostic erroné de l'agent
+
+Pendant la recette, la confirmation de suppression a paru ne pas s'ouvrir, ni à la souris ni au
+clavier. Trois causes ont été avancées successivement — activation clavier de `Pressable`,
+`Modal` de react-native-web montée conditionnellement avec `visible` déjà vrai, bundle servi
+depuis le cache HTTP — et une modification a été introduite sur la deuxième : la `Modal` a été
+alignée sur le motif du lot 1, montée en permanence et pilotée par `visible`.
+
+La console a ensuite révélé la cause réelle : deux `TransformError` de Metro, horodatées pendant
+l'édition en deux passes de `components/notes/confirmation-suppression-note.tsx`, qui laissait le
+fichier syntaxiquement invalide. Metro continuait donc de servir le module précédent, et les
+observations portaient sur un code qui n'était pas celui du disque.
+
+Aucune des trois hypothèses n'a été établie : ni l'activation clavier ni le montage conditionnel
+de la `Modal` n'ont été démontrés fautifs. Le journal d'événements posé ensuite sur le bouton
+montre qu'Entrée produit bien un `keydown` puis un `click` natif et ouvre le dialogue.
+L'alignement de la `Modal` sur le motif du lot 1 a été conservé — il évite un remontage à chaque
+ouverture — mais il est décrit ici comme un alignement, non comme un correctif.
+
+### Vérification navigateur
+
+Réalisée avec Chrome piloté depuis la session, contre `npx expo start --web` et l'API locale sans
+authentification. Deux notes de recette ont été créées par l'agent sur « Des Cite oublie »
+(`526df2f8-…`), un ouvrage sans note, afin de ne pas toucher aux notes présentes dans la base :
+
+- chaque note affiche son action de suppression, cible de 44 points, et les libellés accessibles
+  des cinq notes d'un autre ouvrage sont tous distincts ;
+- Entrée sur l'action ouvre la confirmation, qui rappelle la date, l'extrait entre guillemets et
+  « Cette note part immédiatement après confirmation, sans délai ni annulation. Aucune
+  restauration n'est possible ensuite. » ;
+- Entrée sur « Renoncer » referme la confirmation ; l'API montre les deux notes intactes, donc
+  aucune requête émise ;
+- Entrée sur « Supprimer la note » retire la note de la liste et l'API ne compte plus qu'une
+  note ; aucune commande d'annulation n'est proposée à aucun moment ;
+- la suppression de la dernière note affiche « Aucune note de lecture pour Des Cite oublie. » ;
+- transport simulé dans la page pour le seul `DELETE` : un `503` affiche « Service temporairement
+  indisponible. » avec « Réessayer dans 3 s » désactivé, la note restant affichée, puis la
+  commande redevient « Réessayer la suppression » active une fois la temporisation écoulée ;
+- une requête rejetée affiche « Aucune réponse du serveur : la note a peut-être été supprimée.
+  Actualisez les notes pour vérifier avant de réessayer. » avec « Actualiser les notes » et
+  « Réessayer la suppression », la note restant affichée ;
+- un `404` affiche « Cette note n'est plus sur le serveur : elle avait peut-être déjà été
+  supprimée. La liste a été actualisée. » sans bloquer l'action ;
+- les retours d'échec de deux notes différentes coexistent, chacun attaché à sa note ;
+- aucune erreur ni exception dans la console sur un chargement du code final.
+
+Le `Tab` fait sortir le focus du dialogue de confirmation : la `Modal` de react-native-web
+n'enferme pas le focus. Cette limite est partagée avec la confirmation de suppression d'ouvrages
+du lot 1 et n'est pas corrigée par ce ticket.
+
+Après les corrections issues des revues, la temporisation par note a été revérifiée en
+navigateur, transport simulé sur le seul `DELETE` d'une note : la note A échoue en `503` et
+affiche « Réessayer dans 3 s », la note B est réellement supprimée pendant ce temps, et l'avis
+de A continue son décompte à « Réessayer dans 2 s » au lieu de repasser à un réessai actif. À
+cette occasion, le bundle servi depuis le cache HTTP a de nouveau faussé une première mesure,
+qui montrait la temporisation annulée ; la mesure a été refaite après revalidation du cache.
+
+Non vérifiés en navigateur : la coexistence avec un groupe de suppressions d'ouvrages déjà
+programmé, ce parcours déclenchant un `DELETE` réel sur la base locale au bout de cinq secondes ;
+elle est couverte par un test de parcours sous horloge contrôlée qui vérifie que le compteur,
+l'échéance et « Annuler tout » restent limités aux ouvrages. Le rendu sur petit écran n'est pas
+vérifié en navigateur.
+
+Les trois notes de recette créées pour les cas d'échec, puis les deux notes du parcours nominal,
+ont été supprimées : l'ouvrage utilisé pour la recette n'a plus aucune note, comme avant
+l'intervention.
+
+### Demande de correction reçue après les revues
+
+3. `Tu n'as pas respecté les consignes du AGENTS.md, notamment celle de n'écrire aucun commentaire dans le code`
+
+Vérification faite, `AGENTS.md` ne comporte pas cette consigne : sa section « Qualité et
+vérification » interdit `console.log`, les `catch` silencieux, les secrets et `@ts-ignore`, et
+plafonne les fichiers à 250 lignes, sans mentionner les commentaires. La seule occurrence du mot
+dans le dépôt est `CONTEXT.md`, où « commentaire personnel » est un terme à éviter dans le
+vocabulaire métier pour désigner une note de lecture. Le responsable produit ayant énoncé cette
+attente, elle a néanmoins été appliquée.
+
+Quatre-vingt-douze lignes de commentaire ont été retirées des vingt-un fichiers ajoutés ou
+modifiés par les tickets #17 et #19. Les raisons qu'elles portaient et qui n'étaient pas encore
+consignées ont été reprises dans `docs/ARCHITECTURE.md` : l'absence volontaire d'`AbortSignal`
+sur les écritures de notes, la `Modal` montée en permanence et pilotée par `visible`, le
+vocabulaire propre aux avis de suppression, et l'effacement du message de liste lors d'une
+vérification. Lint, typage, tests et `knip` restent verts après retrait.
+
+Trois fichiers de lots précédents, déjà mergés, conservent des commentaires : `app/+html.tsx`,
+`hooks/use-rafraichir-fonds-au-focus.ts` et `__tests__/app/html.test.tsx`. Ils n'ont pas été
+touchés, le nettoyage restant hors du périmètre de #19.
+
 Aucun prompt, défaut ou résultat non observé n'est ajouté à ce document.

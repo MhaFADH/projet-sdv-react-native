@@ -28,11 +28,6 @@ export type EtatFiche =
 type FicheViewProps = {
   etat: EtatFiche;
   retour: () => void;
-  /**
-   * Section des notes composée par l'écran. Elle est rendue hors du basculement
-   * d'état de la fiche : une erreur de lecture ou la disparition de l'ouvrage ne
-   * peut donc pas démonter le formulaire et effacer une saisie non confirmée.
-   */
   sectionNotes?: ReactNode;
 };
 

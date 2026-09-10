@@ -19,7 +19,6 @@ import { useToastSucces } from '@/hooks/use-toast-succes';
 import { interpreterEchecAjoutNote, type ResultatAjoutNote } from './resultat-note';
 import { TEXTES_NOTE } from './textes-note';
 
-/** Raisons pour lesquelles l'envoi est suspendu sans que la saisie soit effacée. */
 export type CauseBlocageNote = 'ouvrage-introuvable' | 'ouvrage-masque';
 
 const TEXTE_BLOCAGE: Record<CauseBlocageNote, string> = {

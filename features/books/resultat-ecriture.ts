@@ -1,10 +1,6 @@
 import { type ChampSaisieOuvrage, repartirRefusServeur } from '@/domain/saisie-ouvrage';
-import {
-  type ErreurApplication,
-  estErreurApplication,
-  STATUT_ERREUR_SERVEUR_MINIMALE,
-  STATUT_INDISPONIBLE,
-} from '@/services/api/erreurs';
+import type { ErreurApplication } from '@/services/api/erreurs';
+import { classerEchecEcriture } from '@/services/api/issue-ecriture';
 import type { TextesEcriture } from './textes-ecriture';
 
 export type ResultatEcriture =
@@ -30,25 +26,25 @@ export const interpreterEchecEcriture = (
   cause: unknown,
   textes: TextesEcriture,
 ): ResultatEcriture => {
-  if (!estErreurApplication(cause)) {
-    return { type: 'incertain', message: textes.incertainReponseInexploitable };
+  const classe = classerEchecEcriture(cause, {
+    sansReponse: textes.incertainSansReponse,
+    reponseInexploitable: textes.incertainReponseInexploitable,
+  });
+
+  if (classe.classe === 'indisponible') {
+    return { type: 'indisponible', message: classe.message };
   }
 
-  if (cause.type === 'validation') {
-    if (cause.champs === undefined) {
+  if (classe.classe === 'incertain') {
+    return { type: 'incertain', message: classe.message };
+  }
+
+  if (classe.erreur.type === 'validation') {
+    if (classe.erreur.champs === undefined) {
       return { type: 'incertain', message: textes.incertainReponseInexploitable };
     }
-    return interpreterRefus(cause);
+    return interpreterRefus(classe.erreur);
   }
 
-  if (cause.type === 'reseau') {
-    if (cause.statut === STATUT_INDISPONIBLE) {
-      return { type: 'indisponible', message: cause.message };
-    }
-    if (cause.statut === undefined || cause.statut >= STATUT_ERREUR_SERVEUR_MINIMALE) {
-      return { type: 'incertain', message: textes.incertainSansReponse };
-    }
-  }
-
-  return { type: 'refus', parChamp: {}, message: cause.message };
+  return { type: 'refus', parChamp: {}, message: classe.erreur.message };
 };
