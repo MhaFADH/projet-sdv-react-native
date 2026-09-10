@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { interpreterEchecCreation } from '../../features/books/resultat-creation';
+import { interpreterEchecEcriture } from '../../features/books/resultat-ecriture';
+import { TEXTES_CREATION } from '../../features/books/textes-ecriture';
+
+const interpreterEchecCreation = (cause: unknown) =>
+  interpreterEchecEcriture(cause, TEXTES_CREATION);
 
 describe('interprétation de l’échec d’une création', () => {
   it('reporte un refus 422 sur les champs du formulaire', () => {

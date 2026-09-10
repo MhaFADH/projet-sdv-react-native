@@ -1,21 +1,27 @@
-import type { PropsWithChildren } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
   ControleStatutLecture,
   type ErreurStatutLecture,
-} from '@/components/books/controle-statut-lecture';
-import { EtatAbsence, EtatErreur, SqueletteDonnees } from '@/components/etats-donnees';
-import { libelleEditeur, type Ouvrage } from '@/domain/ouvrage';
-import { theme } from '@/theme/tokens';
+} from "@/components/books/controle-statut-lecture";
+import { Bouton } from "@/components/bouton";
+import {
+  EtatAbsence,
+  EtatErreur,
+  SqueletteDonnees,
+} from "@/components/etats-donnees";
+import { libelleEditeur, type Ouvrage } from "@/domain/ouvrage";
+import { theme } from "@/theme/tokens";
+import type { PropsWithChildren } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 type EtatFiche =
-  | { type: 'chargement' }
-  | { type: 'erreur'; message: string; reessayer: () => void }
-  | { type: 'introuvable'; message: string }
-  | { type: 'masquee' }
+  | { type: "chargement" }
+  | { type: "erreur"; message: string; reessayer: () => void }
+  | { type: "introuvable"; message: string }
+  | { type: "masquee" }
   | {
-      type: 'succes';
+      type: "succes";
       ouvrage: Ouvrage;
+      corriger: () => void;
       basculerStatut: () => void;
       statutEnCours: boolean;
       erreurStatut?: ErreurStatutLecture;
@@ -28,11 +34,14 @@ type FicheViewProps = {
   retour: () => void;
 };
 
-type EtatSucces = Extract<EtatFiche, { type: 'succes' }>;
+type EtatSucces = Extract<EtatFiche, { type: "succes" }>;
 
 const NOMBRE_LIGNES_SQUELETTE = 3;
 
-const CadreFiche = ({ retour, children }: PropsWithChildren<Pick<FicheViewProps, 'retour'>>) => (
+const CadreFiche = ({
+  retour,
+  children,
+}: PropsWithChildren<Pick<FicheViewProps, "retour">>) => (
   <ScrollView contentContainerStyle={styles.conteneur}>
     <Pressable
       accessibilityLabel="Retour au fonds"
@@ -48,7 +57,13 @@ const CadreFiche = ({ retour, children }: PropsWithChildren<Pick<FicheViewProps,
   </ScrollView>
 );
 
-const Renseignement = ({ libelle, valeur }: { libelle: string; valeur: string }) => (
+const Renseignement = ({
+  libelle,
+  valeur,
+}: {
+  libelle: string;
+  valeur: string;
+}) => (
   <View style={styles.renseignement}>
     <Text style={styles.libelle}>{libelle}</Text>
     <Text style={styles.valeur}>{valeur}</Text>
@@ -61,8 +76,14 @@ const FicheDetail = (etat: EtatSucces) => (
       {etat.ouvrage.titre}
     </Text>
     <Renseignement libelle="Auteur" valeur={etat.ouvrage.auteur} />
-    <Renseignement libelle="Éditeur" valeur={libelleEditeur(etat.ouvrage.editeur)} />
-    <Renseignement libelle="Année de publication" valeur={String(etat.ouvrage.annee)} />
+    <Renseignement
+      libelle="Éditeur"
+      valeur={libelleEditeur(etat.ouvrage.editeur)}
+    />
+    <Renseignement
+      libelle="Année de publication"
+      valeur={String(etat.ouvrage.annee)}
+    />
     <ControleStatutLecture
       basculerStatut={etat.basculerStatut}
       erreurStatut={etat.erreurStatut}
@@ -75,25 +96,32 @@ const FicheDetail = (etat: EtatSucces) => (
       accessibilityState={{ disabled: etat.suppressionDesactivee }}
       disabled={etat.suppressionDesactivee}
       onPress={etat.demanderSuppression}
-      style={[styles.boutonSuppression, etat.suppressionDesactivee && styles.boutonDesactive]}
+      style={[
+        styles.boutonSuppression,
+        etat.suppressionDesactivee && styles.boutonDesactive,
+      ]}
     >
       <Text selectable={false} style={styles.texteBoutonSuppression}>
         {etat.suppressionDesactivee
-          ? 'Suppression indisponible pendant l’envoi'
-          : 'Supprimer cet ouvrage'}
+          ? "Suppression indisponible pendant l’envoi"
+          : "Supprimer cet ouvrage"}
       </Text>
     </Pressable>
+    <Bouton action={etat.corriger} libelle="Corriger cet ouvrage" />
   </View>
 );
 
-const ContenuFiche = ({ etat }: Pick<FicheViewProps, 'etat'>) => {
-  if (etat.type === 'chargement') {
+const ContenuFiche = ({ etat }: Pick<FicheViewProps, "etat">) => {
+  if (etat.type === "chargement") {
     return (
-      <SqueletteDonnees libelle="Chargement de la fiche" nombreLignes={NOMBRE_LIGNES_SQUELETTE} />
+      <SqueletteDonnees
+        libelle="Chargement de la fiche"
+        nombreLignes={NOMBRE_LIGNES_SQUELETTE}
+      />
     );
   }
 
-  if (etat.type === 'erreur') {
+  if (etat.type === "erreur") {
     return (
       <EtatErreur
         message={etat.message}
@@ -103,11 +131,17 @@ const ContenuFiche = ({ etat }: Pick<FicheViewProps, 'etat'>) => {
     );
   }
 
-  if (etat.type === 'introuvable') {
-    return <EtatAbsence alerte message={etat.message} titre="Cette fiche n'est plus disponible" />;
+  if (etat.type === "introuvable") {
+    return (
+      <EtatAbsence
+        alerte
+        message={etat.message}
+        titre="Cette fiche n'est plus disponible"
+      />
+    );
   }
 
-  if (etat.type === 'masquee') {
+  if (etat.type === "masquee") {
     return (
       <EtatAbsence
         message="Cet ouvrage est masqué jusqu’au résultat de la suppression. Utilisez le bandeau pour tout annuler avant l’envoi."
@@ -127,9 +161,9 @@ export const FicheView = ({ etat, retour }: FicheViewProps) => (
 
 const styles = StyleSheet.create({
   conteneur: {
-    width: '100%',
+    width: "100%",
     maxWidth: theme.layout.contentMaxWidth,
-    alignSelf: 'center',
+    alignSelf: "center",
     padding: theme.spacing.md,
     gap: theme.spacing.lg,
   },
@@ -141,14 +175,18 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.md,
     backgroundColor: theme.colors.surface,
   },
-  titre: { color: theme.colors.text, fontSize: theme.typography.pageTitle, fontWeight: '700' },
+  titre: {
+    color: theme.colors.text,
+    fontSize: theme.typography.pageTitle,
+    fontWeight: "700",
+  },
   renseignement: { gap: theme.spacing.xs },
   libelle: {
     color: theme.colors.primary,
     fontSize: theme.typography.caption,
-    fontWeight: '700',
+    fontWeight: "700",
     letterSpacing: theme.typography.overlineLetterSpacing,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
   valeur: {
     color: theme.colors.text,
@@ -157,8 +195,8 @@ const styles = StyleSheet.create({
   },
   boutonRetour: {
     minHeight: theme.minTargetSize,
-    alignSelf: 'flex-start',
-    justifyContent: 'center',
+    alignSelf: "flex-start",
+    justifyContent: "center",
     borderWidth: theme.borderWidth,
     borderColor: theme.colors.border,
     borderRadius: theme.radius.sm,
@@ -168,12 +206,12 @@ const styles = StyleSheet.create({
   texteBoutonRetour: {
     color: theme.colors.primary,
     fontSize: theme.typography.body,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   boutonSuppression: {
     minHeight: theme.minTargetSize,
-    alignSelf: 'flex-start',
-    justifyContent: 'center',
+    alignSelf: "flex-start",
+    justifyContent: "center",
     marginTop: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
     borderRadius: theme.radius.sm,
@@ -183,6 +221,6 @@ const styles = StyleSheet.create({
   texteBoutonSuppression: {
     color: theme.colors.primaryText,
     fontSize: theme.typography.body,
-    fontWeight: '700',
+    fontWeight: "700",
   },
 });

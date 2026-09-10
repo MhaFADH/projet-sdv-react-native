@@ -19,27 +19,38 @@ type ChampTexteControleProps = {
   numerique?: boolean;
 };
 
-export type AvisCreation =
+export type AvisEcriture =
   | { type: 'refus'; message: string }
   | { type: 'indisponible'; message: string; secondesRestantes: number; reessayer: () => void }
-  | { type: 'incertain'; message: string; verifierLeFonds: () => void; reessayer: () => void };
+  | {
+      type: 'incertain';
+      message: string;
+      avertissement: string;
+      libelleVerifier: string;
+      libelleReessayer: string;
+      verifier: () => void;
+      reessayer: () => void;
+    };
 
-export type ToastCreation = {
+export type ToastEcriture = {
   cle: number;
-  titre: string;
+  message: string;
   ouvrirFiche: () => void;
   suspendre: () => void;
   reprendre: () => void;
 };
 
-type FormulaireOuvrageViewProps = {
+export type FormulaireOuvrageViewProps = {
+  titre: string;
+  libelleQuitter: string;
+  libelleEnregistrer: string;
   controle: ControleSaisie;
   enEnvoi: boolean;
   enregistrer: () => void;
   quitter: () => void;
   confirmationAbandon: { confirmer: () => void; poursuivre: () => void } | null;
-  avis: AvisCreation | null;
-  toast: ToastCreation | null;
+  avis: AvisEcriture | null;
+  toast: ToastEcriture | null;
 };
 
 const ChampTexteControle = ({
@@ -78,13 +89,16 @@ const BasculeStatutControle = ({
   return <BasculeStatut desactive={enEnvoi} lu={field.value} modifier={field.onChange} />;
 };
 
-const AvisCreationView = ({ avis }: { avis: AvisCreation }) => {
+const AvisEcritureView = ({ avis }: { avis: AvisEcriture }) => {
   if (avis.type === 'refus') return <AvisRefus message={avis.message} />;
   if (avis.type === 'indisponible') return <AvisIndisponible {...avis} />;
   return <AvisIncertain {...avis} />;
 };
 
 export const FormulaireOuvrageView = ({
+  titre,
+  libelleQuitter,
+  libelleEnregistrer,
   controle,
   enEnvoi,
   enregistrer,
@@ -95,15 +109,15 @@ export const FormulaireOuvrageView = ({
 }: FormulaireOuvrageViewProps) => (
   <ScrollView contentContainerStyle={styles.conteneur}>
     <View style={styles.entete}>
-      <Bouton action={quitter} libelle="← Retour au fonds" variante="secondaire" />
+      <Bouton action={quitter} libelle={libelleQuitter} variante="secondaire" />
       <Text accessibilityRole="header" style={styles.titre}>
-        Ajouter un ouvrage
+        {titre}
       </Text>
     </View>
 
     {confirmationAbandon === null ? null : <ConfirmationAbandon {...confirmationAbandon} />}
     {toast === null ? null : <ToastSucces key={toast.cle} {...toast} />}
-    {avis === null ? null : <AvisCreationView avis={avis} />}
+    {avis === null ? null : <AvisEcritureView avis={avis} />}
 
     <View style={styles.carte}>
       <ChampTexteControle controle={controle} enEnvoi={enEnvoi} libelle="Titre" nom="titre" />
@@ -123,11 +137,7 @@ export const FormulaireOuvrageView = ({
         numerique
       />
       <BasculeStatutControle controle={controle} enEnvoi={enEnvoi} />
-      <Bouton
-        action={enregistrer}
-        desactive={enEnvoi}
-        libelle={enEnvoi ? 'Enregistrement en cours…' : 'Enregistrer l’ouvrage'}
-      />
+      <Bouton action={enregistrer} desactive={enEnvoi} libelle={libelleEnregistrer} />
     </View>
   </ScrollView>
 );

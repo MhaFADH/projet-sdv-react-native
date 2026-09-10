@@ -31,7 +31,7 @@ const rendreFiche = (identifiant = ID) => {
     </QueryClientProvider>
   );
   const retour = vi.fn();
-  render(<FicheScreen id={identifiant} retour={retour} />, { wrapper });
+  render(<FicheScreen corriger={vi.fn()} id={identifiant} retour={retour} />, { wrapper });
   return { client, retour };
 };
 

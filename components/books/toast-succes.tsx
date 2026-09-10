@@ -3,13 +3,13 @@ import { Bouton } from '@/components/bouton';
 import { theme } from '@/theme/tokens';
 
 type ToastSuccesProps = {
-  titre: string;
+  message: string;
   ouvrirFiche: () => void;
   suspendre: () => void;
   reprendre: () => void;
 };
 
-export const ToastSucces = ({ titre, ouvrirFiche, suspendre, reprendre }: ToastSuccesProps) => (
+export const ToastSucces = ({ message, ouvrirFiche, suspendre, reprendre }: ToastSuccesProps) => (
   <Pressable
     onHoverIn={suspendre}
     onHoverOut={reprendre}
@@ -18,7 +18,7 @@ export const ToastSucces = ({ titre, ouvrirFiche, suspendre, reprendre }: ToastS
     testID="toast-succes"
   >
     <View style={styles.contenu}>
-      <Text style={styles.message}>« {titre} » a été ajouté au fonds.</Text>
+      <Text style={styles.message}>{message}</Text>
       <Bouton
         action={ouvrirFiche}
         libelle="Ouvrir la fiche"

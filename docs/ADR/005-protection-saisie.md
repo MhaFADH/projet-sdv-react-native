@@ -2,7 +2,7 @@
 
 ## Statut
 
-Accepté lors du cadrage du lot 1. Implémenté pour la création d’un ouvrage par le ticket #4 ; les décisions relatives à la modification restent à appliquer par le ticket correspondant.
+Accepté lors du cadrage du lot 1. Implémenté pour la création d’un ouvrage par le ticket #4 et pour sa correction par le ticket #5.
 
 ## Contexte
 
@@ -51,7 +51,15 @@ Le ticket #4 livre ces décisions pour la création :
 - confirmation avant abandon volontaire et avertissement `beforeunload` via `services/plateforme/avertissement-depart`, sans brouillon persistant ni récupération après arrêt brutal ;
 - après création confirmée : maintien dans le formulaire, champs vidés, statut remis à « Non lu », aucune redirection automatique.
 
-La conservation des valeurs après une modification confirmée n’est pas encore livrée : aucun parcours de correction n’existe dans l’application.
+Le ticket #5 livre ces décisions pour la correction, en réutilisant le même formulaire par `features/books/use-saisie-ouvrage.ts` :
+
+- préremplissage depuis `GET /books/:id`, avec chargement, échec de lecture et ouvrage introuvable traités sans proposer de création ;
+- envoi partiel en `PATCH /books/:id` des seuls champs modifiés, afin de ne pas écraser les champs serveur non concernés ;
+- champs et soumission verrouillés pendant l’envoi, protections d’abandon et de double soumission inchangées ;
+- refus `422` par champ, `503` réessayable après temporisation, résultat inconnu conservant la saisie ; un réessai rejoue la même correction sur le même ouvrage et ne peut pas créer de doublon ;
+- après correction confirmée : maintien dans le formulaire avec les valeurs enregistrées, sans changements en attente, sans vidage ni retour arbitraire à « Non lu » ;
+- une réactualisation de la fiche ne réécrit pas les champs et son échec ne remplace pas le formulaire : celui-ci est monté une fois par identifiant et garde la saisie du libraire ;
+- une soumission identique à la fiche n’envoie aucune écriture et l’annonce, plutôt que d’écrire une représentation vide ou de simuler un succès.
 
 ## Références
 
