@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook } from '@testing-library/react';
 import { type PropsWithChildren, useEffect } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { CONSULTATION_FONDS_PAR_DEFAUT } from '../../domain/criteres-ouvrages';
 import { clesOuvrages } from '../../hooks/cles-ouvrages';
 import { useRafraichirFondsAuFocus } from '../../hooks/use-rafraichir-fonds-au-focus';
 
@@ -32,13 +33,14 @@ describe('retour au fonds', () => {
   it('réactualise la recherche et la page consultées au retour, jamais au premier affichage', () => {
     const { client, invalider, wrapper } = creerEnvironnement();
 
-    renderHook(() => useRafraichirFondsAuFocus(3, 'zola'), { wrapper });
+    const consultation = { ...CONSULTATION_FONDS_PAR_DEFAUT, recherche: 'zola' };
+    renderHook(() => useRafraichirFondsAuFocus(3, consultation), { wrapper });
     expect(invalider).not.toHaveBeenCalled();
 
     act(() => rappelFocus?.());
 
     expect(invalider).toHaveBeenCalledExactlyOnceWith({
-      queryKey: clesOuvrages.liste(3, 'zola'),
+      queryKey: clesOuvrages.liste(3, consultation),
     });
     client.clear();
   });

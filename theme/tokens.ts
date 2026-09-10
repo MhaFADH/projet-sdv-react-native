@@ -42,6 +42,8 @@ export const theme = {
     cardMinHeight: 112,
     cardTextMinWidth: 200,
     paginationButtonMinWidth: 112,
+    compactBreakpoint: 768,
+    criteriaLabelWidth: 160,
   },
   borderWidth: 1,
   minTargetSize: 44,

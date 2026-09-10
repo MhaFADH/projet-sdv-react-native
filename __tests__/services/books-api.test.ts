@@ -1,6 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { creerCriteresOuvrages } from '../../domain/criteres-ouvrages';
+import {
+  CONSULTATION_FONDS_PAR_DEFAUT,
+  creerCriteresOuvrages as creerCriteres,
+} from '../../domain/criteres-ouvrages';
 import { fetchBooksPage } from '../../services/api/books-api';
+
+const creerCriteresOuvrages = (page: number, recherche: string) =>
+  creerCriteres(page, { ...CONSULTATION_FONDS_PAR_DEFAUT, recherche });
 
 const bookPageResponse = {
   items: [
@@ -50,6 +56,23 @@ describe('API des ouvrages', () => {
         method: 'GET',
       }),
     );
+  });
+
+  it.each([
+    ['lu', 'lu'],
+    ['nonlu', 'nonlu'],
+  ] as const)('envoie le filtre de lecture %s au serveur', async (_libelle, lecture) => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(JSON.stringify(bookPageResponse), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    await fetchBooksPage(creerCriteres(2, { ...CONSULTATION_FONDS_PAR_DEFAUT, lecture }));
+
+    expect(new URL(String(fetchMock.mock.calls[0][0])).searchParams.get('status')).toBe(lecture);
   });
 
   it('valide les champs serveur sensibles au lieu de fabriquer des données', async () => {

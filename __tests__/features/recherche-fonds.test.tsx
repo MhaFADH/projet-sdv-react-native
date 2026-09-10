@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { type PropsWithChildren, useCallback, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { CONSULTATION_FONDS_PAR_DEFAUT } from '../../domain/criteres-ouvrages';
 import type { Ouvrage } from '../../domain/ouvrage';
 import { FondsScreen } from '../../features/books/fonds-screen';
 import { SuppressionsProvider } from '../../features/books/suppressions-provider';
@@ -43,20 +44,21 @@ type ProprietesFondsControle = {
 
 const FondsControle = ({ pageInitiale = 1, rechercheInitiale = '' }: ProprietesFondsControle) => {
   const [page, setPage] = useState(pageInitiale);
-  const [recherche, setRecherche] = useState(rechercheInitiale);
+  const consultationInitiale = { ...CONSULTATION_FONDS_PAR_DEFAUT, recherche: rechercheInitiale };
+  const [consultation, setConsultation] = useState(consultationInitiale);
   const changerPage = useCallback((nouvellePage: number) => setPage(nouvellePage), []);
-  const changerRecherche = useCallback((nouvelleRecherche: string) => {
-    setRecherche(nouvelleRecherche);
+  const changerConsultation = useCallback((nouvelleConsultation: typeof consultationInitiale) => {
+    setConsultation(nouvelleConsultation);
     setPage(1);
   }, []);
   return (
     <FondsScreen
       ajouterOuvrage={vi.fn()}
+      changerConsultation={changerConsultation}
       changerPage={changerPage}
-      changerRecherche={changerRecherche}
+      consultationDemandee={consultation}
       ouvrirOuvrage={ouvrirOuvrage}
       pageDemandee={page}
-      rechercheDemandee={recherche}
     />
   );
 };
@@ -180,7 +182,7 @@ describe('recherche dans le fonds', () => {
     await act(async () => void (await vi.advanceTimersByTimeAsync(300)));
     await attendreMicrotaches();
     expect(screen.getByText('Germinal')).toBeVisible();
-    expect(screen.getByRole('button', { name: '0 sélectionnés — Supprimer' })).toBeDisabled();
+    expect(screen.queryByLabelText('0 sélectionnés — Supprimer')).not.toBeInTheDocument();
 
     changerSaisie('');
     await act(async () => void (await vi.advanceTimersByTimeAsync(300)));
@@ -234,7 +236,7 @@ describe('recherche dans le fonds', () => {
     expect(carteAnciennePage).toBeDisabled();
     fireEvent.click(carteAnciennePage);
     expect(ouvrirOuvrage).not.toHaveBeenCalled();
-    expect(screen.getByRole('button', { name: '0 sélectionnés — Supprimer' })).toBeDisabled();
+    expect(screen.queryByLabelText('0 sélectionnés — Supprimer')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Précédent' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Suivant' })).toBeDisabled();
     expect(screen.getByRole('textbox')).toBeEnabled();

@@ -21,6 +21,7 @@ export type EtatFiche =
       basculerStatut: () => void;
       statutEnCours: boolean;
       erreurStatut?: ErreurStatutLecture;
+      erreurActualisation?: { titre: string; message: string; reessayer: () => void };
       demanderSuppression: () => void;
       suppressionDesactivee: boolean;
     };
@@ -72,6 +73,12 @@ const FicheDetail = (etat: EtatSucces) => (
       ouvrage={etat.ouvrage}
       statutEnCours={etat.statutEnCours}
     />
+    {etat.erreurActualisation ? (
+      <EtatErreur
+        {...etat.erreurActualisation}
+        libelleReessai="Réessayer l’actualisation de la fiche"
+      />
+    ) : null}
     <Pressable
       accessibilityLabel={`Supprimer ${etat.ouvrage.titre}`}
       accessibilityRole="button"

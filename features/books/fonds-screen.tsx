@@ -1,22 +1,23 @@
 import { useEffect, useState } from 'react';
 import { ConfirmationSuppression } from '@/components/books/confirmation-suppression';
 import { FondsView } from '@/components/books/fonds-view';
+import { type ConsultationFonds, consultationsEgales } from '@/domain/criteres-ouvrages';
 import { OUVRAGES_PAR_PAGE, PAS_DE_PAGE, PREMIERE_PAGE } from '@/domain/ouvrage';
 import { useBooksPage } from '@/hooks/use-books-page';
 import { useSuppressions } from '@/hooks/use-suppressions';
 
 type FondsScreenProps = {
   pageDemandee: number;
-  rechercheDemandee: string;
+  consultationDemandee: ConsultationFonds;
   changerPage: (page: number) => void;
-  changerRecherche: (recherche: string) => void;
+  changerConsultation: (consultation: ConsultationFonds) => void;
   ouvrirOuvrage: (id: string) => void;
   ajouterOuvrage: () => void;
 };
 
 type EtatSelection = {
   page: number;
-  recherche: string;
+  consultation: ConsultationFonds;
   identifiants: Set<string>;
 };
 
@@ -24,31 +25,34 @@ const AUCUN_IDENTIFIANT = new Set<string>();
 
 export const FondsScreen = ({
   pageDemandee,
-  rechercheDemandee,
+  consultationDemandee,
   changerPage,
-  changerRecherche,
+  changerConsultation,
   ouvrirOuvrage,
   ajouterOuvrage,
 }: FondsScreenProps) => {
-  const requete = useBooksPage(pageDemandee, rechercheDemandee);
+  const requete = useBooksPage(pageDemandee, consultationDemandee);
   const { confirmerSuppressions, estMasque, suppressionDesactivee } = useSuppressions();
   const [selection, setSelection] = useState<EtatSelection>(() => ({
     page: pageDemandee,
-    recherche: rechercheDemandee,
+    consultation: consultationDemandee,
     identifiants: new Set(),
   }));
   const [confirmationVisible, setConfirmationVisible] = useState(false);
   const dernierePageDisponible = requete.data?.totalPages;
-  const selectionDesCriteres =
-    selection.page === pageDemandee && selection.recherche === rechercheDemandee;
-  const identifiantsSelectionnes = selectionDesCriteres
-    ? selection.identifiants
-    : AUCUN_IDENTIFIANT;
+  const memesCriteres =
+    selection.page === pageDemandee &&
+    consultationsEgales(selection.consultation, consultationDemandee);
+  const identifiantsSelectionnes = memesCriteres ? selection.identifiants : AUCUN_IDENTIFIANT;
 
   useEffect(() => {
-    setSelection({ page: pageDemandee, recherche: rechercheDemandee, identifiants: new Set() });
+    setSelection({
+      page: pageDemandee,
+      consultation: consultationDemandee,
+      identifiants: new Set(),
+    });
     setConfirmationVisible(false);
-  }, [pageDemandee, rechercheDemandee]);
+  }, [pageDemandee, consultationDemandee]);
 
   useEffect(() => {
     if (dernierePageDisponible === undefined || pageDemandee <= dernierePageDisponible) return;
@@ -56,23 +60,27 @@ export const FondsScreen = ({
   }, [changerPage, dernierePageDisponible, pageDemandee]);
 
   const recherche = {
-    valeurAppliquee: rechercheDemandee,
-    appliquer: changerRecherche,
+    valeurAppliquee: consultationDemandee.recherche,
+    appliquer: (recherche: string) => changerConsultation({ ...consultationDemandee, recherche }),
   };
+  const criteres = { consultation: consultationDemandee, appliquer: changerConsultation };
 
-  if (requete.isPending || pageDemandee > (dernierePageDisponible ?? pageDemandee))
+  if (requete.isPending || pageDemandee > (dernierePageDisponible ?? pageDemandee)) {
     return (
       <FondsView
         ajouterOuvrage={ajouterOuvrage}
+        criteres={criteres}
         etat={{ type: 'chargement' }}
         recherche={recherche}
       />
     );
+  }
 
-  if (requete.isError) {
+  if (requete.isError && !requete.data) {
     return (
       <FondsView
         ajouterOuvrage={ajouterOuvrage}
+        criteres={criteres}
         etat={{
           type: 'erreur',
           message: requete.error.message,
@@ -105,14 +113,17 @@ export const FondsScreen = ({
   const basculerSelection = (id: string) => {
     if (requete.isPlaceholderData) return;
     setSelection((courante) => {
-      const memesCriteres =
-        courante.page === pageDemandee && courante.recherche === rechercheDemandee;
-      const identifiants = memesCriteres ? new Set(courante.identifiants) : new Set<string>();
-      if (identifiants.delete(id))
-        return { page: pageDemandee, recherche: rechercheDemandee, identifiants };
+      const memesCriteresCourants =
+        courante.page === pageDemandee &&
+        consultationsEgales(courante.consultation, consultationDemandee);
+      const identifiants = memesCriteresCourants
+        ? new Set(courante.identifiants)
+        : new Set<string>();
+      const nouvelEtat = { page: pageDemandee, consultation: consultationDemandee, identifiants };
+      if (identifiants.delete(id)) return nouvelEtat;
       if (identifiants.size >= OUVRAGES_PAR_PAGE) return courante;
       identifiants.add(id);
-      return { page: pageDemandee, recherche: rechercheDemandee, identifiants };
+      return nouvelEtat;
     });
   };
   const demanderSuppression = () => {
@@ -124,7 +135,11 @@ export const FondsScreen = ({
     if (requete.isPlaceholderData || ouvragesSelectionnes.length === 0 || suppressionDesactivee)
       return;
     confirmerSuppressions(ouvragesSelectionnes);
-    setSelection({ page: pageDemandee, recherche: rechercheDemandee, identifiants: new Set() });
+    setSelection({
+      page: pageDemandee,
+      consultation: consultationDemandee,
+      identifiants: new Set(),
+    });
     setConfirmationVisible(false);
   };
 
@@ -132,6 +147,7 @@ export const FondsScreen = ({
     <>
       <FondsView
         ajouterOuvrage={ajouterOuvrage}
+        criteres={criteres}
         etat={{
           type: 'succes',
           page: pageVisible,
@@ -146,6 +162,9 @@ export const FondsScreen = ({
           },
           masquageTemporaire: pageVisible.items.length < requete.data.items.length,
           pageEnChargement: requete.isPlaceholderData ? pageDemandee : undefined,
+          erreurActualisation: requete.isError
+            ? { message: requete.error.message, reessayer: () => void requete.refetch() }
+            : undefined,
         }}
         recherche={recherche}
       />

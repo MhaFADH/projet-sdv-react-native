@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import type { PropsWithChildren } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { CONSULTATION_FONDS_PAR_DEFAUT } from '../../domain/criteres-ouvrages';
 import { useBooksPage } from '../../hooks/use-books-page';
 
 const ouvrage = {
@@ -51,16 +52,14 @@ describe('consultation paginée des ouvrages', () => {
     const wrapper = ({ children }: PropsWithChildren) => (
       <QueryClientProvider client={client}>{children}</QueryClientProvider>
     );
-    const { result, rerender } = renderHook(
-      ({ page, recherche }) => useBooksPage(page, recherche),
-      {
-        initialProps: { page: 1, recherche: 'zola' },
-        wrapper,
-      },
-    );
+    const consultation = { ...CONSULTATION_FONDS_PAR_DEFAUT, recherche: 'zola' };
+    const { result, rerender } = renderHook(({ page }) => useBooksPage(page, consultation), {
+      initialProps: { page: 1 },
+      wrapper,
+    });
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
-    rerender({ page: 2, recherche: 'zola' });
+    rerender({ page: 2 });
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
 
     await act(async () => resolutions[1](creerReponse(2)));
@@ -73,7 +72,15 @@ describe('consultation paginée des ouvrages', () => {
         queryKey: [
           'ouvrages',
           'liste',
-          { page: 2, limit: 20, q: 'zola', sort: 'titre', order: 'asc' },
+          {
+            page: 2,
+            limit: 20,
+            q: 'zola',
+            status: undefined,
+            favori: undefined,
+            sort: 'titre',
+            order: 'asc',
+          },
         ],
       }),
     ).toBeDefined();

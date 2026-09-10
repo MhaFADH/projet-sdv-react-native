@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { type PropsWithChildren, useCallback, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { CONSULTATION_FONDS_PAR_DEFAUT } from '../../domain/criteres-ouvrages';
 import { FondsScreen } from '../../features/books/fonds-screen';
 import { SuppressionsProvider } from '../../features/books/suppressions-provider';
 import { clesOuvrages } from '../../hooks/cles-ouvrages';
@@ -36,11 +37,11 @@ const FondsControle = ({ pageInitiale, ouvrirOuvrage }: FondsControleProps) => {
   return (
     <FondsScreen
       ajouterOuvrage={vi.fn()}
+      changerConsultation={vi.fn()}
       changerPage={changerPage}
-      changerRecherche={vi.fn()}
+      consultationDemandee={CONSULTATION_FONDS_PAR_DEFAUT}
       ouvrirOuvrage={ouvrirOuvrage}
       pageDemandee={pageDemandee}
-      rechercheDemandee=""
     />
   );
 };

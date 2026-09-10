@@ -544,3 +544,61 @@ Trois fichiers de lots précédents, déjà mergés, conservent des commentaires
 touchés, le nettoyage restant hors du périmètre de #19.
 
 Aucun prompt, défaut ou résultat non observé n'est ajouté à ce document.
+
+## Intervention — issue #18
+
+- Outil : pi coding agent.
+- Fournisseur : OpenAI Codex.
+- Modèle : `gpt-5.6-sol`.
+- Périmètre : issue GitHub #18, combinaison des filtres et tris du fonds.
+
+### Demandes reçues
+
+1. `<skill name="implement" location="/Users/fadhl/.pi/agent/skills/implement/SKILL.md">…</skill> https://github.com/MhaFADH/projet-sdv-react-native/issues/18, tu as accès à github cli.`
+2. Sortie de `git pull` transmise par le responsable, puis `c'est bon ?`.
+3. `well, i really dont like the filters layout, they're all just piled, whichever in web view or mobile view`
+4. Accord pour une barre responsive et demande que l’action de suppression disparaisse sans sélection au lieu d’occuper une grande bande blanche.
+5. Validation du panneau mobile et demande de revenir à une disposition verticale sur web et tablette.
+6. Signalement du libellé « Recommandations » coupé sur deux lignes et d’une séparation insuffisante entre « Affiner » et « Trier ».
+
+### Actions réalisées avec l’IA
+
+- lecture du ticket #18, de sa spécification parent, des tickets bloquants #16 et #6, du contrat de l’API, du glossaire et de l’architecture ;
+- arrêt avant modification lorsque la dépendance #16 fusionnée sur GitHub n’était pas encore présente dans le `main` local, puis reprise après la synchronisation effectuée par le responsable ;
+- ajout test-first de la consultation typée, des filtres de lecture et de coups de cœur, des quatre tris dans les deux sens, des paramètres serveur et des clés de cache complètes ;
+- conservation dans l’URL de la recherche, des filtres, du tri, de l’ordre et de la page lors du parcours fonds–fiche–fonds ;
+- ajout des tests des trois résultats d’une bascule de lecture sous filtre : succès avec retrait après relecture, refus avec restauration et succès du `PATCH` suivi d’un échec de relecture sans restauration fictive ;
+- réorganisation responsive des critères en zones verticales sur écran large et en panneau repliable avec résumé sur petit écran ; suppression de l’action de suppression lorsque la sélection est vide et retrait de son grand conteneur blanc ;
+- mise à jour du README et de `docs/ARCHITECTURE.md` ;
+- exécution du formatage, du lint, du typage, des tests, de la couverture, de `knip`, du contrôle Expo et d’une recette Chrome.
+
+### Défauts constatés et corrections réelles
+
+- Le premier test clavier a confirmé qu’une `Pressable` de rôle `radio` ne réagissait pas à Espace sur le web. L’adaptation de plateforme déjà utilisée par les cases de sélection a été réutilisée pour tous les filtres et tris.
+- La première suite complète a montré qu’une vue pure sans propriété de critères interprétait `undefined` comme un filtre actif et affichait « Aucun résultat » à la place de « Le fonds est vide ». Le calcul exige désormais une consultation définie avant de comparer ses filtres.
+- Le lint a signalé une dépendance de callback recréée à chaque rendu et le dépassement de la limite du test de recherche après adaptation de son contrôle. Les dépendances primitives ont remplacé l’objet instable et l’adaptation du test a été compactée.
+- `knip` a signalé cinq constantes devenues inutiles ou exportées sans consommateur après la généralisation des tris. Les quatre tables internes ont été rendues locales et l’ancien tri fixe a été retiré.
+- La relecture avant revue a montré qu’un échec de `GET` après un `PATCH` réussi masquait la fiche et son statut confirmé derrière l’erreur générique. La fiche conserve désormais la valeur confirmée, explique séparément l’échec d’actualisation et permet de réessayer la lecture.
+- Les deux axes de revue ont relevé qu’un échec de relecture du fonds sans écriture préalable était annoncé à tort comme suivant une écriture confirmée. Le fonds utilise désormais un message neutre ; seule la fiche, qui connaît le succès de la mutation, annonce l’écriture confirmée.
+- La revue Standards a demandé des tests directs des règles pures de critères et la revue Spec la preuve de `status=lu`. Les lecteurs d’URL, l’encodage, la comparaison, les valeurs par défaut et les deux statuts envoyés sont maintenant couverts.
+- Les remarques de conception de la revue sur les chaînes `JSON.stringify` et la duplication de l’encodage ont été suivies : l’identité de consultation est comparée par une règle typée et un codec pur unique produit les paramètres d’URL.
+- La revue finale de la refonte responsive a relevé que les deux zones étaient encore dessinées comme deux cartes et que les radios ne géraient que la touche Espace. La surface, la bordure et le fond ont été regroupés sur une barre unique ; les radios utilisent désormais un arrêt de tabulation mobile et les touches Flèches, Début et Fin déplacent le choix et le focus.
+- La même revue a relevé deux types suffixés en anglais et un test large qui ne vérifiait pas la direction de la barre. Les types ont été renommés en français et le test vérifie maintenant le rôle de barre d’outils, sa disposition verticale validée ensuite par le responsable et sa bordure commune.
+- Le retour produit a identifié le retour à la ligne de « Recommandations » et le manque de séparation. La largeur du libellé a été augmentée, son rendu limité à une ligne et la zone « Trier » commence désormais après une bordure et un espacement dédiés.
+
+### Vérification navigateur
+
+Réalisée avec Chrome piloté par le protocole DevTools, contre `npx expo start --web` et l’API locale sans authentification :
+
+- l’URL `/?page=1&q=a&status=nonlu&favori=true&sort=annee&order=desc` affiche « Page 1 sur 3 · 54 ouvrages » ;
+- « Non lus », « Coups de cœur », « Année » et « Décroissant » exposent tous `aria-checked="true"` ;
+- l’ouverture de « Un Machine des origines » produit une URL de fiche contenant les six paramètres de retour ;
+- « Retour au fonds » restaure exactement l’URL filtrée et les quatre états sélectionnés ;
+- la construction web ne signale aucune erreur applicative dans le journal Expo.
+
+Après le retour produit sur la densité de l’interface, une seconde recette responsive a été exécutée :
+
+- à 1 200 px, la barre expose `flex-direction: column`, les quatre groupes sont visibles sous « Affiner » puis « Trier » et aucun bouton de panneau n’est présent ;
+- à 768 px, la barre reste verticale, « Recommandations » expose `white-space: nowrap`, la séparation avant « Trier » mesure 1 px et aucun panneau mobile n’est présent ;
+- à 390 px, le panneau est fermé par défaut, aucun groupe radio n’est monté et son bouton expose `aria-expanded="false"` ; après ouverture, les quatre groupes sont présents et `aria-expanded` vaut `true` ;
+- à zéro sélection, aucune action de suppression n’est présente ; sélectionner le premier ouvrage fait apparaître uniquement « 1 sélectionné — Supprimer ».

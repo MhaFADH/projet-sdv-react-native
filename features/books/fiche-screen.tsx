@@ -69,7 +69,7 @@ export const FicheScreen = ({ id, retour, corriger }: FicheScreenProps) => {
 
   if (requete.isPending) return rendre({ type: 'chargement' });
 
-  if (requete.isError) {
+  if (requete.isError && !requete.data) {
     if (requete.error.type === 'introuvable') {
       return rendre({ type: 'introuvable', message: requete.error.message });
     }
@@ -94,6 +94,18 @@ export const FicheScreen = ({ id, retour, corriger }: FicheScreenProps) => {
         basculerStatut: () => basculeStatut.basculer(!requete.data.lu),
         statutEnCours: basculeStatut.enCours,
         erreurStatut: basculeStatut.erreur,
+        erreurActualisation: basculeStatut.erreurActualisation
+          ? {
+              titre: 'Actualisation de la fiche impossible',
+              ...basculeStatut.erreurActualisation,
+            }
+          : requete.isError && !basculeStatut.enCours
+            ? {
+                titre: 'Impossible d’actualiser la fiche',
+                message: requete.error.message,
+                reessayer: () => void requete.refetch(),
+              }
+            : undefined,
         demanderSuppression: () => setConfirmationVisible(true),
         suppressionDesactivee,
         corriger,

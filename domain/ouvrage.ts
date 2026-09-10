@@ -3,7 +3,6 @@ export const NOMBRE_ANNEES_FUTURES_AUTORISEES = 1;
 export const PREMIERE_PAGE = 1;
 export const PAS_DE_PAGE = 1;
 export const OUVRAGES_PAR_PAGE = 20;
-export const TRI_FONDS = { champ: 'titre', ordre: 'asc' } as const;
 
 export type Ouvrage = {
   id: string;

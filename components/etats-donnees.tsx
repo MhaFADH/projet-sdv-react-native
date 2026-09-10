@@ -10,6 +10,7 @@ type EtatErreurProps = {
   titre: string;
   message: string;
   reessayer: () => void;
+  libelleReessai?: string;
 };
 
 type EtatAbsenceProps = {
@@ -29,14 +30,24 @@ export const SqueletteDonnees = ({ libelle, nombreLignes }: SqueletteDonneesProp
   </View>
 );
 
-export const EtatErreur = ({ titre, message, reessayer }: EtatErreurProps) => (
+export const EtatErreur = ({
+  titre,
+  message,
+  reessayer,
+  libelleReessai = 'Réessayer',
+}: EtatErreurProps) => (
   <View accessibilityRole="alert" style={styles.erreur}>
     <Text accessibilityRole="header" style={[styles.titre, styles.titreErreur]}>
       {titre}
     </Text>
     <Text style={styles.message}>{message}</Text>
-    <Pressable accessibilityRole="button" onPress={reessayer} style={styles.bouton}>
-      <Text style={styles.texteBouton}>Réessayer</Text>
+    <Pressable
+      accessibilityLabel={libelleReessai}
+      accessibilityRole="button"
+      onPress={reessayer}
+      style={styles.bouton}
+    >
+      <Text style={styles.texteBouton}>{libelleReessai}</Text>
     </Pressable>
   </View>
 );
