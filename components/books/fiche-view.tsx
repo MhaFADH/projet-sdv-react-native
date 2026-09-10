@@ -1,4 +1,4 @@
-import type { PropsWithChildren } from 'react';
+import type { PropsWithChildren, ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
   ControleStatutLecture,
@@ -6,11 +6,10 @@ import {
 } from '@/components/books/controle-statut-lecture';
 import { Bouton } from '@/components/bouton';
 import { EtatAbsence, EtatErreur, SqueletteDonnees } from '@/components/etats-donnees';
-import { type EtatNotes, VueListeNotes } from '@/components/notes/vue-liste-notes';
 import { libelleEditeur, type Ouvrage } from '@/domain/ouvrage';
 import { theme } from '@/theme/tokens';
 
-type EtatFiche =
+export type EtatFiche =
   | { type: 'chargement' }
   | { type: 'erreur'; message: string; reessayer: () => void }
   | { type: 'introuvable'; message: string }
@@ -24,12 +23,17 @@ type EtatFiche =
       erreurStatut?: ErreurStatutLecture;
       demanderSuppression: () => void;
       suppressionDesactivee: boolean;
-      etatNotes: EtatNotes;
     };
 
 type FicheViewProps = {
   etat: EtatFiche;
   retour: () => void;
+  /**
+   * Section des notes composée par l'écran. Elle est rendue hors du basculement
+   * d'état de la fiche : une erreur de lecture ou la disparition de l'ouvrage ne
+   * peut donc pas démonter le formulaire et effacer une saisie non confirmée.
+   */
+  sectionNotes?: ReactNode;
 };
 
 type EtatSucces = Extract<EtatFiche, { type: 'succes' }>;
@@ -121,17 +125,13 @@ const ContenuFiche = ({ etat }: Pick<FicheViewProps, 'etat'>) => {
     );
   }
 
-  return (
-    <>
-      <FicheDetail {...etat} />
-      <VueListeNotes etat={etat.etatNotes} titreOuvrage={etat.ouvrage.titre} />
-    </>
-  );
+  return <FicheDetail {...etat} />;
 };
 
-export const FicheView = ({ etat, retour }: FicheViewProps) => (
+export const FicheView = ({ etat, retour, sectionNotes = null }: FicheViewProps) => (
   <CadreFiche retour={retour}>
     <ContenuFiche etat={etat} />
+    {sectionNotes}
   </CadreFiche>
 );
 

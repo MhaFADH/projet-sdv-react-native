@@ -1,12 +1,12 @@
 import { type Control, useController } from 'react-hook-form';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Bouton } from '@/components/bouton';
+import { ConfirmationAbandon } from '@/components/confirmation-abandon';
+import { type AvisEcriture, AvisEcritureView } from '@/components/messages-ecriture';
+import { type ActionToast, ToastSucces } from '@/components/toast-succes';
 import type { OuvrageSaisi, SaisieOuvrage } from '@/domain/saisie-ouvrage';
 import { theme } from '@/theme/tokens';
 import { BasculeStatut, ChampTexte } from './champs-saisie';
-import { ConfirmationAbandon } from './confirmation-abandon';
-import { AvisIncertain, AvisIndisponible, AvisRefus } from './messages-creation';
-import { ToastSucces } from './toast-succes';
 
 type ControleSaisie = Control<SaisieOuvrage, unknown, OuvrageSaisi>;
 
@@ -19,23 +19,10 @@ type ChampTexteControleProps = {
   numerique?: boolean;
 };
 
-export type AvisEcriture =
-  | { type: 'refus'; message: string }
-  | { type: 'indisponible'; message: string; secondesRestantes: number; reessayer: () => void }
-  | {
-      type: 'incertain';
-      message: string;
-      avertissement: string;
-      libelleVerifier: string;
-      libelleReessayer: string;
-      verifier: () => void;
-      reessayer: () => void;
-    };
-
 export type ToastEcriture = {
   cle: number;
   message: string;
-  ouvrirFiche: () => void;
+  action: ActionToast;
   suspendre: () => void;
   reprendre: () => void;
 };
@@ -87,12 +74,6 @@ const BasculeStatutControle = ({
   const { field } = useController({ control: controle, name: 'lu' });
 
   return <BasculeStatut desactive={enEnvoi} lu={field.value} modifier={field.onChange} />;
-};
-
-const AvisEcritureView = ({ avis }: { avis: AvisEcriture }) => {
-  if (avis.type === 'refus') return <AvisRefus message={avis.message} />;
-  if (avis.type === 'indisponible') return <AvisIndisponible {...avis} />;
-  return <AvisIncertain {...avis} />;
 };
 
 export const FormulaireOuvrageView = ({

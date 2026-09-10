@@ -2,7 +2,7 @@
 
 ## Statut
 
-Accepté lors du cadrage du lot 1. Implémenté pour la création d’un ouvrage par le ticket #4 et pour sa correction par le ticket #5.
+Accepté lors du cadrage du lot 1. Implémenté pour la création d’un ouvrage par le ticket #4, pour sa correction par le ticket #5 et étendu à l’ajout d’une note de lecture par le ticket #17.
 
 ## Contexte
 
@@ -61,10 +61,26 @@ Le ticket #5 livre ces décisions pour la correction, en réutilisant le même f
 - une réactualisation de la fiche ne réécrit pas les champs et son échec ne remplace pas le formulaire : celui-ci est monté une fois par identifiant et garde la saisie du libraire ;
 - une soumission identique à la fiche n’envoie aucune écriture et l’annonce, plutôt que d’écrire une représentation vide ou de simuler un succès.
 
+Le ticket #17 étend ces décisions à l’ajout d’une note de lecture, sans créer de second socle d’écriture :
+
+- schéma `domain/saisie-note.ts` partagé entre React Hook Form et les règles métier, aligné sur le validateur de l’API : contenu obligatoire après retrait des espaces périphériques et 1 000 caractères au maximum ;
+- compteur de caractères mesurant la longueur réellement envoyée, donc le contenu normalisé et non la frappe brute ;
+- `POST /books/:id/notes` n’étant pas idempotent, aucun réessai automatique : la mutation est déclarée `retry: false` comme la création d’ouvrage ;
+- champ et soumission verrouillés pendant l’envoi, verrou de rendu contre la double soumission ;
+- refus `422` reporté sur le champ `contenu`, `503` réessayable après temporisation, saisie jamais effacée ;
+- un `404` sur la fiche est une réponse concluante : l’envoi est bloqué et expliqué, mais le texte reste affiché pour être recopié ;
+- coupure ou délai d’expiration dépassé présentés comme un résultat incertain, avec actualisation des notes pour vérifier et renvoi manuel averti du risque de doublon ; l’avertissement précise qu’une note au contenu identique ne prouve pas que le premier envoi a abouti et que son absence ne prouve pas un refus ;
+- après ajout confirmé : maintien sur la fiche, champ vidé, nouvelle note affichée en tête et confirmation par le même toast de cinq secondes que le lot 1 ;
+- confirmation avant abandon volontaire, que le départ vienne du bouton « Effacer la saisie » ou du retour au fonds, et avertissement `beforeunload` par la même interface de plateforme ; la section des notes reste montée dans tous les états où une saisie peut exister, sans quoi cette confirmation serait démontée et le retour au fonds resterait sans effet visible ;
+- l'abandon d'une note se décide sur un contenu réellement renseigné, et non sur `formState.isDirty` comme pour les ouvrages : une note tapée puis entièrement effacée ne déclenche plus de confirmation, puisqu'il n'y a plus rien à perdre. Le contenu est de toute façon observé en continu pour le compteur de caractères ;
+- la saisie est détenue par l’écran de la fiche : ni une actualisation des notes, ni un échec de lecture, ni le masquage d’un ouvrage en attente de suppression ne la remplace ou ne l’efface. Dans les deux cas où l’envoi est suspendu — ouvrage disparu, ouvrage masqué jusqu’au résultat de sa suppression — le texte reste affiché et modifiable, et la raison est énoncée ; seule la soumission est désactivée.
+
+Les limites du lot 1 restent inchangées : aucun brouillon persistant, aucune récupération après arrêt brutal, aucune écriture synchronisée hors ligne.
+
 ## Références
 
 - [Cadrage du lot 1](../LOT-1.md), Q4, Q8, Q10, Q11 et Q12.
 - [Instructions du projet](../../AGENTS.md), formulaire, validation et gestion des erreurs.
-- [Contrat de l’API](../../../api-books-v2-/api-books-v2/README.md), création et erreurs 422/503.
-- [Routes effectives de l’API](../../../api-books-v2-/api-books-v2/src/routes-livres.js), création sans contrôle de doublon.
+- [Contrat de l’API](../../../api-books-v2-/api-books-v2/README.md), création, notes et erreurs 422/503.
+- [Routes effectives de l’API](../../../api-books-v2-/api-books-v2/src/routes-livres.js), création et `POST /books/:id/notes` sans contrôle de doublon.
 - [MDN — beforeunload](https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeunload_event), limites des avertissements de fermeture.

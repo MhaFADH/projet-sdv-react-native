@@ -1,6 +1,6 @@
 # BookList Pro
 
-BookList Pro numérise le cahier de lecture des Comptoirs du Livre. Cette version livre la consultation et la recherche par titre ou auteur du fonds par pages de vingt ouvrages triées par titre croissant par l’API, la fiche détaillée avec ses notes de lecture, l’ajout protégé contre la perte de saisie, la modification du statut collectif lu/non lu et la suppression différée depuis une fiche ou une sélection de la liste, avec annulation groupée.
+BookList Pro numérise le cahier de lecture des Comptoirs du Livre. Cette version livre la consultation et la recherche par titre ou auteur du fonds par pages de vingt ouvrages triées par titre croissant par l’API, la fiche détaillée avec ses notes de lecture et l’ajout d’une note, l’ajout d’ouvrage protégé contre la perte de saisie, la modification du statut collectif lu/non lu et la suppression différée depuis une fiche ou une sélection de la liste, avec annulation groupée.
 
 ## Prérequis
 
@@ -53,7 +53,12 @@ Pour tester depuis un appareil mobile, remplacer `localhost` dans `.env.local` p
 - validation de la réponse d’écriture, protection contre les réponses obsolètes et actualisation ciblée des caches de fiche et de liste ;
 - fiche en squelette, erreur avec réessai, absence contextualisée sur `404` et succès ;
 - consultation de `GET /books/:id/notes` dans un cache distinct par ouvrage, avec validation de chaque note, ordre serveur conservé, date et heure françaises, squelette, vide contextualisé et erreur réessayable sans masquer la bibliographie ;
-- l’ajout et la suppression de notes de lecture ne sont pas encore livrés et restent à venir ;
+- ajout d’une note depuis la fiche : champ multiligne, compteur sur 1 000 caractères, validation partagée avec le validateur de l’API, `POST /books/:id/notes` validé à l’exécution, champ et soumission verrouillés pendant l’envoi ;
+- note ajoutée affichée en tête sans invalider les caches d’ouvrages, champ vidé et confirmation par le même toast de cinq secondes que la création d’ouvrage, qui coexiste avec le bandeau de suppression sans en réinitialiser le compteur ;
+- refus `422` reporté sur le champ, `503` réessayable après temporisation, ouvrage disparu (`404`) expliqué sans effacer le texte ;
+- absence de réponse présentée comme un résultat incertain : aucun succès annoncé, actualisation des notes pour vérifier, renvoi manuel averti du risque de doublon, sans rejeu automatique ;
+- confirmation avant abandon volontaire d’une note non envoyée, depuis « Effacer la saisie » comme depuis le retour au fonds ;
+- la suppression d’une note de lecture n’est pas encore livrée et reste à venir ;
 - retour au fonds qui retrouve la page consultée et la réactualise, ou affiche la dernière page disponible si elle a disparu ;
 - annulation des requêtes obsolètes et ErrorBoundary global ;
 - ajout d’un ouvrage depuis le fonds (`/ouvrages/nouveau`) : titre, auteur, éditeur facultatif, année vide à l’ouverture et statut « Non lu » ;
@@ -87,12 +92,13 @@ npx expo install --check
 - `app/` compose les routes et les providers ;
 - `components/` contient la présentation pure ;
 - `features/books/` compose les parcours de consultation du fonds, de la fiche et d’ajout d’un ouvrage ;
+- `features/notes/` compose la saisie d’une note de lecture et les états de présentation des notes ;
 - `hooks/` porte l’intégration React avec TanStack Query ;
 - `services/api/` centralise HTTP, validation et erreurs ;
 - `services/plateforme/` porte les capacités dépendant de la plateforme derrière une interface unique ;
 - `domain/` contient les types et constantes métier purs ;
 - `theme/` centralise les tokens visuels.
 
-Le détail du flux est décrit dans [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), la décision TanStack Query dans [`docs/ADR/001-gestion-etat-serveur.md`](docs/ADR/001-gestion-etat-serveur.md), la suppression différée dans [`docs/ADR/004-suppression-differee.md`](docs/ADR/004-suppression-differee.md) et la protection de la saisie dans [`docs/ADR/005-protection-saisie.md`](docs/ADR/005-protection-saisie.md).
+Le détail du flux est décrit dans [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), la décision TanStack Query dans [`docs/ADR/001-gestion-etat-serveur.md`](docs/ADR/001-gestion-etat-serveur.md), la suppression différée dans [`docs/ADR/004-suppression-differee.md`](docs/ADR/004-suppression-differee.md) et la protection de la saisie, y compris pour l’ajout d’une note, dans [`docs/ADR/005-protection-saisie.md`](docs/ADR/005-protection-saisie.md).
 
 Le compte rendu de recette du lot 1, avec ce qui est automatisé, vérifié manuellement ou non vérifié, est dans [`docs/RECETTE-LOT-1.md`](docs/RECETTE-LOT-1.md).
