@@ -18,6 +18,17 @@
     "enabled": true,
     "rules": {
       "preset": "recommended",
+      "complexity": {
+        "useArrowFunction": "error"
+      },
+      "nursery": {
+        "useReactFunctionComponentDefinition": {
+          "level": "error",
+          "options": {
+            "namedComponents": "arrowFunction"
+          }
+        }
+      },
       "style": {
         "noExcessiveLinesPerFile": {
           "level": "error",

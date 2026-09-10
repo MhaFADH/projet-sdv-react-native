@@ -1,52 +1,71 @@
-# Welcome to your Expo app 👋
+# BookList Pro
 
-[![CI](https://github.com/MhaFADH/projet-sdv-react-native/actions/workflows/ci.yml/badge.svg)](https://github.com/MhaFADH/projet-sdv-react-native/actions/workflows/ci.yml)
+BookList Pro numérise le cahier de lecture des Comptoirs du Livre. Cette version livre la consultation du fonds par pages de vingt ouvrages, triées par titre croissant par l’API.
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## Prérequis
 
-## Get started
+- Node.js 22, conformément à `.nvmrc` ;
+- l’API BookList Pro v2 fournie avec le projet ;
+- un navigateur récent.
 
-1. Install dependencies
+## Lancement en moins de cinq minutes
 
-   ```bash
-   npm install
-   ```
+### 1. Démarrer l’API sans authentification
 
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+Depuis le dépôt de l’API :
 
 ```bash
-npm run reset-project
+npm install
+npm run seed:small
+npm start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+L’API doit répondre sur <http://localhost:3000/health>. La commande `npm start` laisse l’authentification désactivée.
 
-## Learn more
+### 2. Démarrer le client web
 
-To learn more about developing your project with Expo, look at the following resources:
+Depuis ce dépôt :
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+npm ci
+cp .env.example .env.local
+npm run web
+```
 
-## Join the community
+Ouvrir l’URL indiquée par Expo dans le navigateur. `EXPO_PUBLIC_API_URL` est une URL publique intégrée au client, jamais un secret.
 
-Join our community of developers creating universal apps.
+Pour tester depuis un appareil mobile, remplacer `localhost` dans `.env.local` par l’adresse IP locale de la machine qui exécute l’API, puis redémarrer Expo.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Comportement livré
+
+- appel de `GET /books?page=…&limit=20&sort=titre&order=asc` ;
+- validation Zod de l’enveloppe paginée et de tous les champs d’un ouvrage ;
+- chargement par squelette, erreur avec réessai, fonds vide et liste en succès ;
+- pagination « Précédent / Suivant » bornée par les métadonnées serveur ;
+- statut collectif « Lu » ou « Non lu » affiché sans action de modification ;
+- annulation des requêtes obsolètes et ErrorBoundary global.
+
+La fiche, l’ajout, la modification, la suppression, l’authentification et le mode hors ligne ne font pas partie de ce ticket.
+
+## Vérifications
+
+```bash
+npm run check
+npm run typecheck
+npm test
+npm run test:coverage
+npm run knip
+npx expo install --check
+```
+
+## Organisation
+
+- `app/` compose les routes et les providers ;
+- `components/` contient la présentation pure ;
+- `features/books/` compose le parcours de consultation ;
+- `hooks/` porte l’intégration React avec TanStack Query ;
+- `services/api/` centralise HTTP, validation et erreurs ;
+- `domain/` contient les types et constantes métier purs ;
+- `theme/` centralise les tokens visuels.
+
+Le détail du flux est décrit dans [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) et la décision TanStack Query dans [`docs/ADR/001-gestion-etat-serveur.md`](docs/ADR/001-gestion-etat-serveur.md).
