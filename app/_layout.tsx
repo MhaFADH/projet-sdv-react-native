@@ -1,24 +1,42 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
+import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { type ErrorBoundaryProps, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
+import { StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { GlobalErrorView } from '@/components/global-error-view';
+import { theme } from '@/theme/tokens';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+const queryClient = new QueryClient();
 
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
+export const ErrorBoundary = ({ retry }: ErrorBoundaryProps) => (
+  <SafeAreaView edges={['top', 'bottom']} style={styles.page}>
+    <GlobalErrorView retry={retry} />
+  </SafeAreaView>
+);
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
-
-  return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+const RootLayout = () => (
+  <QueryClientProvider client={queryClient}>
+    <ThemeProvider value={DefaultTheme}>
+      <Stack
+        screenOptions={{
+          contentStyle: { backgroundColor: theme.colors.background },
+          headerShown: false,
+        }}
+      >
+        <Stack.Screen name="index" />
       </Stack>
-      <StatusBar style="auto" />
+      <StatusBar style="dark" />
     </ThemeProvider>
-  );
-}
+  </QueryClientProvider>
+);
+
+const styles = StyleSheet.create({
+  page: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+  },
+});
+
+export default RootLayout;

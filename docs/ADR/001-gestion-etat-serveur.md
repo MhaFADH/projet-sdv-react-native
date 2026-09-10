@@ -2,7 +2,7 @@
 
 ## Statut
 
-Accepté lors du cadrage du lot 1, non implémenté. Ce document ne vaut pas autorisation de démarrer l’implémentation.
+Accepté. Implémenté partiellement par le ticket #2 pour la consultation paginée du fonds.
 
 ## Contexte
 
@@ -29,12 +29,18 @@ La saisie reste un état de formulaire géré avec React Hook Form et le schéma
 
 Ce choix n’annonce ni cache persistant ni rejeu hors ligne pour le lot 1.
 
+## État de l’implémentation
+
+Le ticket #2 livre TanStack Query pour `GET /books`, une clé de liste contenant la page, la limite, le tri et l’ordre, ainsi que la transmission du signal d’annulation au client HTTP. Les réponses sont validées à l’exécution avant leur entrée dans le cache. Le hook et l’arrivée tardive d’une ancienne page sont couverts par des tests avec le transport simulé.
+
+Les clés de fiche, les mutations, les invalidations après écriture et la bascule optimiste lu/non lu restent des décisions prévues pour les tickets fonctionnels suivants. Elles ne sont pas présentées comme disponibles dans l’application actuelle.
+
 ## Conséquences
 
 - La liste et la fiche disposent d’un mécanisme commun de cache et de mise à jour, au lieu de copies de l’état serveur gérées indépendamment par chaque écran.
 - La cohérence dépend de clés correctes, d’invalidations ciblées et de restaurations optimistes testées ; la bibliothèque ne remplace pas ces règles applicatives.
 - Un cache de données consultées ne constitue pas une sauvegarde de formulaire ni une garantie de fonctionnement hors ligne.
-- L’implémentation devra être vérifiée notamment par un hook de données testé avec une API simulée. Aucun test métier de ce comportement n’existe encore à la rédaction de cet ADR.
+- Le hook paginé est vérifié avec un transport simulé ; les mutations futures devront apporter leurs propres tests d’invalidation et de restauration.
 
 ## Références
 
