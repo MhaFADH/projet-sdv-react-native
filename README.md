@@ -1,6 +1,6 @@
 # BookList Pro
 
-BookList Pro numérise le cahier de lecture des Comptoirs du Livre. Cette version livre la consultation du fonds par pages de vingt ouvrages triées par titre croissant par l’API, la fiche détaillée avec ses notes de lecture, l’ajout protégé contre la perte de saisie, la modification du statut collectif lu/non lu et la suppression différée depuis une fiche ou une sélection de la liste, avec annulation groupée.
+BookList Pro numérise le cahier de lecture des Comptoirs du Livre. Cette version livre la consultation et la recherche par titre ou auteur du fonds par pages de vingt ouvrages triées par titre croissant par l’API, la fiche détaillée avec ses notes de lecture, l’ajout protégé contre la perte de saisie, la modification du statut collectif lu/non lu et la suppression différée depuis une fiche ou une sélection de la liste, avec annulation groupée.
 
 ## Prérequis
 
@@ -38,11 +38,12 @@ Pour tester depuis un appareil mobile, remplacer `localhost` dans `.env.local` p
 
 ## Comportement livré
 
-- appel de `GET /books?page=…&limit=20&sort=titre&order=asc` ;
+- appel de `GET /books?page=…&limit=20&q=…&sort=titre&order=asc`, avec omission de `q` quand la recherche est vide ;
+- recherche titre ou auteur appliquée côté serveur 300 ms après la dernière frappe, avec annulation des demandes dépassées ;
 - validation Zod de l’enveloppe paginée et de tous les champs d’un ouvrage ;
 - chargement par squelette, erreur avec réessai, fonds vide et liste en succès ;
 - pagination « Précédent / Suivant » bornée par les métadonnées serveur ;
-- page consultée portée par l’URL de la liste (`/?page=3`) afin d’être restituée au retour ;
+- recherche et page consultée portées par l’URL de la liste (`/?page=3&q=zola`) afin d’être restituées et actualisées au retour ;
 - statut collectif « Lu » ou « Non lu » indiqué dans la liste, sans action par ligne ;
 - cases à cocher limitées aux vingt ouvrages de la page, sélection remise à zéro à chaque changement de page et barre « N sélectionnés — Supprimer » ;
 - confirmation récapitulative avant l’ajout de la sélection au même groupe annulable que la suppression depuis une fiche ;

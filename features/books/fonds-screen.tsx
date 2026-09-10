@@ -7,13 +7,16 @@ import { useSuppressions } from '@/hooks/use-suppressions';
 
 type FondsScreenProps = {
   pageDemandee: number;
+  rechercheDemandee: string;
   changerPage: (page: number) => void;
+  changerRecherche: (recherche: string) => void;
   ouvrirOuvrage: (id: string) => void;
   ajouterOuvrage: () => void;
 };
 
 type EtatSelection = {
   page: number;
+  recherche: string;
   identifiants: Set<string>;
 };
 
@@ -21,33 +24,50 @@ const AUCUN_IDENTIFIANT = new Set<string>();
 
 export const FondsScreen = ({
   pageDemandee,
+  rechercheDemandee,
   changerPage,
+  changerRecherche,
   ouvrirOuvrage,
   ajouterOuvrage,
 }: FondsScreenProps) => {
-  const requete = useBooksPage(pageDemandee);
+  const requete = useBooksPage(pageDemandee, rechercheDemandee);
   const { confirmerSuppressions, estMasque, suppressionDesactivee } = useSuppressions();
   const [selection, setSelection] = useState<EtatSelection>(() => ({
     page: pageDemandee,
+    recherche: rechercheDemandee,
     identifiants: new Set(),
   }));
   const [confirmationVisible, setConfirmationVisible] = useState(false);
   const dernierePageDisponible = requete.data?.totalPages;
-  const identifiantsSelectionnes =
-    selection.page === pageDemandee ? selection.identifiants : AUCUN_IDENTIFIANT;
+  const selectionDesCriteres =
+    selection.page === pageDemandee && selection.recherche === rechercheDemandee;
+  const identifiantsSelectionnes = selectionDesCriteres
+    ? selection.identifiants
+    : AUCUN_IDENTIFIANT;
 
   useEffect(() => {
-    setSelection({ page: pageDemandee, identifiants: new Set() });
+    setSelection({ page: pageDemandee, recherche: rechercheDemandee, identifiants: new Set() });
     setConfirmationVisible(false);
-  }, [pageDemandee]);
+  }, [pageDemandee, rechercheDemandee]);
 
   useEffect(() => {
     if (dernierePageDisponible === undefined || pageDemandee <= dernierePageDisponible) return;
     changerPage(dernierePageDisponible);
   }, [changerPage, dernierePageDisponible, pageDemandee]);
 
+  const recherche = {
+    valeurAppliquee: rechercheDemandee,
+    appliquer: changerRecherche,
+  };
+
   if (requete.isPending || pageDemandee > (dernierePageDisponible ?? pageDemandee))
-    return <FondsView ajouterOuvrage={ajouterOuvrage} etat={{ type: 'chargement' }} />;
+    return (
+      <FondsView
+        ajouterOuvrage={ajouterOuvrage}
+        etat={{ type: 'chargement' }}
+        recherche={recherche}
+      />
+    );
 
   if (requete.isError) {
     return (
@@ -58,13 +78,22 @@ export const FondsScreen = ({
           message: requete.error.message,
           reessayer: () => void requete.refetch(),
         }}
+        recherche={recherche}
       />
     );
   }
 
-  const pagePrecedente = () => changerPage(Math.max(PREMIERE_PAGE, pageDemandee - PAS_DE_PAGE));
-  const pageSuivante = () =>
-    changerPage(Math.min(requete.data.totalPages, pageDemandee + PAS_DE_PAGE));
+  const pagePrecedente = () => {
+    if (!requete.isPlaceholderData)
+      changerPage(Math.max(PREMIERE_PAGE, pageDemandee - PAS_DE_PAGE));
+  };
+  const pageSuivante = () => {
+    if (!requete.isPlaceholderData)
+      changerPage(Math.min(requete.data.totalPages, pageDemandee + PAS_DE_PAGE));
+  };
+  const ouvrirFiche = (id: string) => {
+    if (!requete.isPlaceholderData) ouvrirOuvrage(id);
+  };
   const pageVisible = {
     ...requete.data,
     items: requete.data.items.filter(({ id }) => !estMasque(id)),
@@ -74,23 +103,28 @@ export const FondsScreen = ({
     .map(({ id, titre }) => ({ id, titre }));
 
   const basculerSelection = (id: string) => {
+    if (requete.isPlaceholderData) return;
     setSelection((courante) => {
-      const identifiants =
-        courante.page === pageDemandee ? new Set(courante.identifiants) : new Set<string>();
-      if (identifiants.delete(id)) return { page: pageDemandee, identifiants };
+      const memesCriteres =
+        courante.page === pageDemandee && courante.recherche === rechercheDemandee;
+      const identifiants = memesCriteres ? new Set(courante.identifiants) : new Set<string>();
+      if (identifiants.delete(id))
+        return { page: pageDemandee, recherche: rechercheDemandee, identifiants };
       if (identifiants.size >= OUVRAGES_PAR_PAGE) return courante;
       identifiants.add(id);
-      return { page: pageDemandee, identifiants };
+      return { page: pageDemandee, recherche: rechercheDemandee, identifiants };
     });
   };
   const demanderSuppression = () => {
-    if (ouvragesSelectionnes.length === 0 || suppressionDesactivee) return;
+    if (requete.isPlaceholderData || ouvragesSelectionnes.length === 0 || suppressionDesactivee)
+      return;
     setConfirmationVisible(true);
   };
   const confirmerSelection = () => {
-    if (ouvragesSelectionnes.length === 0 || suppressionDesactivee) return;
+    if (requete.isPlaceholderData || ouvragesSelectionnes.length === 0 || suppressionDesactivee)
+      return;
     confirmerSuppressions(ouvragesSelectionnes);
-    setSelection({ page: pageDemandee, identifiants: new Set() });
+    setSelection({ page: pageDemandee, recherche: rechercheDemandee, identifiants: new Set() });
     setConfirmationVisible(false);
   };
 
@@ -103,7 +137,7 @@ export const FondsScreen = ({
           page: pageVisible,
           pagePrecedente,
           pageSuivante,
-          ouvrirOuvrage,
+          ouvrirOuvrage: ouvrirFiche,
           selection: {
             identifiants: identifiantsSelectionnes,
             basculer: basculerSelection,
@@ -111,7 +145,9 @@ export const FondsScreen = ({
             suppressionDesactivee,
           },
           masquageTemporaire: pageVisible.items.length < requete.data.items.length,
+          pageEnChargement: requete.isPlaceholderData ? pageDemandee : undefined,
         }}
+        recherche={recherche}
       />
       {confirmationVisible && ouvragesSelectionnes.length > 0 ? (
         <ConfirmationSuppression

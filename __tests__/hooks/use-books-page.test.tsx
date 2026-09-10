@@ -51,13 +51,16 @@ describe('consultation paginée des ouvrages', () => {
     const wrapper = ({ children }: PropsWithChildren) => (
       <QueryClientProvider client={client}>{children}</QueryClientProvider>
     );
-    const { result, rerender } = renderHook(({ page }) => useBooksPage(page), {
-      initialProps: { page: 1 },
-      wrapper,
-    });
+    const { result, rerender } = renderHook(
+      ({ page, recherche }) => useBooksPage(page, recherche),
+      {
+        initialProps: { page: 1, recherche: 'zola' },
+        wrapper,
+      },
+    );
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
-    rerender({ page: 2 });
+    rerender({ page: 2, recherche: 'zola' });
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
 
     await act(async () => resolutions[1](creerReponse(2)));
@@ -67,7 +70,11 @@ describe('consultation paginée des ouvrages', () => {
     expect(result.current.data?.page).toBe(2);
     expect(
       client.getQueryCache().find({
-        queryKey: ['ouvrages', 'liste', { page: 2, limit: 20, sort: 'titre', order: 'asc' }],
+        queryKey: [
+          'ouvrages',
+          'liste',
+          { page: 2, limit: 20, q: 'zola', sort: 'titre', order: 'asc' },
+        ],
       }),
     ).toBeDefined();
   });

@@ -1,11 +1,11 @@
 import { z } from 'zod';
+import type { CriteresOuvrages } from '@/domain/criteres-ouvrages';
 import {
   ANNEE_PUBLICATION_MINIMALE,
   NOMBRE_ANNEES_FUTURES_AUTORISEES,
   OUVRAGES_PAR_PAGE,
   type Ouvrage,
   type PageOuvrages,
-  TRI_FONDS,
 } from '@/domain/ouvrage';
 import type { CorrectionOuvrage, OuvrageSaisi } from '@/domain/saisie-ouvrage';
 import { clientHttp } from './client-http';
@@ -39,18 +39,22 @@ const pageOuvragesSchema = z.object({
   totalPages: z.number().int().positive(),
 });
 
-export const fetchBooksPage = async (page: number, signal?: AbortSignal): Promise<PageOuvrages> => {
+export const fetchBooksPage = async (
+  criteres: CriteresOuvrages,
+  signal?: AbortSignal,
+): Promise<PageOuvrages> => {
   const corps = await clientHttp.get('/books', {
     parametres: {
-      page,
-      limit: OUVRAGES_PAR_PAGE,
-      sort: TRI_FONDS.champ,
-      order: TRI_FONDS.ordre,
+      page: criteres.page,
+      limit: criteres.limit,
+      q: criteres.q === '' ? undefined : criteres.q,
+      sort: criteres.sort,
+      order: criteres.order,
     },
     signal,
   });
   const resultat = pageOuvragesSchema.safeParse(corps);
-  if (!resultat.success || resultat.data.page !== page) {
+  if (!resultat.success || resultat.data.page !== criteres.page) {
     throw creerErreurValidation('La réponse du serveur pour les ouvrages est invalide.');
   }
   return resultat.data;

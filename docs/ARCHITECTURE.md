@@ -4,7 +4,7 @@
 
 Les dépendances vont de la composition vers le domaine et les services. Le domaine ne dépend ni de React, ni d’Expo, ni du réseau.
 
-| Couche                 | Responsabilité livrée dans les tickets #2, #3, #4, #5, #6, #7 et #8                                                                                                                                                                                                                                |
+| Couche                 | Responsabilité livrée dans les tickets #2, #3, #4, #5, #6, #7, #8 et #16                                                                                                                                                                                                                                |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `app/`                 | Compose Expo Router, TanStack Query, le provider global de suppression, le thème clair et l’ErrorBoundary global. Détient la page consultée dans l’URL et déclenche les navigations. `app/+html.tsx` est l’enveloppe HTML de la version web, rendue à la seule génération du document : elle déclare `lang="fr"` pour les technologies d’assistance.                                                                                                              |
 | `features/books/`      | Transforme l’état des hooks en états de présentation, pour le fonds paginé, sa sélection, la fiche et le formulaire partagé d’ajout et de correction. Interprète l’issue d’une écriture et coordonne également le cycle global des suppressions différées.                                         |
@@ -17,15 +17,16 @@ Les dépendances vont de la composition vers le domaine et les services. Le doma
 
 ## Parcours de consultation livré
 
-1. `app/index.tsx` compose `FondsScreen` sans appel réseau : il lit la page demandée dans l’URL et fournit les navigations.
-2. `FondsScreen` traduit l’état de `useBooksPage` en états de présentation et demande un changement de page à la route.
-3. Le hook crée une clé de cache contenant la page, la limite de vingt, le champ de tri et l’ordre.
-4. TanStack Query fournit un `AbortSignal` à `fetchBooksPage`. Un changement de page annule la requête devenue inutile et chaque page conserve une entrée de cache distincte.
-5. `clientHttp` lit `EXPO_PUBLIC_API_URL`, ajoute les en-têtes communs, construit les paramètres et applique un délai d’expiration de dix secondes.
-6. `books-api.ts` valide avec Zod l’enveloppe, les ouvrages, les identifiants, les dates, les versions et les autres champs serveur.
-7. Une réponse valide rejoint le cache de sa clé. Une réponse invalide ou une erreur HTTP devient une erreur applicative discriminée, jamais une donnée fictive.
-8. `FondsView` reçoit un état de chargement, d’erreur ou de succès. Il réserve l’état « fonds vide » à un total serveur nul et borne les commandes avec les métadonnées serveur.
-9. Si une écriture concurrente fait disparaître la page demandée, `FondsScreen` revient à la dernière page indiquée par le serveur. L’état transitoire conserve une commande « Précédent » au lieu de présenter tout le fonds comme vide.
+1. `app/index.tsx` compose `FondsScreen` sans appel réseau : il lit la recherche et la page demandées dans l’URL et fournit les navigations.
+2. `RechercheFonds` conserve seule la saisie immédiate. Son attente repoussable applique la valeur après 300 ms, sans rendre de nouveau la liste pendant les frappes.
+3. `FondsScreen` traduit l’état de `useBooksPage` en états de présentation. Une recherche appliquée revient à la page une et vide la sélection, y compris lorsque la première page était déjà affichée.
+4. Le hook crée une clé de cache contenant `q`, la page, la limite de vingt et le tri fixe par titre croissant. Seul le serveur recherche, trie et pagine.
+5. TanStack Query fournit un `AbortSignal` à `fetchBooksPage`. Un changement de critères annule la requête devenue inutile et chaque combinaison conserve une entrée de cache distincte.
+6. `clientHttp` lit `EXPO_PUBLIC_API_URL`, ajoute les en-têtes communs, construit les paramètres et applique un délai d'expiration de dix secondes.
+7. `books-api.ts` valide avec Zod l'enveloppe, les ouvrages, les identifiants, les dates, les versions et les autres champs serveur.
+8. Une réponse valide rejoint le cache de sa clé. Une réponse invalide ou une erreur HTTP devient une erreur applicative discriminée, jamais une donnée fictive.
+9. `FondsView` reçoit un état de chargement, d’erreur ou de succès. Il distingue fonds vide, recherche sans résultat et chargement d’une autre page. Pendant ce dernier, les anciennes lignes restent lisibles, mais leur sélection, la suppression et la pagination sont désactivées jusqu’à la réponse serveur.
+10. Si une écriture concurrente fait disparaître la page demandée, `FondsScreen` revient à la dernière page indiquée par le serveur. L’état transitoire conserve une commande « Précédent » au lieu de présenter tout le fonds comme vide.
 
 Une réponse de page ancienne ne remplace pas la page actuellement demandée : les clés sont distinctes et TanStack Query annule l’observation précédente.
 
@@ -47,9 +48,16 @@ Une fois la fiche bibliographique disponible, `useNotes` interroge `GET /books/:
 
 ## Retour au fonds
 
-La page consultée est portée par le paramètre d’URL `page` de la route racine, lu par `lireNumeroPage` dans `domain/`. Une valeur inutilisable retombe sur la première page.
+La page consultée et la recherche appliquée sont portées par les paramètres d’URL `page` et `q` de la route racine. Une page inutilisable retombe sur la première page.
 
-Le retour depuis une fiche ne démonte pas l’écran du fonds : `useRafraichirFondsAuFocus` invalide la clé de la page consultée à chaque nouveau focus, jamais au premier affichage. La page revient donc actualisée. Si le fonds a diminué au point de faire disparaître cette page, `FondsScreen` demande la dernière page annoncée par le serveur, comme lors d’une pagination classique.
+Le retour depuis une fiche ne démonte pas l’écran du fonds : `useRafraichirFondsAuFocus` invalide la clé exacte de la recherche et de la page consultées à chaque nouveau focus, jamais au premier affichage. La fiche reçoit aussi ces paramètres de retour afin que son repli sans historique reconstruise le même fonds. Si le fonds a diminué au point de faire disparaître cette page, `FondsScreen` demande la dernière page annoncée par le serveur, comme lors d’une pagination classique.
+
+## Preuve de rendu avec React DevTools
+
+1. Lancer l’API, puis `npm run web`, ouvrir React DevTools et sélectionner l’onglet Profiler.
+2. Démarrer un enregistrement, saisir un caractère dans « Rechercher un titre ou un auteur », puis arrêter l’enregistrement avant 300 ms.
+3. Ouvrir le commit enregistré : `RechercheFonds` apparaît, tandis que `FondsScreen`, `FondsView` et `OuvragesList` sont absents des composants rendus.
+4. Recommencer en laissant passer plus de 300 ms : un second commit contient l’application des critères et le rendu des nouveaux résultats. Le panneau Réseau montre alors un unique `GET /books` avec `q`, `page=1`, `limit=20`, `sort=titre` et `order=asc`.
 
 ## Erreurs et reprise
 

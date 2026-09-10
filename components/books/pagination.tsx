@@ -5,6 +5,7 @@ import { theme } from '@/theme/tokens';
 type PaginationProps = Pick<PageOuvrages, 'page' | 'total' | 'totalPages'> & {
   pagePrecedente: () => void;
   pageSuivante: () => void;
+  navigationDesactivee?: boolean;
 };
 
 type BoutonPaginationProps = {
@@ -31,6 +32,7 @@ export const Pagination = ({
   totalPages,
   pagePrecedente,
   pageSuivante,
+  navigationDesactivee = false,
 }: PaginationProps) => {
   const libelleTotal = total === 1 ? 'ouvrage' : 'ouvrages';
   return (
@@ -41,10 +43,14 @@ export const Pagination = ({
       <View style={styles.actions}>
         <BoutonPagination
           action={pagePrecedente}
-          desactive={page <= PREMIERE_PAGE}
+          desactive={navigationDesactivee || page <= PREMIERE_PAGE}
           libelle="Précédent"
         />
-        <BoutonPagination action={pageSuivante} desactive={page >= totalPages} libelle="Suivant" />
+        <BoutonPagination
+          action={pageSuivante}
+          desactive={navigationDesactivee || page >= totalPages}
+          libelle="Suivant"
+        />
       </View>
     </View>
   );

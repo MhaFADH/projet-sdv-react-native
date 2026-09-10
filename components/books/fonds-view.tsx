@@ -7,6 +7,7 @@ import type { PageOuvrages } from '@/domain/ouvrage';
 import { theme } from '@/theme/tokens';
 import { OuvragesList } from './ouvrages-list';
 import { Pagination } from './pagination';
+import { RechercheFonds } from './recherche-fonds';
 
 type SelectionFonds = {
   identifiants: ReadonlySet<string>;
@@ -26,11 +27,16 @@ type EtatFonds =
       ouvrirOuvrage: (id: string) => void;
       selection: SelectionFonds;
       masquageTemporaire?: boolean;
+      pageEnChargement?: number;
     };
 
 type FondsViewProps = {
   etat: EtatFonds;
   ajouterOuvrage: () => void;
+  recherche?: {
+    valeurAppliquee: string;
+    appliquer: (recherche: string) => void;
+  };
 };
 
 const NOMBRE_LIGNES_SQUELETTE = 5;
@@ -47,11 +53,12 @@ const EnteteFonds = ({ ajouterOuvrage }: Pick<FondsViewProps, 'ajouterOuvrage'>)
   </View>
 );
 
-type CadreFondsProps = PropsWithChildren<Pick<FondsViewProps, 'ajouterOuvrage'>>;
+type CadreFondsProps = PropsWithChildren<Pick<FondsViewProps, 'ajouterOuvrage' | 'recherche'>>;
 
-const CadreFonds = ({ ajouterOuvrage, children }: CadreFondsProps) => (
-  <ScrollView contentContainerStyle={styles.conteneur}>
+const CadreFonds = ({ ajouterOuvrage, recherche, children }: CadreFondsProps) => (
+  <ScrollView contentContainerStyle={styles.conteneur} keyboardShouldPersistTaps="handled">
     <EnteteFonds ajouterOuvrage={ajouterOuvrage} />
+    {recherche ? <RechercheFonds {...recherche} /> : null}
     {children}
   </ScrollView>
 );
@@ -64,9 +71,12 @@ const ErreurFonds = ({ message, reessayer }: Extract<EtatFonds, { type: 'erreur'
   <EtatErreur message={message} reessayer={reessayer} titre="Impossible de charger le fonds" />
 );
 
-const FondsVide = () => (
-  <EtatAbsence message="Aucun ouvrage n'est encore recensé." titre="Le fonds est vide" />
-);
+const FondsVide = ({ rechercheActive }: { rechercheActive: boolean }) =>
+  rechercheActive ? (
+    <EtatAbsence message="Aucun ouvrage ne correspond à cette recherche." titre="Aucun résultat" />
+  ) : (
+    <EtatAbsence message="Aucun ouvrage n'est encore recensé." titre="Le fonds est vide" />
+  );
 
 const FondsMasqueTemporairement = ({
   page,
@@ -120,23 +130,36 @@ const FondsRempli = ({
   pageSuivante,
   ouvrirOuvrage,
   selection,
+  pageEnChargement,
 }: Extract<EtatFonds, { type: 'succes' }>) => {
+  const interactionsDesactivees = pageEnChargement !== undefined;
   const nombreSelectionnes = page.items.filter(({ id }) => selection.identifiants.has(id)).length;
 
   return (
     <>
+      {pageEnChargement ? (
+        <View
+          accessibilityLabel={`Chargement de la page ${pageEnChargement}`}
+          accessibilityRole="progressbar"
+        >
+          <Text style={styles.chargementPage}>Chargement de la page {pageEnChargement}…</Text>
+        </View>
+      ) : null}
       <BarreSelectionSuppression
         demanderSuppression={selection.demanderSuppression}
         nombreSelectionnes={nombreSelectionnes}
-        suppressionDesactivee={selection.suppressionDesactivee}
+        suppressionDesactivee={selection.suppressionDesactivee || interactionsDesactivees}
       />
       <OuvragesList
         basculerSelection={selection.basculer}
         identifiantsSelectionnes={selection.identifiants}
         ouvrages={page.items}
+        ouvertureDesactivee={interactionsDesactivees}
         ouvrirOuvrage={ouvrirOuvrage}
+        selectionDesactivee={interactionsDesactivees}
       />
       <Pagination
+        navigationDesactivee={interactionsDesactivees}
         page={page.page}
         pagePrecedente={pagePrecedente}
         pageSuivante={pageSuivante}
@@ -147,19 +170,20 @@ const FondsRempli = ({
   );
 };
 
-const ContenuFonds = ({ etat }: Pick<FondsViewProps, 'etat'>) => {
+const ContenuFonds = ({ etat, recherche }: Pick<FondsViewProps, 'etat' | 'recherche'>) => {
   if (etat.type === 'chargement') return <ChargementFonds />;
   if (etat.type === 'erreur') return <ErreurFonds {...etat} />;
-  if (etat.page.total === 0) return <FondsVide />;
+  if (etat.page.total === 0)
+    return <FondsVide rechercheActive={(recherche?.valeurAppliquee ?? '') !== ''} />;
   if (etat.page.items.length === 0 && etat.masquageTemporaire)
     return <FondsMasqueTemporairement {...etat} />;
   if (etat.page.items.length === 0) return <PageIndisponible {...etat} />;
   return <FondsRempli {...etat} />;
 };
 
-export const FondsView = ({ etat, ajouterOuvrage }: FondsViewProps) => (
-  <CadreFonds ajouterOuvrage={ajouterOuvrage}>
-    <ContenuFonds etat={etat} />
+export const FondsView = ({ etat, ajouterOuvrage, recherche }: FondsViewProps) => (
+  <CadreFonds ajouterOuvrage={ajouterOuvrage} recherche={recherche}>
+    <ContenuFonds etat={etat} recherche={recherche} />
   </CadreFonds>
 );
 
@@ -189,5 +213,9 @@ const styles = StyleSheet.create({
     color: theme.colors.text,
     fontSize: theme.typography.pageTitle,
     fontWeight: '700',
+  },
+  chargementPage: {
+    color: theme.colors.textMuted,
+    fontSize: theme.typography.body,
   },
 });

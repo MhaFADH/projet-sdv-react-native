@@ -51,8 +51,10 @@ const FondsControle = ({ pageInitiale = 1 }: ProprietesFondsControle) => {
     <FondsScreen
       ajouterOuvrage={vi.fn()}
       changerPage={changerPage}
+      changerRecherche={vi.fn()}
       ouvrirOuvrage={vi.fn()}
       pageDemandee={page}
+      rechercheDemandee=""
     />
   );
 };

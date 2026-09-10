@@ -9,6 +9,8 @@ type OuvragesListProps = {
   identifiantsSelectionnes: ReadonlySet<string>;
   basculerSelection: (id: string) => void;
   ouvrirOuvrage: (id: string) => void;
+  ouvertureDesactivee?: boolean;
+  selectionDesactivee?: boolean;
 };
 
 export const OuvragesList = ({
@@ -16,6 +18,8 @@ export const OuvragesList = ({
   identifiantsSelectionnes,
   basculerSelection,
   ouvrirOuvrage,
+  ouvertureDesactivee = false,
+  selectionDesactivee = false,
 }: OuvragesListProps) => (
   <View accessibilityLabel="Ouvrages du fonds" role="list" style={styles.liste}>
     {ouvrages.map((ouvrage) => {
@@ -27,21 +31,32 @@ export const OuvragesList = ({
             {...creerActivationParEspace(basculer)}
             accessibilityLabel={`Sélectionner ${ouvrage.titre}`}
             accessibilityRole="checkbox"
-            accessibilityState={{ checked: selectionne }}
+            accessibilityState={{ checked: selectionne, disabled: selectionDesactivee }}
             aria-checked={selectionne}
+            disabled={selectionDesactivee}
             onPress={basculer}
-            style={[styles.caseSelection, selectionne && styles.caseSelectionnee]}
+            style={[
+              styles.caseSelection,
+              selectionne && styles.caseSelectionnee,
+              selectionDesactivee && styles.caseSelectionDesactivee,
+            ]}
           >
             <Text selectable={false} style={styles.coche}>
               {selectionne ? '✓' : ''}
             </Text>
           </Pressable>
           <Pressable
-            accessibilityHint="Ouvre la fiche de l’ouvrage"
+            accessibilityHint={
+              ouvertureDesactivee
+                ? 'Ouverture indisponible pendant le chargement de la page'
+                : 'Ouvre la fiche de l’ouvrage'
+            }
             accessibilityLabel={`${ouvrage.titre}, ${ouvrage.auteur}, ${libelleStatutLecture(ouvrage.lu)}`}
             accessibilityRole="button"
+            accessibilityState={{ disabled: ouvertureDesactivee }}
+            disabled={ouvertureDesactivee}
             onPress={() => ouvrirOuvrage(ouvrage.id)}
-            style={styles.carte}
+            style={[styles.carte, ouvertureDesactivee && styles.carteDesactivee]}
           >
             <View style={styles.description}>
               <Text style={styles.titre}>{ouvrage.titre}</Text>
@@ -80,6 +95,9 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.primary,
     backgroundColor: theme.colors.primary,
   },
+  caseSelectionDesactivee: {
+    opacity: 0.5,
+  },
   coche: {
     color: theme.colors.primaryText,
     fontSize: theme.typography.body,
@@ -98,6 +116,9 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border,
     borderRadius: theme.radius.md,
     backgroundColor: theme.colors.surface,
+  },
+  carteDesactivee: {
+    opacity: 0.5,
   },
   description: {
     flexGrow: 1,

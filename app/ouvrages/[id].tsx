@@ -6,13 +6,20 @@ import { theme } from '@/theme/tokens';
 
 const FicheRoute = () => {
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, retourPage, retourRecherche } = useLocalSearchParams<{
+    id: string;
+    retourPage?: string;
+    retourRecherche?: string;
+  }>();
   const retour = () => {
     if (router.canGoBack()) {
       router.back();
       return;
     }
-    router.replace('/');
+    router.replace({
+      pathname: '/',
+      params: { page: retourPage ?? '1', q: retourRecherche ?? '' },
+    });
   };
 
   return (
