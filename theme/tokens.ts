@@ -13,6 +13,7 @@ export const theme = {
     neutralBackground: '#ECEFF2',
     dangerBackground: '#FBE9E7',
     dangerText: '#8A2C24',
+    overlay: 'rgba(31, 41, 51, 0.45)',
   },
   spacing: {
     xs: 4,

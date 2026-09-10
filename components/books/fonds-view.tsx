@@ -16,6 +16,7 @@ type EtatFonds =
       pagePrecedente: () => void;
       pageSuivante: () => void;
       ouvrirOuvrage: (id: string) => void;
+      masquageTemporaire?: boolean;
     };
 
 type FondsViewProps = {
@@ -56,6 +57,13 @@ const ErreurFonds = ({ message, reessayer }: Extract<EtatFonds, { type: 'erreur'
 
 const FondsVide = () => (
   <EtatAbsence message="Aucun ouvrage n'est encore recensé." titre="Le fonds est vide" />
+);
+
+const FondsMasqueTemporairement = () => (
+  <EtatAbsence
+    message="Les ouvrages de cette page restent récupérables avec « Annuler tout » avant l’envoi."
+    titre="Ouvrages masqués temporairement"
+  />
 );
 
 const PageIndisponible = ({
@@ -100,6 +108,7 @@ const ContenuFonds = ({ etat }: Pick<FondsViewProps, 'etat'>) => {
   if (etat.type === 'chargement') return <ChargementFonds />;
   if (etat.type === 'erreur') return <ErreurFonds {...etat} />;
   if (etat.page.total === 0) return <FondsVide />;
+  if (etat.page.items.length === 0 && etat.masquageTemporaire) return <FondsMasqueTemporairement />;
   if (etat.page.items.length === 0) return <PageIndisponible {...etat} />;
   return <FondsRempli {...etat} />;
 };

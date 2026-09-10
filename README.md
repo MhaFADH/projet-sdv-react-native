@@ -1,6 +1,6 @@
 # BookList Pro
 
-BookList Pro numérise le cahier de lecture des Comptoirs du Livre. Cette version livre la consultation du fonds par pages de vingt ouvrages triées par titre croissant par l’API, la fiche détaillée, l’ajout protégé contre la perte de saisie et la modification du statut collectif lu/non lu.
+BookList Pro numérise le cahier de lecture des Comptoirs du Livre. Cette version livre la consultation du fonds par pages de vingt ouvrages triées par titre croissant par l’API, la fiche détaillée, l’ajout protégé contre la perte de saisie, la modification du statut collectif lu/non lu et la suppression différée avec annulation groupée.
 
 ## Prérequis
 
@@ -57,9 +57,14 @@ Pour tester depuis un appareil mobile, remplacer `localhost` dans `.env.local` p
 - refus `422` reporté sur les champs concernés, indisponibilité `503` réessayable après temporisation, saisie toujours conservée ;
 - création au résultat inconnu signalée sans réessai automatique, avec vérification du fonds ou réessai manuel averti du risque de doublon ;
 - confirmation avant abandon volontaire d’une saisie modifiée et avertissement de départ du navigateur, sans brouillon persistant ;
-- après création confirmée : formulaire vidé, statut remis à « Non lu », toast de cinq secondes contenant le bouton vers la fiche, suspendu au survol ou au focus clavier, et invalidation ciblée des listes.
+- après création confirmée : formulaire vidé, statut remis à « Non lu », toast de cinq secondes contenant le bouton vers la fiche, suspendu au survol ou au focus clavier, et invalidation ciblée des listes ;
+- suppression directe depuis une fiche après confirmation nominative ;
+- masquage temporaire et groupe global conservé pendant les navigations internes ;
+- échéance commune de cinq secondes, remise à cinq secondes à chaque ajout, avec « Annuler tout » ;
+- DELETE individuels via le client HTTP partagé, sans promesse de transaction atomique ;
+- réaffichage des seuls échecs partiels et réessai ciblé après une nouvelle confirmation et un nouveau délai.
 
-La correction bibliographique, la suppression, l’authentification et le mode hors ligne ne font pas partie de ces tickets.
+Les intentions non envoyées ne sont pas persistées : fermer ou recharger les abandonne. Une requête déjà partie ne peut pas être annulée avec garantie côté serveur. La sélection depuis la liste, la correction bibliographique, l’authentification et le mode hors ligne ne font pas partie de ces tickets.
 
 ## Vérifications
 

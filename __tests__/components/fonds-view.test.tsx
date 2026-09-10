@@ -89,6 +89,25 @@ describe('présentation du fonds', () => {
     expect(screen.getByRole('button', { name: 'Précédent' })).toBeEnabled();
   });
 
+  it('distingue le masquage temporaire d’une page serveur disparue', () => {
+    render(
+      <FondsView
+        ajouterOuvrage={vi.fn()}
+        etat={{
+          type: 'succes',
+          page: { items: [], page: 1, limit: 20, total: 2, totalPages: 1 },
+          pagePrecedente: vi.fn(),
+          pageSuivante: vi.fn(),
+          ouvrirOuvrage: vi.fn(),
+          masquageTemporaire: true,
+        }}
+      />,
+    );
+
+    expect(screen.getByRole('heading', { name: 'Ouvrages masqués temporairement' })).toBeVisible();
+    expect(screen.getByText(/Annuler tout/)).toBeVisible();
+  });
+
   it('présente les ouvrages, leur statut collectif et la pagination serveur', () => {
     const pageSuivante = vi.fn();
     render(

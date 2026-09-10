@@ -6,6 +6,7 @@ import 'react-native-reanimated';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { GlobalErrorView } from '@/components/global-error-view';
+import { SuppressionsProvider } from '@/features/books/suppressions-provider';
 import { theme } from '@/theme/tokens';
 
 const queryClient = new QueryClient();
@@ -19,17 +20,19 @@ export const ErrorBoundary = ({ retry }: ErrorBoundaryProps) => (
 const RootLayout = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider value={DefaultTheme}>
-      <Stack
-        screenOptions={{
-          contentStyle: { backgroundColor: theme.colors.background },
-          headerShown: false,
-        }}
-      >
-        <Stack.Screen name="index" />
-        <Stack.Screen name="ouvrages/nouveau" />
-        <Stack.Screen name="ouvrages/[id]" />
-      </Stack>
-      <StatusBar style="dark" />
+      <SuppressionsProvider>
+        <Stack
+          screenOptions={{
+            contentStyle: { backgroundColor: theme.colors.background },
+            headerShown: false,
+          }}
+        >
+          <Stack.Screen name="index" />
+          <Stack.Screen name="ouvrages/nouveau" />
+          <Stack.Screen name="ouvrages/[id]" />
+        </Stack>
+        <StatusBar style="dark" />
+      </SuppressionsProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );

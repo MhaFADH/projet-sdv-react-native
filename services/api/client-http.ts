@@ -17,10 +17,15 @@ type OptionsEcriture = {
 
 type RequeteHttp = {
   chemin: string;
-  methode: 'GET' | 'POST' | 'PATCH';
+  methode: 'GET' | 'POST' | 'PATCH' | 'DELETE';
   parametres?: Record<string, ParametreRequete>;
   corps?: unknown;
   signal?: AbortSignal;
+};
+
+type ResultatRequete = {
+  corps: unknown;
+  statut: number;
 };
 
 const construireUrl = (chemin: string, parametres: Record<string, ParametreRequete>): string => {
@@ -84,7 +89,7 @@ const executer = async ({
   parametres = {},
   corps,
   signal,
-}: RequeteHttp): Promise<unknown> => {
+}: RequeteHttp): Promise<ResultatRequete> => {
   const url = construireUrl(chemin, parametres);
   const controleur = new AbortController();
   let expiree = false;
@@ -102,7 +107,7 @@ const executer = async ({
   try {
     reponse = await fetch(url, {
       method: methode,
-      headers: methode === 'GET' ? EN_TETES_JSON : EN_TETES_ENVOI_JSON,
+      headers: methode === 'GET' || methode === 'DELETE' ? EN_TETES_JSON : EN_TETES_ENVOI_JSON,
       body: corps === undefined ? undefined : JSON.stringify(corps),
       signal: controleur.signal,
     });
@@ -115,16 +120,31 @@ const executer = async ({
   }
 
   if (!reponse.ok) throw traduireErreurHttp(reponse.status, reponseCorps);
-  return reponseCorps;
+  return { corps: reponseCorps, statut: reponse.status };
 };
 
-const get = (chemin: string, options: OptionsRequete = {}): Promise<unknown> =>
-  executer({ chemin, methode: 'GET', parametres: options.parametres, signal: options.signal });
+const get = async (chemin: string, options: OptionsRequete = {}): Promise<unknown> =>
+  (await executer({ chemin, methode: 'GET', ...options })).corps;
 
-const post = (chemin: string, corps: unknown, options: OptionsEcriture = {}): Promise<unknown> =>
-  executer({ chemin, methode: 'POST', corps, signal: options.signal });
+const post = async (
+  chemin: string,
+  corps: unknown,
+  options: OptionsEcriture = {},
+): Promise<unknown> =>
+  (await executer({ chemin, methode: 'POST', corps, signal: options.signal })).corps;
 
-const patch = (chemin: string, corps: unknown, options: OptionsEcriture = {}): Promise<unknown> =>
-  executer({ chemin, methode: 'PATCH', corps, signal: options.signal });
+const patch = async (
+  chemin: string,
+  corps: unknown,
+  options: OptionsEcriture = {},
+): Promise<unknown> =>
+  (await executer({ chemin, methode: 'PATCH', corps, signal: options.signal })).corps;
 
-export const clientHttp = { get, post, patch };
+const supprimer = async (chemin: string, options: OptionsEcriture = {}): Promise<void> => {
+  const resultat = await executer({ chemin, methode: 'DELETE', signal: options.signal });
+  if (resultat.statut !== 204 || resultat.corps !== undefined) {
+    throw creerErreurValidation('La réponse du serveur pour la suppression est invalide.');
+  }
+};
+
+export const clientHttp = { get, post, patch, supprimer };

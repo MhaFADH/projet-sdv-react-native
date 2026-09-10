@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { type PropsWithChildren, useCallback, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { FondsScreen } from '../../features/books/fonds-screen';
+import { SuppressionsProvider } from '../../features/books/suppressions-provider';
 import { clesOuvrages } from '../../hooks/cles-ouvrages';
 
 const ouvrage = {
@@ -45,7 +46,9 @@ const FondsControle = ({ pageInitiale, ouvrirOuvrage }: FondsControleProps) => {
 const rendreFonds = (pageInitiale: number) => {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const wrapper = ({ children }: PropsWithChildren) => (
-    <QueryClientProvider client={client}>{children}</QueryClientProvider>
+    <QueryClientProvider client={client}>
+      <SuppressionsProvider>{children}</SuppressionsProvider>
+    </QueryClientProvider>
   );
   const ouvrirOuvrage = vi.fn();
   render(<FondsControle ouvrirOuvrage={ouvrirOuvrage} pageInitiale={pageInitiale} />, { wrapper });

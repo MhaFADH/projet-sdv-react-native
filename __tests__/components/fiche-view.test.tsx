@@ -19,6 +19,14 @@ const ouvrage = {
   version: 3,
 };
 
+const etatSucces = (valeur = ouvrage) => ({
+  type: 'succes' as const,
+  ouvrage: valeur,
+  ...actionStatut,
+  demanderSuppression: vi.fn(),
+  suppressionDesactivee: false,
+});
+
 describe('présentation de la fiche', () => {
   it('affiche un squelette accessible pendant le chargement', () => {
     render(<FicheView etat={{ type: 'chargement' }} retour={vi.fn()} />);
@@ -57,13 +65,18 @@ describe('présentation de la fiche', () => {
 
   it("présente l'édition consultée et un retour au fonds accessible", () => {
     const retour = vi.fn();
-    render(<FicheView etat={{ type: 'succes', ouvrage, ...actionStatut }} retour={retour} />);
+    const etat = etatSucces();
+    render(<FicheView etat={etat} retour={retour} />);
 
     expect(screen.getByRole('heading', { name: 'Bel-Ami' })).toBeVisible();
     expect(screen.getByText('Guy de Maupassant')).toBeVisible();
     expect(screen.getByText('Victor Havard')).toBeVisible();
     expect(screen.getByText('1885')).toBeVisible();
     expect(screen.getByText('Lu')).toBeVisible();
+    const boutonSuppression = screen.getByRole('button', { name: 'Supprimer Bel-Ami' });
+    expect(boutonSuppression).toHaveStyle({ minHeight: '44px' });
+    fireEvent.click(boutonSuppression);
+    expect(etat.demanderSuppression).toHaveBeenCalledOnce();
 
     const boutonRetour = screen.getByRole('button', { name: 'Retour au fonds' });
     expect(boutonRetour).toHaveStyle({ minHeight: '44px' });
@@ -75,24 +88,14 @@ describe('présentation de la fiche', () => {
   });
 
   it("reste valide lorsque l'éditeur accepté par le contrat est vide", () => {
-    render(
-      <FicheView
-        etat={{ type: 'succes', ouvrage: { ...ouvrage, editeur: '' }, ...actionStatut }}
-        retour={vi.fn()}
-      />,
-    );
+    render(<FicheView etat={etatSucces({ ...ouvrage, editeur: '' })} retour={vi.fn()} />);
 
     expect(screen.getByRole('heading', { name: 'Bel-Ami' })).toBeVisible();
     expect(screen.getByText('Éditeur non renseigné')).toBeVisible();
   });
 
   it('annonce un statut de lecture négatif sans le déguiser', () => {
-    render(
-      <FicheView
-        etat={{ type: 'succes', ouvrage: { ...ouvrage, lu: false }, ...actionStatut }}
-        retour={vi.fn()}
-      />,
-    );
+    render(<FicheView etat={etatSucces({ ...ouvrage, lu: false })} retour={vi.fn()} />);
 
     expect(screen.getByText('Non lu')).toBeVisible();
   });
@@ -101,7 +104,7 @@ describe('présentation de la fiche', () => {
     const basculerStatut = vi.fn();
     render(
       <FicheView
-        etat={{ type: 'succes', ouvrage, basculerStatut, statutEnCours: false }}
+        etat={{ ...etatSucces(), basculerStatut, statutEnCours: false }}
         retour={vi.fn()}
       />,
     );
@@ -117,12 +120,7 @@ describe('présentation de la fiche', () => {
   });
 
   it('affiche le chargement dans le bouton sans modifier son contenu dimensionnant', () => {
-    render(
-      <FicheView
-        etat={{ type: 'succes', ouvrage, basculerStatut: vi.fn(), statutEnCours: true }}
-        retour={vi.fn()}
-      />,
-    );
+    render(<FicheView etat={{ ...etatSucces(), statutEnCours: true }} retour={vi.fn()} />);
 
     expect(screen.getByLabelText('Enregistrement du statut en cours')).toBeVisible();
     expect(screen.getByText('Marquer comme non lu')).toHaveStyle({ opacity: '0' });
@@ -133,9 +131,7 @@ describe('présentation de la fiche', () => {
     render(
       <FicheView
         etat={{
-          type: 'succes',
-          ouvrage,
-          ...actionStatut,
+          ...etatSucces(),
           erreurStatut: {
             message: 'Le statut précédent a été restauré. Service indisponible.',
             reessayer,
