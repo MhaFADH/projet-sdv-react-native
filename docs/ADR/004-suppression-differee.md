@@ -2,7 +2,7 @@
 
 ## Statut
 
-Accepté et implémenté pour la suppression directe depuis les fiches dans le ticket #7 et pour la sélection depuis la liste dans le ticket #8.
+Accepté et implémenté pour la suppression directe depuis les fiches dans le ticket #7 et pour la sélection depuis la liste dans le ticket #8. Le ticket #19 ajoute une exception explicitement validée pour les notes de lecture, sans modifier ce mécanisme.
 
 ## Contexte
 
@@ -43,10 +43,27 @@ Fermer ou recharger le document avant l’envoi abandonne les intentions non env
 - Le groupe vit uniquement dans le provider React racine : la navigation interne le conserve, tandis qu’une fermeture ou un rechargement l’abandonne sans forcer de DELETE.
 - La sélection de liste reste locale à `FondsScreen` et ne traverse jamais une page ; seule sa confirmation transmet les ouvrages au groupe global existant.
 
+## Exception validée pour les notes de lecture
+
+Le lot 2 arbitre différemment la suppression d'une note. Cette exception est un choix produit explicitement validé, décrit dans [le cadrage du lot 2](../LOT-2.md) ; elle ne change rien aux suppressions d'ouvrages.
+
+- Une note demande confirmation, puis son DELETE part immédiatement. Aucun délai de cinq secondes, aucune action d'annulation, aucune recréation destinée à simuler une restauration serveur. La confirmation le dit explicitement avant l'envoi.
+- La confirmation identifie la note par sa date et un extrait de son contenu. La date seule ne suffit pas : deux notes d'un même ouvrage peuvent partager la même minute.
+- Les notes n'entrent jamais dans le groupe global des ouvrages. Elles ne remettent pas son échéance commune à cinq secondes, ne modifient pas son compteur, et « Annuler tout » ne les restaure pas. Le bandeau et les suppressions d'ouvrages déjà programmées conservent intégralement leur fonctionnement.
+- L'état de l'envoi est visible sur la note concernée et une seconde soumission de la même note est écartée ; les autres notes restent actionnables pendant un envoi lent.
+- Un échec produit un retour visible attaché à la note, avec une reprise toujours offerte : temporisation avant réessai sur `503`, reprise immédiate sur un refus concluant. Une action en échec n'est jamais laissée bloquée. Chaque note a sa propre temporisation : supprimer une note ne raccourcit ni n'annule le compte à rebours d'une autre.
+- Une réponse perdue reste un résultat incertain : la note a peut-être été supprimée. L'interface ne prétend pas que le serveur n'a rien supprimé et n'annonce aucune restauration sans preuve ; elle propose d'actualiser les notes pour vérifier avant tout nouvel envoi.
+- Le contrat documentant `204 | 404` pour cette route, un `404` est traité comme une issue et non comme un échec : l'intention est satisfaite, la liste est actualisée et l'action ne devient pas un blocage permanent.
+
+### Pourquoi cette différence est tenable
+
+Une note est une observation textuelle courte, recréable à l'identique par son auteur en quelques secondes, sans identité ni relations à préserver — contrairement à un ouvrage, dont la fiche porte identifiant, version et historique. Le coût d'une suppression accidentelle est donc borné par la confirmation seule, là où un ouvrage justifie la fenêtre d'annulation du lot 1.
+
 ## Références
 
 - [Cadrage du lot 1](../LOT-1.md), Q3, Q9, Q16 et Q18 à Q20.
-- [Contrat de l’API](../../../api-books-v2-/api-books-v2/README.md), route DELETE des ouvrages.
+- [Cadrage du lot 2](../LOT-2.md), section « Suppression des notes : exception validée ».
+- [Contrat de l’API](../../../api-books-v2-/api-books-v2/README.md), routes DELETE des ouvrages et des notes.
 - [Routes effectives de l’API](../../../api-books-v2-/api-books-v2/src/routes-livres.js), suppression et absence de restauration.
 - [MDN — beforeunload](https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeunload_event), événement non garanti et dialogue annulable.
 - [MDN — Request.keepalive](https://developer.mozilla.org/en-US/docs/Web/API/Request/keepalive), maintien d’une requête déjà initiée, sans garantie de résultat serveur.

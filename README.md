@@ -1,6 +1,6 @@
 # BookList Pro
 
-BookList Pro numérise le cahier de lecture des Comptoirs du Livre. Cette version livre la consultation et la recherche par titre ou auteur du fonds par pages de vingt ouvrages triées par titre croissant par l’API, la fiche détaillée avec ses notes de lecture et l’ajout d’une note, l’ajout d’ouvrage protégé contre la perte de saisie, la modification du statut collectif lu/non lu et la suppression différée depuis une fiche ou une sélection de la liste, avec annulation groupée.
+BookList Pro numérise le cahier de lecture des Comptoirs du Livre. Cette version livre la consultation et la recherche par titre ou auteur du fonds par pages de vingt ouvrages triées par titre croissant par l’API, la fiche détaillée avec ses notes de lecture, l’ajout et la suppression d’une note, l’ajout d’ouvrage protégé contre la perte de saisie, la modification du statut collectif lu/non lu et la suppression différée depuis une fiche ou une sélection de la liste, avec annulation groupée.
 
 ## Prérequis
 
@@ -58,7 +58,12 @@ Pour tester depuis un appareil mobile, remplacer `localhost` dans `.env.local` p
 - refus `422` reporté sur le champ, `503` réessayable après temporisation, ouvrage disparu (`404`) expliqué sans effacer le texte ;
 - absence de réponse présentée comme un résultat incertain : aucun succès annoncé, actualisation des notes pour vérifier, renvoi manuel averti du risque de doublon, sans rejeu automatique ;
 - confirmation avant abandon volontaire d’une note non envoyée, depuis « Effacer la saisie » comme depuis le retour au fonds ;
-- la suppression d’une note de lecture n’est pas encore livrée et reste à venir ;
+- suppression d’une note depuis la fiche, après confirmation identifiant la note par sa date et un extrait, puis `DELETE /books/:livreId/notes/:noteId` immédiat : aucun délai, aucune annulation, aucune recréation simulant une restauration ;
+- état de l’envoi visible sur la note concernée, seconde soumission de la même note écartée, les autres notes restant actionnables ;
+- échec avec retour visible attaché à la note et reprise toujours offerte : temporisation sur `503`, reprise immédiate sur un refus concluant ;
+- réponse perdue présentée comme un résultat incertain — la note a peut-être été supprimée — avec actualisation des notes pour vérifier, sans annoncer de restauration serveur ;
+- `404` traité comme une issue documentée et non comme un blocage : la liste est actualisée et le cas expliqué ;
+- notes retirées du seul cache des notes de l’ouvrage, état vide contextualisé si la dernière disparaît, et aucune interaction avec le groupe de suppressions d’ouvrages, son compteur ou son « Annuler tout » ;
 - retour au fonds qui retrouve la page consultée et la réactualise, ou affiche la dernière page disponible si elle a disparu ;
 - annulation des requêtes obsolètes et ErrorBoundary global ;
 - ajout d’un ouvrage depuis le fonds (`/ouvrages/nouveau`) : titre, auteur, éditeur facultatif, année vide à l’ouverture et statut « Non lu » ;
@@ -92,13 +97,13 @@ npx expo install --check
 - `app/` compose les routes et les providers ;
 - `components/` contient la présentation pure ;
 - `features/books/` compose les parcours de consultation du fonds, de la fiche et d’ajout d’un ouvrage ;
-- `features/notes/` compose la saisie d’une note de lecture et les états de présentation des notes ;
+- `features/notes/` compose la saisie et la suppression d’une note de lecture, et les états de présentation des notes ;
 - `hooks/` porte l’intégration React avec TanStack Query ;
 - `services/api/` centralise HTTP, validation et erreurs ;
 - `services/plateforme/` porte les capacités dépendant de la plateforme derrière une interface unique ;
 - `domain/` contient les types et constantes métier purs ;
 - `theme/` centralise les tokens visuels.
 
-Le détail du flux est décrit dans [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), la décision TanStack Query dans [`docs/ADR/001-gestion-etat-serveur.md`](docs/ADR/001-gestion-etat-serveur.md), la suppression différée dans [`docs/ADR/004-suppression-differee.md`](docs/ADR/004-suppression-differee.md) et la protection de la saisie, y compris pour l’ajout d’une note, dans [`docs/ADR/005-protection-saisie.md`](docs/ADR/005-protection-saisie.md).
+Le détail du flux est décrit dans [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), la décision TanStack Query dans [`docs/ADR/001-gestion-etat-serveur.md`](docs/ADR/001-gestion-etat-serveur.md), la suppression différée et l’exception validée des notes dans [`docs/ADR/004-suppression-differee.md`](docs/ADR/004-suppression-differee.md) et la protection de la saisie, y compris pour l’ajout d’une note, dans [`docs/ADR/005-protection-saisie.md`](docs/ADR/005-protection-saisie.md).
 
 Le compte rendu de recette du lot 1, avec ce qui est automatisé, vérifié manuellement ou non vérifié, est dans [`docs/RECETTE-LOT-1.md`](docs/RECETTE-LOT-1.md).

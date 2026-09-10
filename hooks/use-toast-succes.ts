@@ -7,10 +7,6 @@ type Annonce<Contenu> = {
   contenu: Contenu;
 };
 
-/**
- * Socle unique des notifications de succès : une annonce visible cinq secondes,
- * suspendue tant que le libraire survole ou parcourt le toast au clavier.
- */
 export const useToastSucces = <Contenu>() => {
   const [toast, setToast] = useState<Annonce<Contenu> | null>(null);
   const [suspensions, setSuspensions] = useState(0);

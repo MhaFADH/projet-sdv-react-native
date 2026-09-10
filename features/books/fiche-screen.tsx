@@ -5,6 +5,7 @@ import { VueSectionNotes } from '@/components/notes/vue-section-notes';
 import { identifiantUtilisable } from '@/domain/ouvrage';
 import { construireEtatNotes } from '@/features/notes/etat-notes';
 import { type CauseBlocageNote, useSaisieNote } from '@/features/notes/use-saisie-note';
+import { useSuppressionNote } from '@/features/notes/use-suppression-note';
 import { useBook } from '@/hooks/use-book';
 import { useNotes } from '@/hooks/use-notes';
 import { useSuppressions } from '@/hooks/use-suppressions';
@@ -32,11 +33,9 @@ export const FicheScreen = ({ id, retour, corriger }: FicheScreenProps) => {
     : requete.error?.type === 'introuvable'
       ? 'ouvrage-introuvable'
       : null;
-  const saisieNote = useSaisieNote({
-    livreId: id,
-    causeBlocage,
-    rafraichirNotes: () => void requeteNotes.refetch(),
-  });
+  const rafraichirNotes = () => void requeteNotes.refetch();
+  const saisieNote = useSaisieNote({ livreId: id, causeBlocage, rafraichirNotes });
+  const suppressionNote = useSuppressionNote({ livreId: id, rafraichirNotes });
 
   const quitter = () => saisieNote.partir(retour);
   const sectionNotes = (etat: EtatFiche) => {
@@ -46,7 +45,13 @@ export const FicheScreen = ({ id, retour, corriger }: FicheScreenProps) => {
         formulaire={saisieNote.vue}
         liste={
           notesActives
-            ? { etat: construireEtatNotes(requeteNotes), titreOuvrage: requete.data.titre }
+            ? {
+                etat: construireEtatNotes(requeteNotes),
+                titreOuvrage: requete.data.titre,
+                suppression: suppressionNote.suppression,
+                messageListe: suppressionNote.messageListe,
+                confirmation: suppressionNote.confirmation,
+              }
             : null
         }
       />

@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { LONGUEUR_MAXIMALE_NOTE, type NoteLecture } from '@/domain/note-lecture';
 import type { NoteSaisie } from '@/domain/saisie-note';
 import { clientHttp } from './client-http';
-import { creerErreurValidation } from './erreurs';
+import { creerErreurValidation, estErreurApplication } from './erreurs';
 
 const schemaNoteLecture = z.object({
   id: z.string(),
@@ -27,10 +27,6 @@ export const recupererNotes = async (
   return resultat.data;
 };
 
-/**
- * Volontairement non annulable : abandonner un `POST` en vol produirait
- * exactement le résultat incertain que ce parcours cherche à éviter.
- */
 export const ajouterNote = async (livreId: string, saisie: NoteSaisie): Promise<NoteLecture> => {
   const corps = await clientHttp.post(cheminNotes(livreId), { contenu: saisie.contenu });
   const resultat = schemaNoteLecture.safeParse(corps);
@@ -38,4 +34,19 @@ export const ajouterNote = async (livreId: string, saisie: NoteSaisie): Promise<
     throw creerErreurValidation('La réponse du serveur pour la note ajoutée est invalide.');
   }
   return resultat.data;
+};
+
+export type IssueSuppressionNote = 'supprimee' | 'deja-absente';
+
+export const supprimerNote = async (
+  livreId: string,
+  noteId: string,
+): Promise<IssueSuppressionNote> => {
+  try {
+    await clientHttp.supprimer(`${cheminNotes(livreId)}/${encodeURIComponent(noteId)}`);
+    return 'supprimee';
+  } catch (cause) {
+    if (estErreurApplication(cause) && cause.type === 'introuvable') return 'deja-absente';
+    throw cause;
+  }
 };

@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen } from '@testing-library/react';
 import type { PropsWithChildren } from 'react';
 import { vi } from 'vitest';
-import type { NoteLecture } from '../../domain/note-lecture';
+import { formaterDateNote, libelleNote, type NoteLecture } from '../../domain/note-lecture';
 import { FicheScreen } from '../../features/books/fiche-screen';
 import { SuppressionsProvider } from '../../features/books/suppressions-provider';
 
@@ -26,11 +26,18 @@ const ouvrage = {
 
 const autreOuvrage = { ...ouvrage, id: ID_AUTRE_LIVRE, titre: 'Germinal' };
 
-const noteExistante: NoteLecture = {
+export const noteExistante: NoteLecture = {
   id: '03c36090-9281-40c4-8cf2-4e36c18304c6',
   livreId: ID_LIVRE,
   contenu: 'Observation ancienne.',
   createdAt: '2025-01-01T09:15:00',
+};
+
+export const secondeNote: NoteLecture = {
+  id: '73191de4-e6bd-4f04-96eb-b5c01a333703',
+  livreId: ID_LIVRE,
+  contenu: 'Observation récente.',
+  createdAt: '2025-01-02T10:30:00',
 };
 
 export const json = (corps: unknown, statut = 200): Response =>
@@ -44,19 +51,42 @@ export const noteCreee = (contenu: string): NoteLecture => ({
 });
 
 type OptionsTransport = {
-  /** Réponse au `POST` ; par défaut un `201` immédiat portant le contenu envoyé. */
   post?: (contenu: string) => Promise<Response>;
-  /** Réponse au `GET /books/:id` ; par défaut l'ouvrage demandé. */
   fiche?: (id: string) => Promise<Response>;
+  notes?: readonly NoteLecture[];
+  suppressionNote?: (noteId: string) => Promise<Response>;
 };
 
-export const creerTransport = ({ post, fiche }: OptionsTransport = {}) => {
-  const notes: NoteLecture[] = [noteExistante];
-  const compteurs = { post: 0, lecturesNotes: 0, fiche: 0 };
+export const creerTransport = ({
+  post,
+  fiche,
+  notes: notesInitiales = [noteExistante],
+  suppressionNote,
+}: OptionsTransport = {}) => {
+  const notes: NoteLecture[] = [...notesInitiales];
+  const compteurs = {
+    post: 0,
+    lecturesNotes: 0,
+    fiche: 0,
+    suppressionsNotes: 0,
+    suppressionsOuvrages: 0,
+  };
 
   const fetchMock = vi.fn<typeof fetch>().mockImplementation((entree, initialisation) => {
     const url = String(entree);
     const methode = initialisation?.method ?? 'GET';
+
+    if (url.includes('/notes/')) {
+      compteurs.suppressionsNotes += 1;
+      const noteId = url.slice(url.lastIndexOf('/') + 1);
+      if (suppressionNote) return suppressionNote(noteId);
+      const index = notes.findIndex(({ id }) => id === noteId);
+      if (index === -1) {
+        return Promise.resolve(json({ erreur: 'introuvable', message: 'Note inconnue.' }, 404));
+      }
+      notes.splice(index, 1);
+      return Promise.resolve(new Response(null, { status: 204 }));
+    }
 
     if (url.endsWith('/notes')) {
       if (methode === 'POST') {
@@ -68,7 +98,10 @@ export const creerTransport = ({ post, fiche }: OptionsTransport = {}) => {
       return Promise.resolve(json(notes));
     }
 
-    if (methode === 'DELETE') return Promise.resolve(new Response(null, { status: 204 }));
+    if (methode === 'DELETE') {
+      compteurs.suppressionsOuvrages += 1;
+      return Promise.resolve(new Response(null, { status: 204 }));
+    }
 
     compteurs.fiche += 1;
     const id = url.slice(url.lastIndexOf('/') + 1);
@@ -95,6 +128,11 @@ export const rendreFiche = (id = ID_LIVRE) => {
 };
 
 export const champNote = () => screen.getByRole('textbox', { name: 'Note de lecture' });
+
+export const boutonSupprimerNote = (note: NoteLecture) =>
+  screen.getByRole('button', { name: `Supprimer la ${libelleNote(note)}` });
+
+export const libelleDateNote = (note: NoteLecture) => formaterDateNote(note.createdAt);
 
 export const boutonAjouter = () => screen.getByRole('button', { name: 'Ajouter la note' });
 
