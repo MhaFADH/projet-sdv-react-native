@@ -26,10 +26,6 @@ type EtatAccessibleChamp = {
   'aria-describedby'?: string;
 };
 
-/**
- * React Native ne type pas encore ces attributs, que react-native-web
- * transmet au DOM : ils portent l'état d'erreur du champ sur la cible web.
- */
 const etatAccessibleChamp = (identifiantErreur: string, enErreur: boolean): EtatAccessibleChamp =>
   enErreur ? { 'aria-invalid': true, 'aria-describedby': identifiantErreur } : {};
 

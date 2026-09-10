@@ -5,10 +5,6 @@ const DELAI_TEMPORISATION_MS = 3_000;
 const PAS_MS = 1_000;
 const MILLISECONDES_PAR_SECONDE = 1_000;
 
-/**
- * Temporise un réessai manuel : le bouton reste visible mais indisponible
- * pendant le décompte, sans jamais déclencher d'envoi automatique.
- */
 export const useTemporisation = (delaiMs: number = DELAI_TEMPORISATION_MS) => {
   const [restantMs, setRestantMs] = useState(0);
   const enCours = restantMs > 0;

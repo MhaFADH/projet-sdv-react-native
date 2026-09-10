@@ -9,10 +9,6 @@ export type ToastSucces = {
   titre: string;
 };
 
-/**
- * Le temps restant est mémorisé à chaque suspension : un survol ou un focus
- * clavier prolonge le toast sans jamais raccourcir le délai convenu.
- */
 export const useToastSucces = () => {
   const [toast, setToast] = useState<ToastSucces | null>(null);
   const [suspensions, setSuspensions] = useState(0);

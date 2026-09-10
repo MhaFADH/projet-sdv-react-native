@@ -5,10 +5,6 @@ import { createBook } from '@/services/api/books-api';
 import type { ErreurApplication } from '@/services/api/erreurs';
 import { clesOuvrages } from './cles-ouvrages';
 
-/**
- * Une création n'est jamais réessayée automatiquement : le POST n'est pas
- * idempotent et un second envoi produirait un second ouvrage.
- */
 export const useCreerOuvrage = () => {
   const client = useQueryClient();
 

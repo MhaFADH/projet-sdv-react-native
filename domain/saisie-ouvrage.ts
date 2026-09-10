@@ -3,11 +3,6 @@ import { ANNEE_PUBLICATION_MINIMALE, NOMBRE_ANNEES_FUTURES_AUTORISEES } from './
 
 export const LONGUEUR_MAXIMALE_TEXTE = 200;
 
-/**
- * Champs du formulaire portant un message d'erreur. Le statut de lecture n'y
- * figure pas : un refus le concernant doit rester visible dans le message
- * général plutôt que sur une bascule qui n'affiche pas d'erreur.
- */
 const CHAMPS_SAISIE_OUVRAGE = ['titre', 'auteur', 'editeur', 'annee'] as const;
 
 export type ChampSaisieOuvrage = (typeof CHAMPS_SAISIE_OUVRAGE)[number];

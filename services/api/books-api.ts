@@ -65,10 +65,6 @@ export const fetchBook = async (id: string, signal?: AbortSignal): Promise<Ouvra
   return resultat.data;
 };
 
-/**
- * La création ne reçoit pas de signal d'annulation : interrompre un POST déjà
- * parti laisserait le sort de l'ouvrage inconnu sans rien annuler côté serveur.
- */
 export const createBook = async (saisie: OuvrageSaisi): Promise<Ouvrage> => {
   const corps = await clientHttp.post('/books', {
     titre: saisie.titre,

@@ -41,11 +41,6 @@ export const FormulaireOuvrageScreen = ({
   const { reset } = formulaire;
   useAvertissementDepart(formulaire.formState.isDirty);
 
-  /**
-   * La remise à vide suit la création confirmée dans un effet : appelée depuis
-   * la soumission, elle laisse React Hook Form ignorer les saisies suivantes,
-   * qui ne seraient alors plus protégées contre un abandon involontaire.
-   */
   useEffect(() => {
     if (creationsConfirmees === 0) return;
     reset(SAISIE_OUVRAGE_VIDE);

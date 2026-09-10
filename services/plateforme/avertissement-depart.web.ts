@@ -1,9 +1,5 @@
 import type { SaisieModifiee } from './avertissement-depart';
 
-/**
- * L'avertissement de fermeture reste soumis aux limites du navigateur : il ne
- * sauvegarde rien et peut ne pas être présenté.
- */
 export const installerAvertissementDepart = (saisieModifiee: SaisieModifiee): (() => void) => {
   if (typeof window === 'undefined') return () => {};
 

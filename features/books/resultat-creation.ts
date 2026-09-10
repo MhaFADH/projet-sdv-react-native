@@ -30,12 +30,6 @@ const interpreterRefus = (
   };
 };
 
-/**
- * Distingue un refus explicite du serveur d'une écriture dont le sort reste
- * inconnu : une absence de réponse, une réponse inexploitable ou une panne
- * serveur ne prouvent pas une absence d'enregistrement. Seule une
- * indisponibilité annoncée par le serveur permet de proposer un réessai.
- */
 export const interpreterEchecCreation = (cause: unknown): ResultatCreation => {
   if (!estErreurApplication(cause)) {
     return { type: 'incertain', message: MESSAGE_REPONSE_INEXPLOITABLE };
