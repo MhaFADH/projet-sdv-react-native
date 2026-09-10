@@ -56,6 +56,7 @@ describe('présentation du fonds', () => {
           page: { items: [], page: 1, limit: 20, total: 0, totalPages: 1 },
           pagePrecedente: vi.fn(),
           pageSuivante: vi.fn(),
+          ouvrirOuvrage: vi.fn(),
         }}
       />,
     );
@@ -73,6 +74,7 @@ describe('présentation du fonds', () => {
           page: { items: [], page: 2, limit: 20, total: 20, totalPages: 1 },
           pagePrecedente: vi.fn(),
           pageSuivante: vi.fn(),
+          ouvrirOuvrage: vi.fn(),
         }}
       />,
     );
@@ -97,6 +99,7 @@ describe('présentation du fonds', () => {
           },
           pagePrecedente: vi.fn(),
           pageSuivante,
+          ouvrirOuvrage: vi.fn(),
         }}
       />,
     );
@@ -125,11 +128,43 @@ describe('présentation du fonds', () => {
           page: { items: [ouvrageLu], page: 2, limit: 20, total: 40, totalPages: 2 },
           pagePrecedente: vi.fn(),
           pageSuivante: vi.fn(),
+          ouvrirOuvrage: vi.fn(),
         }}
       />,
     );
 
     expect(screen.getByRole('button', { name: 'Précédent' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Suivant' })).toBeDisabled();
+  });
+
+  it('ouvre la fiche de l’ouvrage choisi depuis la liste', () => {
+    const ouvrirOuvrage = vi.fn();
+    render(
+      <FondsView
+        etat={{
+          type: 'succes',
+          page: {
+            items: [ouvrageLu, ouvrageNonLu],
+            page: 1,
+            limit: 20,
+            total: 40,
+            totalPages: 2,
+          },
+          pagePrecedente: vi.fn(),
+          pageSuivante: vi.fn(),
+          ouvrirOuvrage,
+        }}
+      />,
+    );
+
+    const acces = screen.getByRole('button', { name: 'Germinal, Émile Zola, Non lu' });
+    expect(acces).toHaveStyle({ minHeight: '112px' });
+    expect(acces.tagName).toBe('BUTTON');
+    expect(acces).toHaveAttribute('tabindex', '0');
+    acces.focus();
+    expect(acces).toHaveFocus();
+    fireEvent.click(acces);
+
+    expect(ouvrirOuvrage).toHaveBeenCalledExactlyOnceWith(ouvrageNonLu.id);
   });
 });

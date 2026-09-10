@@ -3,6 +3,7 @@ import {
   ANNEE_PUBLICATION_MINIMALE,
   NOMBRE_ANNEES_FUTURES_AUTORISEES,
   OUVRAGES_PAR_PAGE,
+  type Ouvrage,
   type PageOuvrages,
   TRI_FONDS,
 } from '@/domain/ouvrage';
@@ -50,6 +51,15 @@ export const fetchBooksPage = async (page: number, signal?: AbortSignal): Promis
   const resultat = pageOuvragesSchema.safeParse(corps);
   if (!resultat.success || resultat.data.page !== page) {
     throw creerErreurValidation('La réponse du serveur pour les ouvrages est invalide.');
+  }
+  return resultat.data;
+};
+
+export const fetchBook = async (id: string, signal?: AbortSignal): Promise<Ouvrage> => {
+  const corps = await clientHttp.get(`/books/${encodeURIComponent(id)}`, { signal });
+  const resultat = ouvrageSchema.safeParse(corps);
+  if (!resultat.success || resultat.data.id !== id) {
+    throw creerErreurValidation('La réponse du serveur pour cette fiche est invalide.');
   }
   return resultat.data;
 };

@@ -1,34 +1,31 @@
-import { StyleSheet, Text, View } from 'react-native';
-import type { Ouvrage } from '@/domain/ouvrage';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { libelleEdition, libelleStatutLecture, type Ouvrage } from '@/domain/ouvrage';
 import { theme } from '@/theme/tokens';
+import { StatutLecture } from './statut-lecture';
 
 type OuvragesListProps = {
   ouvrages: Ouvrage[];
+  ouvrirOuvrage: (id: string) => void;
 };
 
-const StatutLecture = ({ lu }: Pick<Ouvrage, 'lu'>) => {
-  const styleStatut = lu ? styles.statutLu : undefined;
-  return (
-    <View style={[styles.statut, styleStatut]}>
-      <Text style={[styles.texteStatut, lu && styles.texteStatutLu]}>{lu ? 'Lu' : 'Non lu'}</Text>
-    </View>
-  );
-};
-
-export const OuvragesList = ({ ouvrages }: OuvragesListProps) => (
+export const OuvragesList = ({ ouvrages, ouvrirOuvrage }: OuvragesListProps) => (
   <View accessibilityLabel="Ouvrages du fonds" role="list" style={styles.liste}>
     {ouvrages.map((ouvrage) => (
-      <View key={ouvrage.id} role="listitem" style={styles.carte}>
-        <View style={styles.description}>
-          <Text accessibilityRole="header" style={styles.titre}>
-            {ouvrage.titre}
-          </Text>
-          <Text style={styles.auteur}>{ouvrage.auteur}</Text>
-          <Text style={styles.edition}>
-            {ouvrage.editeur || 'Éditeur non renseigné'} · {ouvrage.annee}
-          </Text>
-        </View>
-        <StatutLecture lu={ouvrage.lu} />
+      <View key={ouvrage.id} role="listitem">
+        <Pressable
+          accessibilityHint="Ouvre la fiche de l’ouvrage"
+          accessibilityLabel={`${ouvrage.titre}, ${ouvrage.auteur}, ${libelleStatutLecture(ouvrage.lu)}`}
+          accessibilityRole="button"
+          onPress={() => ouvrirOuvrage(ouvrage.id)}
+          style={styles.carte}
+        >
+          <View style={styles.description}>
+            <Text style={styles.titre}>{ouvrage.titre}</Text>
+            <Text style={styles.auteur}>{ouvrage.auteur}</Text>
+            <Text style={styles.edition}>{libelleEdition(ouvrage)}</Text>
+          </View>
+          <StatutLecture lu={ouvrage.lu} />
+        </Pressable>
       </View>
     ))}
   </View>
@@ -70,22 +67,5 @@ const styles = StyleSheet.create({
   edition: {
     color: theme.colors.textMuted,
     fontSize: theme.typography.metadata,
-  },
-  statut: {
-    borderRadius: theme.radius.sm,
-    backgroundColor: theme.colors.neutralBackground,
-    paddingHorizontal: theme.spacing.sm,
-    paddingVertical: theme.spacing.xs,
-  },
-  statutLu: {
-    backgroundColor: theme.colors.successBackground,
-  },
-  texteStatut: {
-    color: theme.colors.textMuted,
-    fontSize: theme.typography.caption,
-    fontWeight: '700',
-  },
-  texteStatutLu: {
-    color: theme.colors.successText,
   },
 });

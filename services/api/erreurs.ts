@@ -3,6 +3,7 @@ import { z } from 'zod';
 const STATUT_HTTP = {
   nonAuthentifie: 401,
   interdit: 403,
+  introuvable: 404,
   conflit: 409,
   validation: 422,
   indisponible: 503,
@@ -24,6 +25,10 @@ export type ErreurApplication =
       message: string;
       reessayable: boolean;
       statut?: number;
+    }
+  | {
+      type: 'introuvable';
+      message: string;
     }
   | {
       type: 'validation';
@@ -51,6 +56,13 @@ export const traduireErreurHttp = (statut: number, corps: unknown): ErreurApplic
       type: 'authentification',
       message: messageServeur ?? 'Authentification requise.',
       statut,
+    };
+  }
+
+  if (statut === STATUT_HTTP.introuvable) {
+    return {
+      type: 'introuvable',
+      message: messageServeur ?? "Cet ouvrage n'existe pas ou plus.",
     };
   }
 
