@@ -1,6 +1,6 @@
 # BookList Pro
 
-BookList Pro numérise le cahier de lecture des Comptoirs du Livre. Cette version livre la consultation du fonds par pages de vingt ouvrages, triées par titre croissant par l’API.
+BookList Pro numérise le cahier de lecture des Comptoirs du Livre. Cette version livre la consultation du fonds par pages de vingt ouvrages, triées par titre croissant par l’API, et la consultation de la fiche d’un ouvrage.
 
 ## Prérequis
 
@@ -38,14 +38,18 @@ Pour tester depuis un appareil mobile, remplacer `localhost` dans `.env.local` p
 
 ## Comportement livré
 
-- appel de `GET /books?page=…&limit=20&sort=titre&order=asc` ;
-- validation Zod de l’enveloppe paginée et de tous les champs d’un ouvrage ;
-- chargement par squelette, erreur avec réessai, fonds vide et liste en succès ;
-- pagination « Précédent / Suivant » bornée par les métadonnées serveur ;
-- statut collectif « Lu » ou « Non lu » affiché sans action de modification ;
+- appel de `GET /books?page=…&limit=20&sort=titre&order=asc` ;
+- validation Zod de l’enveloppe paginée et de tous les champs d’un ouvrage ;
+- chargement par squelette, erreur avec réessai, fonds vide et liste en succès ;
+- pagination « Précédent / Suivant » bornée par les métadonnées serveur ;
+- page consultée portée par l’URL de la liste (`/?page=3`) afin d’être restituée au retour ;
+- statut collectif « Lu » ou « Non lu » affiché sans action de modification ;
+- ouverture de la fiche d’un ouvrage depuis la liste (`/ouvrages/<identifiant>`) avec `GET /books/:id` validé ;
+- fiche en squelette, erreur avec réessai, absence contextualisée sur `404` et succès ;
+- retour au fonds qui retrouve la page consultée et la réactualise, ou affiche la dernière page disponible si elle a disparu ;
 - annulation des requêtes obsolètes et ErrorBoundary global.
 
-La fiche, l’ajout, la modification, la suppression, l’authentification et le mode hors ligne ne font pas partie de ce ticket.
+L’ajout, la modification, la suppression, la bascule du statut de lecture, l’authentification et le mode hors ligne ne font pas partie de ces tickets.
 
 ## Vérifications
 
@@ -62,7 +66,7 @@ npx expo install --check
 
 - `app/` compose les routes et les providers ;
 - `components/` contient la présentation pure ;
-- `features/books/` compose le parcours de consultation ;
+- `features/books/` compose les parcours de consultation du fonds et de la fiche ;
 - `hooks/` porte l’intégration React avec TanStack Query ;
 - `services/api/` centralise HTTP, validation et erreurs ;
 - `domain/` contient les types et constantes métier purs ;

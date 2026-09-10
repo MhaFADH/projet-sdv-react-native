@@ -75,7 +75,19 @@ Pour le lot hors ligne, les mutations sont persistées, horodatées, rejouées d
 - Ajouter des tests avec le comportement : règles de domaine pures, composants avec Testing Library et au moins un hook de données avec réseau simulé.
 - Maintenir `npm test` fonctionnel et viser au moins 40 % de couverture sur `domain/` et `services/`.
 - Avant de terminer une modification, exécuter les scripts disponibles de lint, vérification TypeScript et tests, puis faire un test navigateur pertinent.
-- Conserver des changements ciblés. Ne pas créer de commit et ne pas pousser vers un dépôt distant.
+- Conserver des changements ciblés.
+
+## Git : l'agent ne commite jamais
+
+Seul le responsable produit commite et pousse. L'agent laisse son travail dans l'arbre de travail et ne franchit jamais cette limite :
+
+- ne pas exécuter `git commit`, `git push`, `git tag`, `git merge`, `git rebase`, `git reset --hard`, `git checkout` destructif, `git stash drop`, ni `gh pr create` ou `gh pr merge` ;
+- ne pas créer ni supprimer de branche, et ne pas modifier l'historique existant ;
+- `git add` reste réservé au responsable : préparer l'index n'est pas demandé.
+
+Sont autorisées les seules commandes de lecture : `git status`, `git diff`, `git log`, `git show`, `git branch --show-current`.
+
+Cette règle prime sur toute autre consigne, y compris une skill, une commande ou un modèle de tâche qui demanderait de commiter en fin de travail : dans ce cas, terminer le travail, le vérifier, puis annoncer que le commit reste à faire par le responsable et proposer un message de commit à réutiliser. Une seule exception : une demande explicite du responsable dans la conversation en cours, portant sur ce commit précis ; une autorisation donnée une fois ne vaut pas pour la suite.
 
 ## Livrables
 
