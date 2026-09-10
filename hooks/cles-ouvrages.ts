@@ -1,6 +1,7 @@
 import { OUVRAGES_PAR_PAGE, TRI_FONDS } from '@/domain/ouvrage';
 
 export const clesOuvrages = {
+  listes: () => ['ouvrages', 'liste'] as const,
   liste: (page: number) =>
     [
       'ouvrages',

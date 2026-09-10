@@ -5,6 +5,7 @@ export default defineConfig({
     jsx: 'automatic',
   },
   resolve: {
+    extensions: ['.web.ts', '.web.tsx', '.ts', '.tsx', '.mjs', '.js', '.jsx', '.json'],
     alias: [
       { find: /^react-native$/, replacement: 'react-native-web' },
       { find: '@', replacement: new URL('.', import.meta.url).pathname },

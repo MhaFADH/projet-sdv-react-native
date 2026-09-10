@@ -21,10 +21,12 @@ const FondsRoute = () => {
     (id: string) => router.push({ pathname: '/ouvrages/[id]', params: { id } }),
     [router],
   );
+  const ajouterOuvrage = useCallback(() => router.push('/ouvrages/nouveau'), [router]);
 
   return (
     <SafeAreaView edges={['top', 'bottom']} style={styles.page}>
       <FondsScreen
+        ajouterOuvrage={ajouterOuvrage}
         changerPage={changerPage}
         ouvrirOuvrage={ouvrirOuvrage}
         pageDemandee={pageDemandee}

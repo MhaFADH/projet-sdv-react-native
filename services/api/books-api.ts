@@ -7,6 +7,7 @@ import {
   type PageOuvrages,
   TRI_FONDS,
 } from '@/domain/ouvrage';
+import type { OuvrageSaisi } from '@/domain/saisie-ouvrage';
 import { clientHttp } from './client-http';
 import { creerErreurValidation } from './erreurs';
 
@@ -60,6 +61,25 @@ export const fetchBook = async (id: string, signal?: AbortSignal): Promise<Ouvra
   const resultat = ouvrageSchema.safeParse(corps);
   if (!resultat.success || resultat.data.id !== id) {
     throw creerErreurValidation('La réponse du serveur pour cette fiche est invalide.');
+  }
+  return resultat.data;
+};
+
+/**
+ * La création ne reçoit pas de signal d'annulation : interrompre un POST déjà
+ * parti laisserait le sort de l'ouvrage inconnu sans rien annuler côté serveur.
+ */
+export const createBook = async (saisie: OuvrageSaisi): Promise<Ouvrage> => {
+  const corps = await clientHttp.post('/books', {
+    titre: saisie.titre,
+    auteur: saisie.auteur,
+    editeur: saisie.editeur,
+    annee: saisie.annee,
+    lu: saisie.lu,
+  });
+  const resultat = ouvrageSchema.safeParse(corps);
+  if (!resultat.success) {
+    throw creerErreurValidation("La réponse du serveur pour l'ouvrage créé est invalide.");
   }
   return resultat.data;
 };

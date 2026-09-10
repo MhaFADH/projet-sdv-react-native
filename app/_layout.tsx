@@ -26,6 +26,7 @@ const RootLayout = () => (
         }}
       >
         <Stack.Screen name="index" />
+        <Stack.Screen name="ouvrages/nouveau" />
         <Stack.Screen name="ouvrages/[id]" />
       </Stack>
       <StatusBar style="dark" />
