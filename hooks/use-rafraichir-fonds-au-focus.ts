@@ -9,11 +9,11 @@ import { clesOuvrages } from './cles-ouvrages';
  * La page voyage par référence pour que le rappel reste stable : un changement
  * de page ne doit pas déclencher une seconde requête pendant que l'écran a le focus.
  */
-export const useRafraichirFondsAuFocus = (page: number) => {
+export const useRafraichirFondsAuFocus = (page: number, recherche = '') => {
   const client = useQueryClient();
-  const pageConsultee = useRef(page);
+  const criteresConsultes = useRef({ page, recherche });
   const premierFocus = useRef(true);
-  pageConsultee.current = page;
+  criteresConsultes.current = { page, recherche };
 
   useFocusEffect(
     useCallback(() => {
@@ -21,7 +21,10 @@ export const useRafraichirFondsAuFocus = (page: number) => {
         premierFocus.current = false;
         return;
       }
-      void client.invalidateQueries({ queryKey: clesOuvrages.liste(pageConsultee.current) });
+      const criteres = criteresConsultes.current;
+      void client.invalidateQueries({
+        queryKey: clesOuvrages.liste(criteres.page, criteres.recherche),
+      });
     }, [client]),
   );
 };

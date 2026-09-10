@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { creerCriteresOuvrages } from '../../domain/criteres-ouvrages';
 import { fetchBooksPage } from '../../services/api/books-api';
 
 const bookPageResponse = {
@@ -39,7 +40,7 @@ describe('API des ouvrages', () => {
     );
     vi.stubGlobal('fetch', fetchMock);
 
-    const result = await fetchBooksPage(2);
+    const result = await fetchBooksPage(creerCriteresOuvrages(2, ''));
 
     expect(result).toEqual(bookPageResponse);
     expect(fetchMock).toHaveBeenCalledWith(
@@ -69,7 +70,7 @@ describe('API des ouvrages', () => {
           status: 200,
         }),
       );
-      await expect(fetchBooksPage(1)).rejects.toMatchObject({
+      await expect(fetchBooksPage(creerCriteresOuvrages(1, ''))).rejects.toMatchObject({
         type: 'validation',
         message: 'La réponse du serveur pour les ouvrages est invalide.',
       });
@@ -82,7 +83,7 @@ describe('API des ouvrages', () => {
       vi.fn<typeof fetch>().mockRejectedValue(new TypeError('Failed to fetch')),
     );
 
-    await expect(fetchBooksPage(1)).rejects.toMatchObject({
+    await expect(fetchBooksPage(creerCriteresOuvrages(1, ''))).rejects.toMatchObject({
       type: 'reseau',
       cause: 'indisponible',
       reessayable: true,
@@ -102,7 +103,7 @@ describe('API des ouvrages', () => {
         ),
     );
 
-    await expect(fetchBooksPage(1)).rejects.toMatchObject({
+    await expect(fetchBooksPage(creerCriteresOuvrages(1, ''))).rejects.toMatchObject({
       type: 'reseau',
       cause: 'indisponible',
       message: 'Service temporairement indisponible.',
@@ -122,7 +123,7 @@ describe('API des ouvrages', () => {
     });
     vi.stubGlobal('fetch', fetchMock);
 
-    const requete = expect(fetchBooksPage(1)).rejects.toMatchObject({
+    const requete = expect(fetchBooksPage(creerCriteresOuvrages(1, ''))).rejects.toMatchObject({
       type: 'reseau',
       cause: 'expiration',
       reessayable: true,
@@ -145,7 +146,7 @@ describe('API des ouvrages', () => {
     });
     vi.stubGlobal('fetch', fetchMock);
 
-    const requete = fetchBooksPage(1, controleur.signal);
+    const requete = fetchBooksPage(creerCriteresOuvrages(1, ''), controleur.signal);
     controleur.abort();
 
     await expect(requete).rejects.toMatchObject({

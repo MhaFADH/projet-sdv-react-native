@@ -29,15 +29,17 @@ beforeEach(() => {
 });
 
 describe('retour au fonds', () => {
-  it('réactualise la page consultée au retour, jamais au premier affichage', () => {
+  it('réactualise la recherche et la page consultées au retour, jamais au premier affichage', () => {
     const { client, invalider, wrapper } = creerEnvironnement();
 
-    renderHook(() => useRafraichirFondsAuFocus(3), { wrapper });
+    renderHook(() => useRafraichirFondsAuFocus(3, 'zola'), { wrapper });
     expect(invalider).not.toHaveBeenCalled();
 
     act(() => rappelFocus?.());
 
-    expect(invalider).toHaveBeenCalledExactlyOnceWith({ queryKey: clesOuvrages.liste(3) });
+    expect(invalider).toHaveBeenCalledExactlyOnceWith({
+      queryKey: clesOuvrages.liste(3, 'zola'),
+    });
     client.clear();
   });
 
