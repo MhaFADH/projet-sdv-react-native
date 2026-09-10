@@ -79,3 +79,12 @@ export const createBook = async (saisie: OuvrageSaisi): Promise<Ouvrage> => {
   }
   return resultat.data;
 };
+
+export const patchBookReadStatus = async (id: string, lu: boolean): Promise<Ouvrage> => {
+  const corps = await clientHttp.patch(`/books/${encodeURIComponent(id)}`, { lu });
+  const resultat = ouvrageSchema.safeParse(corps);
+  if (!resultat.success || resultat.data.id !== id) {
+    throw creerErreurValidation('La réponse du serveur après modification du statut est invalide.');
+  }
+  return resultat.data;
+};

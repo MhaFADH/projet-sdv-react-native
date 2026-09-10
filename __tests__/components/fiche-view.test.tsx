@@ -2,6 +2,8 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { FicheView } from '../../components/books/fiche-view';
 
+const actionStatut = { basculerStatut: vi.fn(), statutEnCours: false };
+
 const ouvrage = {
   id: '33575fa9-7968-45b3-8447-ec994a0b8401',
   titre: 'Bel-Ami',
@@ -55,7 +57,7 @@ describe('présentation de la fiche', () => {
 
   it("présente l'édition consultée et un retour au fonds accessible", () => {
     const retour = vi.fn();
-    render(<FicheView etat={{ type: 'succes', ouvrage }} retour={retour} />);
+    render(<FicheView etat={{ type: 'succes', ouvrage, ...actionStatut }} retour={retour} />);
 
     expect(screen.getByRole('heading', { name: 'Bel-Ami' })).toBeVisible();
     expect(screen.getByText('Guy de Maupassant')).toBeVisible();
@@ -75,7 +77,7 @@ describe('présentation de la fiche', () => {
   it("reste valide lorsque l'éditeur accepté par le contrat est vide", () => {
     render(
       <FicheView
-        etat={{ type: 'succes', ouvrage: { ...ouvrage, editeur: '' } }}
+        etat={{ type: 'succes', ouvrage: { ...ouvrage, editeur: '' }, ...actionStatut }}
         retour={vi.fn()}
       />,
     );
@@ -86,9 +88,57 @@ describe('présentation de la fiche', () => {
 
   it('annonce un statut de lecture négatif sans le déguiser', () => {
     render(
-      <FicheView etat={{ type: 'succes', ouvrage: { ...ouvrage, lu: false } }} retour={vi.fn()} />,
+      <FicheView
+        etat={{ type: 'succes', ouvrage: { ...ouvrage, lu: false }, ...actionStatut }}
+        retour={vi.fn()}
+      />,
     );
 
     expect(screen.getByText('Non lu')).toBeVisible();
+  });
+
+  it('propose une bascule collective accessible au clavier', () => {
+    const basculerStatut = vi.fn();
+    render(
+      <FicheView
+        etat={{ type: 'succes', ouvrage, basculerStatut, statutEnCours: false }}
+        retour={vi.fn()}
+      />,
+    );
+
+    const bascule = screen.getByRole('switch', { name: 'Marquer comme non lu' });
+    expect(bascule).toHaveAttribute('aria-checked', 'true');
+    expect(bascule).toHaveStyle({ minHeight: '44px' });
+    expect(bascule).toHaveAttribute('tabindex', '0');
+    bascule.focus();
+    expect(bascule).toHaveFocus();
+    fireEvent.click(bascule);
+    expect(basculerStatut).toHaveBeenCalledOnce();
+  });
+
+  it('rend la restauration et son réessai accessibles après un refus', () => {
+    const reessayer = vi.fn();
+    render(
+      <FicheView
+        etat={{
+          type: 'succes',
+          ouvrage,
+          ...actionStatut,
+          erreurStatut: {
+            message: 'Le statut précédent a été restauré. Service indisponible.',
+            reessayer,
+          },
+        }}
+        retour={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Le statut précédent a été restauré.');
+    const bouton = screen.getByRole('button', {
+      name: 'Réessayer la modification du statut',
+    });
+    expect(bouton).toHaveStyle({ minHeight: '44px' });
+    fireEvent.click(bouton);
+    expect(reessayer).toHaveBeenCalledOnce();
   });
 });
