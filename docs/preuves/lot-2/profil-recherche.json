@@ -1,0 +1,59 @@
+{
+  "outil": "React DevTools 6.1.5-5d87cd2244",
+  "date": "2026-09-11",
+  "captureAvantApplication": {
+    "saisie": "D",
+    "saisieTerminee": "2026-09-11T08:06:48.432Z",
+    "arretDemande": "2026-09-11T08:06:48.554Z",
+    "attenteObserveeMs": 122,
+    "nombreRequetes": 0,
+    "nombreCommits": 2,
+    "commits": [
+      {
+        "index": 1,
+        "cause": "RechercheFonds",
+        "rendu": "1.5 ms",
+        "composantsMetier": ["RechercheFonds"]
+      },
+      {
+        "index": 2,
+        "cause": null,
+        "rendu": "<0.1 ms",
+        "composantsMetier": []
+      }
+    ]
+  },
+  "captureApresApplication": {
+    "saisie": "De",
+    "saisieTerminee": "2026-09-11T08:06:49.099Z",
+    "arretDemande": "2026-09-11T08:06:49.750Z",
+    "attenteObserveeMs": 651,
+    "nombreRequetes": 1,
+    "requete": "http://localhost:3000/books?page=1&limit=20&q=De&sort=titre&order=asc",
+    "nombreCommits": 5,
+    "commits": [
+      {
+        "index": 1,
+        "composantsMetier": ["RechercheFonds"]
+      },
+      {
+        "index": 2,
+        "composantsMetier": []
+      },
+      {
+        "index": 3,
+        "composantsMetier": []
+      },
+      {
+        "index": 4,
+        "composantsMetier": ["FondsScreen"]
+      },
+      {
+        "index": 5,
+        "cause": "FondsScreen",
+        "rendu": "11.5 ms",
+        "composantsMetier": ["FondsScreen", "FondsRempli", "OuvragesList", "LigneOuvrage"]
+      }
+    ]
+  }
+}

@@ -654,3 +654,39 @@ Réalisée avec Chrome piloté par le protocole MCP, contre `npx expo start --we
 - l'échec de relecture du fonds reste affiché séparément, sous « Impossible d'actualiser le fonds », sans annoncer l'annulation d'une écriture confirmée ;
 - le journal du serveur montre deux tentatives de `PATCH` pour un refus `503`, conformément à l'unique réessai temporisé.
 
+## Intervention — issue #21
+
+- Outil : pi coding agent.
+- Fournisseur : OpenAI Codex.
+- Modèle : `gpt-5.6-sol`.
+- Périmètre : issue GitHub #21, recette du cahier enrichi et transmission du lot 2.
+
+### Demande reçue
+
+1. `<skill name="implement" location="/Users/fadhl/.pi/agent/skills/implement/SKILL.md">…</skill> https://github.com/MhaFADH/projet-sdv-react-native/issues/21, tu as accès à github cli`
+
+### Actions réalisées avec l’IA
+
+- lecture du ticket #21 et de ses dépendances avec GitHub CLI, du contrat de l’API, du cadrage du lot 2, des ADR, de l’architecture et de la recette du lot 1 ;
+- exécution de la baseline de formatage, lint, typage, tests, couverture, code inutilisé et versions Expo ;
+- recette nominale dans Chrome piloté par le protocole DevTools, avec deux ouvrages jetables supprimés en fin de parcours ;
+- recette d’une réponse perdue sur l’ajout de note, sans rejeu et avec saisie conservée ;
+- recette sur une copie temporaire de l’API en mode chaos sans authentification, avec 450 ms de latence et 100 % d’échecs pour rendre les restaurations observables ;
+- recette de non-régression de la création, de la correction et de l’annulation des suppressions d’ouvrages du lot 1 ;
+- vérification clavier des notes, de leurs reprises et du cœur, puis mesure des rôles, libellés, états, cibles de 44 points et du débordement du fonds et de la fiche à 390 × 760 ;
+- lancement temporaire de React DevTools 6.1.5, comparaison des commits avant et après l’application de la recherche à 300 ms et conservation d’une preuve horodatée ;
+- rédaction de `docs/RECETTE-LOT-2.md` et mise en cohérence du README, de l’architecture et des ADR 001 et 004.
+
+### Défauts constatés et corrections réelles
+
+- Aucun défaut applicatif n’a été observé pendant les parcours nominaux, dégradés ou de non-régression.
+- L’ADR 001 décrivait encore la restauration par instantanés du ticket #6, alors que le ticket #20 l’a remplacée par une intention superposée et un verrou partagé. Son état d’implémentation a été actualisé pour les lots 1 et 2.
+- L’ADR 004 parlait de la recréation d’une note « par son auteur », en contradiction avec son caractère collectif et l’absence d’attribution personnelle. La justification emploie désormais le vocabulaire du domaine.
+- La première tentative d’automatisation clavier envoyait Entrée sans texte de touche au protocole DevTools ; le navigateur focalisait la commande sans produire de clic. La sonde temporaire a été corrigée avec `text` et `unmodifiedText`, puis les parcours ont été rejoués. Aucun changement applicatif n’en a découlé.
+- La revue Spec a relevé que les reprises clavier, la fiche en petit écran et les durées du Profiler n’étaient pas suffisamment prouvées. Les parcours « Actualiser », renvoi averti et réessais de suppression et de cœur ont été rejoués au clavier à 390 × 760 ; une preuve JSON conserve désormais les horodatages et les commits du Profiler.
+- Les deux revues relèvent que le visa croisé des deux personnes ne peut pas être remplacé par une exécution avec un seul agent. Cette limite reste déclarée, avec une matrice de répartition à faire valider par l’équipe.
+
+### Vérification navigateur
+
+Le détail, les conditions, les valeurs observées, les contrôles automatisés et les limites non vérifiées sont consignés dans [`docs/RECETTE-LOT-2.md`](docs/RECETTE-LOT-2.md). Les données jetables ont été nettoyées et tous les serveurs et outils temporaires ont été arrêtés.
+

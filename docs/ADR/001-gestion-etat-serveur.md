@@ -2,7 +2,7 @@
 
 ## Statut
 
-Accepté. Implémenté pour les consultations des tickets #2 et #3, la création du ticket #4 et la bascule du statut de lecture du ticket #6.
+Accepté. Implémenté pour les consultations et écritures livrées dans les lots 1 et 2.
 
 ## Contexte
 
@@ -16,39 +16,42 @@ Aucune bibliothèque alternative n’a été comparée pendant cette session. Ta
 
 ## Décision
 
-Confier à TanStack Query l’état serveur du lot 1 : lectures, cache, états de requêtes et coordination des mutations.
+Confier à TanStack Query l’état serveur des lots 1 et 2 : lectures, cache, états de requêtes et coordination des mutations.
 
-- Distinguer les clés des listes, comprenant leurs paramètres, et celles des fiches, comprenant l’identifiant de l’ouvrage.
-- Consommer des pages de 20 ouvrages, triées par titre croissant côté serveur.
-- Après une mutation, invalider de manière ciblée les données concernées pour actualiser liste et fiche.
-- Rendre la bascule lu/non lu optimiste, avec restauration et retour visible si elle échoue.
+- Distinguer les clés des listes, comprenant page, recherche, filtres et tri, celles des fiches, comprenant l’identifiant de l’ouvrage, et celles des notes de chaque ouvrage.
+- Consommer des pages de 20 ouvrages recherchées, filtrées et triées côté serveur.
+- Après une mutation, mettre à jour ou invalider uniquement les familles de données concernées.
+- Rendre les bascules de lecture et de coup de cœur optimistes par superposition de l’intention locale, avec restauration ciblée et retour visible si elles échouent.
 - Faire passer les lectures et écritures par le client HTTP unique de `services/api/`, qui valide les réponses à l’exécution et traduit les erreurs. Les composants et les routes ne connaissent pas directement l’API.
-- Transmettre les signaux d’annulation aux requêtes annulables et empêcher une réponse obsolète de remplacer des données plus récentes.
+- Transmettre les signaux d’annulation aux lectures annulables et empêcher une réponse obsolète de remplacer des données plus récentes.
 
 La saisie reste un état de formulaire géré avec React Hook Form et le schéma Zod métier ; elle n’est pas remplacée par le cache serveur. Sa conservation et les créations au résultat incertain relèvent de l’ADR 005.
 
-Ce choix n’annonce ni cache persistant ni rejeu hors ligne pour le lot 1.
+Ce choix n’annonce ni cache persistant ni rejeu hors ligne pour les lots 1 et 2.
 
 ## État de l’implémentation
 
-Le ticket #2 livre TanStack Query pour `GET /books`, une clé de liste contenant la page, la limite, le tri et l’ordre, ainsi que la transmission du signal d’annulation au client HTTP. Le ticket #3 ajoute les clés de fiche et `GET /books/:id`. Les réponses sont validées à l’exécution avant leur entrée dans le cache.
+Les tickets #2, #3, #16 et #18 livrent les lectures des ouvrages. `GET /books` utilise une clé contenant `page`, `limit`, `q`, `status`, `favori`, `sort` et `order` ; `GET /books/:id` utilise une clé de fiche par identifiant. Les réponses sont validées avant leur entrée dans le cache, les lectures reçoivent un `AbortSignal` et les anciennes combinaisons de critères ne peuvent pas remplacer la consultation courante.
 
-Le ticket #4 ajoute la première mutation : la création passe par `useMutation` sans réessai automatique, alimente la clé de la fiche créée avec la réponse validée et invalide les clés de liste par leur préfixe commun `['ouvrages', 'liste']`, sans supposer la page d’arrivée d’un ouvrage dans le tri serveur. Ces comportements sont couverts par les tests du parcours d’ajout avec transport simulé.
+Les tickets #4 et #5 livrent la création et la correction. La création n’est jamais rejouée automatiquement, alimente la fiche créée et invalide les listes. La correction envoie uniquement les champs modifiés, conserve le formulaire indépendamment des relectures et met à jour la fiche concernée avant l’invalidation des listes.
 
-Le ticket #6 livre la mutation du statut collectif. Avant le `PATCH`, les lectures actives de la fiche et des listes sont annulées, puis leurs caches sont modifiés immédiatement. Un refus restaure leurs instantanés précédents. La réponse complète validée remplace ensuite l’ouvrage sans perdre ses autres champs et seules les clés de la fiche concernée et des listes sont invalidées. Chaque intention reçoit un numéro local afin qu’une réponse de mutation plus ancienne ne remplace pas une intention plus récente. Les indisponibilités réessayables reçoivent un unique réessai après une seconde avant la restauration et le réessai manuel visible.
+Les tickets #7 et #8 coordonnent les suppressions d’ouvrages dans un provider racine. Les intentions restent hors du cache pendant les cinq secondes d’annulation. Après les DELETE, seules les fiches supprimées sont retirées et les listes sont invalidées ; les échecs partiels restent ciblés.
 
-Les autres mises à jour et les suppressions restent prévues pour les tickets suivants.
+Les tickets #15, #17 et #19 ajoutent une clé de notes par ouvrage. La lecture, l’ajout et la suppression ne touchent que cette clé. Le POST d’ajout et le DELETE de suppression ne sont pas rejoués automatiquement lorsqu’une réponse manque ; la saisie et les possibilités de vérification restent dans l’interface.
+
+Le ticket #20 remplace le mécanisme local du ticket #6 par `BasculesProvider`, commun aux cœurs et aux statuts. Une intention est superposée aux ouvrages lus dans les caches sans y écrire d’instantané optimiste. Le verrou porte sur un identifiant dans toutes ses vues, tandis que les autres ouvrages restent disponibles. Un refus retire seulement cette intention ; un succès validé remplace l’ouvrage dans les fiches et pages déjà en cache avant leur invalidation ciblée. Chaque envoi garde sa propre séquence et les indisponibilités réessayables reçoivent un unique réessai après une seconde.
 
 ## Conséquences
 
 - La liste et la fiche disposent d’un mécanisme commun de cache et de mise à jour, au lieu de copies de l’état serveur gérées indépendamment par chaque écran.
 - La cohérence dépend de clés correctes, d’invalidations ciblées et de restaurations optimistes testées ; la bibliothèque ne remplace pas ces règles applicatives.
 - Un cache de données consultées ne constitue pas une sauvegarde de formulaire ni une garantie de fonctionnement hors ligne.
-- Les hooks de consultation, la création et la bascule sont vérifiés avec un transport simulé ; chaque mutation future devra apporter ses propres tests d’invalidation et de restauration.
+- Les consultations, créations, corrections, suppressions, notes et bascules sont vérifiées avec TanStack Query réel et un transport simulé aux frontières HTTP.
 
 ## Références
 
 - [Instructions du projet](../../AGENTS.md).
 - [Cadrage du lot 1](../LOT-1.md), Q1, Q2, Q13 et Q17.
-- [Contrat de l’API](../../../api-books-v2-/api-books-v2/README.md), pagination et routes des ouvrages.
+- [Cadrage du lot 2](../LOT-2.md), recherche, notes et bascules collectives.
+- [Contrat de l’API](../../../api-books-v2-/api-books-v2/README.md), pagination et routes des ouvrages et des notes.
 - [ADR 005 — Protection de la saisie](005-protection-saisie.md).

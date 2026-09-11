@@ -57,7 +57,7 @@ Le lot 2 arbitre différemment la suppression d'une note. Cette exception est un
 
 ### Pourquoi cette différence est tenable
 
-Une note est une observation textuelle courte, recréable à l'identique par son auteur en quelques secondes, sans identité ni relations à préserver — contrairement à un ouvrage, dont la fiche porte identifiant, version et historique. Le coût d'une suppression accidentelle est donc borné par la confirmation seule, là où un ouvrage justifie la fenêtre d'annulation du lot 1.
+Une note est une observation textuelle courte et collective, dont le contenu peut être ressaisi après confirmation. Elle ne porte ni auteur, ni version, ni relations documentées au-delà de son ouvrage, contrairement à la fiche d’un ouvrage qui porte identité, version et données bibliographiques. Le coût d’une suppression accidentelle est donc borné par la confirmation seule, là où un ouvrage justifie la fenêtre d’annulation du lot 1.
 
 ## Références
 

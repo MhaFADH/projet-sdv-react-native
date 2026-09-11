@@ -113,4 +113,4 @@ npx expo install --check
 
 Le détail du flux est décrit dans [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), la décision TanStack Query dans [`docs/ADR/001-gestion-etat-serveur.md`](docs/ADR/001-gestion-etat-serveur.md), la suppression différée et l’exception validée des notes dans [`docs/ADR/004-suppression-differee.md`](docs/ADR/004-suppression-differee.md) et la protection de la saisie, y compris pour l’ajout d’une note, dans [`docs/ADR/005-protection-saisie.md`](docs/ADR/005-protection-saisie.md).
 
-Le compte rendu de recette du lot 1, avec ce qui est automatisé, vérifié manuellement ou non vérifié, est dans [`docs/RECETTE-LOT-1.md`](docs/RECETTE-LOT-1.md).
+Les comptes rendus de recette distinguent ce qui est automatisé, vérifié dans le navigateur ou non vérifié : [`docs/RECETTE-LOT-1.md`](docs/RECETTE-LOT-1.md) pour le lot 1 et [`docs/RECETTE-LOT-2.md`](docs/RECETTE-LOT-2.md) pour le cahier enrichi.

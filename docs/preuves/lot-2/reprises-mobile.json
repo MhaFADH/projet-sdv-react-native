@@ -1,0 +1,70 @@
+{
+  "navigateur": "Chrome 153 piloté par le protocole DevTools",
+  "viewport": {
+    "largeur": 390,
+    "hauteur": 760
+  },
+  "ajoutIncertain": {
+    "focusClavier": [
+      "Note de lecture",
+      "Ajouter la note",
+      "Actualiser les notes",
+      "Renvoyer malgré le risque de doublon"
+    ],
+    "tabIndex": 0,
+    "texteConserveApresEchec": true,
+    "texteConserveApresActualisation": true,
+    "actualisationDeclenchee": true,
+    "deuxEnvoisManuels": true,
+    "succesApresRenvoiAverti": true
+  },
+  "suppression": {
+    "focusClavier": ["Supprimer", "Supprimer la note", "Réessayer la suppression"],
+    "tabIndex": 0,
+    "nombreTentatives": 2,
+    "supprimeeApresReprise": true,
+    "dialogue": {
+      "largeur": 358,
+      "gauche": 16,
+      "droite": 374
+    }
+  },
+  "coupDeCoeur": {
+    "focusClavier": ["Commande de coup de cœur", "Réessayer la modification du coup de cœur"],
+    "tabIndex": 0,
+    "restaureApresDeux503": true,
+    "reessaiManuelReussi": true,
+    "valeurInitialeRetrouvee": true
+  },
+  "mesuresPetitEcran": [
+    {
+      "etat": "fiche initiale",
+      "controlesVisibles": 7,
+      "scrollWidth": 390
+    },
+    {
+      "etat": "ajout incertain",
+      "controlesVisibles": 10,
+      "scrollWidth": 390
+    },
+    {
+      "etat": "dialogue de suppression",
+      "controlesVisibles": 10,
+      "scrollWidth": 390
+    },
+    {
+      "etat": "reprise de suppression",
+      "controlesVisibles": 9,
+      "scrollWidth": 390
+    },
+    {
+      "etat": "fiche finale",
+      "controlesVisibles": 7,
+      "scrollWidth": 390
+    }
+  ],
+  "aucuneCibleSous44": true,
+  "aucunControleSansNom": true,
+  "aucunDebordementHorizontal": true,
+  "erreursConsole": []
+}

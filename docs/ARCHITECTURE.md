@@ -4,10 +4,10 @@
 
 Les dépendances vont de la composition vers le domaine et les services. Le domaine ne dépend ni de React, ni d’Expo, ni du réseau.
 
-| Couche                 | Responsabilité livrée dans les tickets #2, #3, #4, #5, #6, #7, #8 et #16                                                                                                                                                                                                                                |
+| Couche                 | Responsabilité livrée dans les lots 1 et 2                                                                                                                                                                                                                                |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `app/`                 | Compose Expo Router, TanStack Query, le provider global de suppression, le thème clair et l’ErrorBoundary global. Détient la page consultée dans l’URL et déclenche les navigations. `app/+html.tsx` est l’enveloppe HTML de la version web, rendue à la seule génération du document : elle déclare `lang="fr"` pour les technologies d’assistance.                                                                                                              |
-| `features/books/`      | Transforme l’état des hooks en états de présentation, pour le fonds paginé, sa sélection, la fiche et le formulaire partagé d’ajout et de correction. Interprète l’issue d’une écriture et coordonne également le cycle global des suppressions différées.                                         |
+| `app/`                 | Compose Expo Router, TanStack Query, les providers globaux de suppression et de bascules, le thème clair et l’ErrorBoundary global. Détient la page consultée dans l’URL et déclenche les navigations. `app/+html.tsx` est l’enveloppe HTML de la version web, rendue à la seule génération du document : elle déclare `lang="fr"` pour les technologies d’assistance.                                                                                                              |
+| `features/books/`      | Transforme l’état des hooks en états de présentation, pour le fonds paginé, sa sélection, la fiche et le formulaire partagé d’ajout et de correction. Interprète l’issue d’une écriture et coordonne les bascules collectives ainsi que le cycle global des suppressions différées.                                         |
 | `features/notes/`      | Coordonne la saisie et la suppression d’une note de lecture : formulaire, verrouillage, issues d’écriture, abandon confirmé, confirmation de suppression, et traduction de la requête des notes en états de présentation.                                                                          |
 | `hooks/`               | Décrit les requêtes et mutations TanStack Query, leurs clés de cache, leur annulation, leur réessai temporisé, la réactualisation au retour, le toast de succès, la durée de ce toast et la temporisation d’un réessai manuel, ainsi que l’accès au contexte de suppression.                      |
 | `components/`          | Affiche des props sans connaître le réseau ni le cache. Contient notamment les formulaires, les notes de lecture, cases de sélection, confirmations et bandeaux de suppression. Les états de données sont mutualisés dans `components/etats-donnees.tsx`.                                                     |
@@ -62,7 +62,7 @@ Le retour depuis une fiche ne démonte pas l’écran du fonds : `useRafraichirF
 
 ## Erreurs et reprise
 
-L’union `ErreurApplication` couvre les catégories réseau, validation, introuvable, conflit et authentification. Les tickets #2, #3, #4, #5 et #6 utilisent effectivement les erreurs réseau, de validation et d’absence. Les catégories conflit et authentification ne déclenchent encore aucun parcours fonctionnel.
+L’union `ErreurApplication` couvre les catégories réseau, validation, introuvable, conflit et authentification. Les parcours livrés des ouvrages, notes et bascules utilisent effectivement les erreurs réseau, de validation et d’absence. Les catégories conflit et authentification ne déclenchent encore aucun parcours fonctionnel.
 
 Une erreur réseau réessayable reçoit un seul nouvel essai automatique après une seconde. Si elle persiste, l’interface expose « Réessayer ». Une erreur de rendu React remonte à l’ErrorBoundary exporté par la racine Expo Router, qui présente également une action de reprise.
 
@@ -80,7 +80,7 @@ Le ticket #4 livre la création d’un ouvrage par `POST`.
 
 ## Parcours d’une écriture livré : la correction d’un ouvrage
 
-Le ticket #5 livre la correction d’un ouvrage par `PATCH`, comme la bascule de statut du ticket #6 décrite plus bas. `PUT` n’est déclenché par aucun composant ; `DELETE` reste réservé au parcours de suppression décrit plus bas.
+Le ticket #5 livre la correction d’un ouvrage par `PATCH`, comme les bascules de statut et de coup de cœur coordonnées par le ticket #20 décrites plus bas. `PUT` n’est déclenché par aucun composant ; `DELETE` reste réservé au parcours de suppression décrit plus bas.
 
 1. La fiche propose « Corriger cet ouvrage ». `app/ouvrages/[id].tsx` pousse `/ouvrages/[id]/modifier`, qui compose `CorrectionOuvrageScreen` sans URL ni appel réseau.
 2. L’écran lit l’ouvrage par `useBook`, donc par la même clé de cache que la fiche. Le chargement affiche un squelette, un `404` une absence contextualisée et tout autre échec un réessai explicite : aucun de ces états ne propose une création déguisée.
