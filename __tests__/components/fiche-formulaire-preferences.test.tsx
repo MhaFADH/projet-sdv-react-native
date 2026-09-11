@@ -28,9 +28,11 @@ const ouvrage = {
 
 const detail = {
   ouvrage,
+  couverture: { type: 'locale' as const },
   basculeEnCours: false,
   basculerCoupDeCoeur: vi.fn(),
   basculerStatut: vi.fn(),
+  noter: vi.fn(),
   demanderSuppression: vi.fn(),
   suppressionDesactivee: false,
   corriger: vi.fn(),
@@ -66,6 +68,9 @@ describe('fiche d’un ouvrage', () => {
 
     const carte = (await screen.findByRole('heading', { name: 'Bel-Ami' })).parentElement;
     await waitFor(() => expect(carte).toHaveStyle({ backgroundColor: SURFACE_SOMBRE }));
+    expect(screen.getByRole('radio', { name: 'Attribuer 1 étoile' })).toHaveStyle({
+      backgroundColor: SURFACE_SOMBRE,
+    });
     window.localStorage.clear();
   });
 });

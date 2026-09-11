@@ -5,6 +5,7 @@ import { FicheView } from '../../components/books/fiche-view';
 const actionsBascule = {
   basculerStatut: vi.fn(),
   basculerCoupDeCoeur: vi.fn(),
+  noter: vi.fn(),
   basculeEnCours: false,
   corriger: vi.fn(),
 };
@@ -27,6 +28,7 @@ const ouvrage = {
 const etatSucces = (valeur = ouvrage) => ({
   type: 'succes' as const,
   ouvrage: valeur,
+  couverture: { type: 'locale' as const },
   ...actionsBascule,
   demanderSuppression: vi.fn(),
   suppressionDesactivee: false,

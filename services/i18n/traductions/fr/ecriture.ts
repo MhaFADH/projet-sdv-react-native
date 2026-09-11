@@ -69,6 +69,7 @@ export const ecritureFr = {
     reponseOuvrages: 'La réponse du serveur pour les ouvrages est invalide.',
     reponseFiche: 'La réponse du serveur pour cette fiche est invalide.',
     reponseBascule: 'La réponse du serveur après la bascule est invalide.',
+    reponseNotation: 'La réponse du serveur après la notation est invalide.',
     reponseCorrection: 'La réponse du serveur pour l’ouvrage corrigé est invalide.',
     reponseNotes: 'La réponse du serveur pour les notes est invalide.',
     reponseNoteAjoutee: 'La réponse du serveur pour la note ajoutée est invalide.',

@@ -113,7 +113,7 @@ export const FondsScreen = ({
     ...requete.data,
     items: requete.data.items
       .filter(({ id }) => !estMasque(id))
-      .map(bascules.appliquerBasculeEnCours),
+      .map(bascules.appliquerModificationEnCours),
   };
   const pageIllustree = {
     ...pageVisible,
@@ -125,7 +125,7 @@ export const FondsScreen = ({
   const coupsDeCoeur = {
     basculer: (ouvrage: Ouvrage) =>
       bascules.basculer({ id: ouvrage.id, champ: 'favori', valeur: !ouvrage.favori }),
-    enCours: bascules.basculeEnCours,
+    enCours: bascules.modificationEnCours,
     erreur: bascules.erreurBascule,
   };
   const ouvragesSelectionnes = pageVisible.items

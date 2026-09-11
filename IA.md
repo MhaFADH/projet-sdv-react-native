@@ -807,3 +807,43 @@ Recette navigateur de cette extension, en thème sombre et en anglais : le formu
 ### Vérification navigateur
 
 Le fonds réel a été vérifié dans Chrome avec l’API locale : couvertures fixes et notations localisées sont visibles sans modifier la pagination serveur. À 390 pixels de large, les cartes et leurs commandes restent dans la fenêtre. Aucun serveur Expo temporaire n’a été laissé actif.
+
+## Intervention — issue #35
+
+- Outil : Codex.
+- Fournisseur : OpenAI.
+- Modèle : GPT-5.
+- Périmètre : issue GitHub #35, couverture résiliente et notation d’un ouvrage depuis sa fiche.
+
+### Demande reçue
+
+1. `$implement https://github.com/MhaFADH/projet-sdv-react-native/issues/34 et https://github.com/MhaFADH/projet-sdv-react-native/issues/35, tu as accès au github cli, lance les en parallele, une fois finies, on prepare et PR la premiere, puis on rebase et pr la deuxieme`
+
+### Actions réalisées avec l’IA
+
+- lecture des issues #35 et #32 avec GitHub CLI, du contrat de l’API voisine, des règles du dépôt et de l’implémentation du ticket #34 présente dans la branche de départ ;
+- ajout test-first du contrat public `PATCH /books/:id` limité à `{ note }`, avec validation Zod de l’ouvrage complet renvoyé ;
+- réutilisation sur la fiche de la résolution de couverture et du repli local livrés par le ticket #34 ;
+- ajout du contrôle radio accessible de zéro à cinq étoiles, sans commande ramenant la note à `null`, avec navigation au clavier, cibles de 44 points, thème et langue actifs ;
+- extension de la coordination partagée des bascules afin que le cœur, le statut de lecture et la notation emploient le même verrou par ouvrage, tout en laissant les autres ouvrages interactifs ;
+- conservation optimiste de la note, restauration limitée à l’ouvrage en échec, réessai visible, mise à jour ciblée de la fiche et des pages en cache, puis relecture serveur ;
+- comparaison des versions avant toute réconciliation afin qu’une réponse de lecture plus ancienne ne remplace pas la réponse confirmée du `PATCH` ;
+- tests Testing Library avec un vrai `QueryClient` et un transport simulé pour les états `null`, zéro et un à cinq, l’optimisme, le succès, la restauration, le réessai, la concurrence, la réponse obsolète et l’échec de relecture.
+
+### Défauts constatés et corrections réelles
+
+- La première réconciliation réappliquait sans comparaison la réponse du `GET` déclenché après le `PATCH` : un serveur de lecture en retard pouvait remplacer la version confirmée. Un test rouge avec les versions 4 puis 3 a fixé le défaut ; la fiche et les pages conservent désormais la version la plus récente.
+- La première écriture post-relecture réinscrivait les pages inactives et effaçait leur état invalidé. Le test existant du fournisseur l’a signalé ; seules les pages actives sont réconciliées après la lecture, les autres restant marquées à actualiser.
+- Les premiers messages de restauration réutilisaient le genre grammatical des bascules booléennes. Des clés propres à la notation ont été ajoutées en français et en anglais.
+- Le premier passage des vérifications globales a trouvé deux imports non ordonnés ; Biome les a corrigés. Un test de correction d’ouvrage a dépassé son délai pendant cette exécution parallèle, puis a réussi seul et lors de la relance complète.
+- La revue Standards a relevé qu’une actualisation commencée après une première notation pouvait se terminer après une seconde et publier une erreur périmée. Chaque actualisation porte désormais la séquence de son écriture ; une fin qui n’est plus la plus récente est ignorée.
+- La même revue a relevé que les noms de l’API interne du contexte parlaient encore uniquement de bascule. Les opérations communes exposent désormais une modification en cours, son application et son erreur ; les deux bascules et la notation restent coordonnées par le fournisseur historique.
+- La revue Standards a demandé une preuve directe des règles pures. Les valeurs limites zéro et cinq, l’identifiant visé et la conservation de la version la plus récente sont maintenant couverts dans un test de domaine.
+- La revue Spec a relevé trois preuves manquantes : le déclenchement du réessai de lecture, le remplacement d’une note existante et les touches Flèche, Début et Fin. Les parcours publics de la fiche couvrent désormais ces trois cas, sans second `PATCH` pendant le réessai de lecture.
+
+### Vérification
+
+- `npm run check`, `npm run typecheck`, `npm run lint` et `npm run knip` réussissent ;
+- `npm test` et `npm run test:coverage` réussissent avec 69 fichiers et 336 tests ; la couverture globale atteint 93,95 % des instructions et 94,93 % des lignes ;
+- l’export statique Expo web réussit pour les sept routes, dont `/ouvrages/[id]` ;
+- aucune capacité de pilotage de navigateur n’était disponible dans cette session. `expo start --web` a démarré Metro mais n’a pas exposé le port 8082 avant l’arrêt de la tentative ; la recette interactive n’a donc pas été revendiquée.

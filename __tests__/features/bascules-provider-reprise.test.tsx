@@ -24,11 +24,11 @@ describe('reprise des bascules après un échec', () => {
     await waitFor(() => expect(fetchMock).toHaveBeenCalledOnce());
     await new Promise((resoudre) => setTimeout(resoudre, 100));
     expect(fetchMock).toHaveBeenCalledOnce();
-    expect(result.current.basculeEnCours(ID)).toBe(true);
+    expect(result.current.modificationEnCours(ID)).toBe(true);
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2), { timeout: 2_000 });
-    await waitFor(() => expect(result.current.erreurBascule(ID)).toBeDefined());
-    expect(result.current.appliquerBasculeEnCours(ouvrage).favori).toBe(false);
+    await waitFor(() => expect(result.current.erreurModification(ID)).toBeDefined());
+    expect(result.current.appliquerModificationEnCours(ouvrage).favori).toBe(false);
     client.clear();
   });
 
@@ -44,12 +44,12 @@ describe('reprise des bascules après un échec', () => {
 
     act(() => result.current.basculer({ id: ID, champ: 'favori', valeur: true }));
 
-    await waitFor(() => expect(result.current.erreurBascule(ID)).toBeDefined(), {
+    await waitFor(() => expect(result.current.erreurModification(ID)).toBeDefined(), {
       timeout: 4_000,
     });
-    expect(result.current.basculeEnCours(ID)).toBe(false);
-    expect(result.current.appliquerBasculeEnCours(ouvrage).favori).toBe(false);
-    expect(result.current.erreurBascule(ID)?.message).toContain(
+    expect(result.current.modificationEnCours(ID)).toBe(false);
+    expect(result.current.appliquerModificationEnCours(ouvrage).favori).toBe(false);
+    expect(result.current.erreurModification(ID)?.message).toContain(
       'Le coup de cœur précédent a été restauré.',
     );
     client.clear();
@@ -77,9 +77,9 @@ describe('reprise des bascules après un échec', () => {
 
     act(() => result.current.basculer({ id: ID, champ: 'favori', valeur: true }));
 
-    await waitFor(() => expect(result.current.basculeEnCours(ID)).toBe(false));
+    await waitFor(() => expect(result.current.modificationEnCours(ID)).toBe(false));
     expect(result.current.erreurActualisation(ID)).toBeUndefined();
-    expect(result.current.erreurBascule(ID)).toBeUndefined();
+    expect(result.current.erreurModification(ID)).toBeUndefined();
     client.clear();
   });
 });

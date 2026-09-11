@@ -1,6 +1,6 @@
 # BookList Pro
 
-BookList Pro numérise le cahier de lecture des Comptoirs du Livre. Cette version livre la consultation illustrée, la recherche, les filtres de lecture et de coups de cœur ainsi que les tris serveur du fonds par pages de vingt ouvrages, la fiche détaillée avec ses notes de lecture, leur ajout et leur suppression, l’ajout d’ouvrage protégé contre la perte de saisie, la modification du statut collectif lu/non lu et la suppression différée depuis une fiche ou une sélection de la liste, avec annulation groupée.
+BookList Pro numérise le cahier de lecture des Comptoirs du Livre. Cette version livre la consultation illustrée, la recherche, les filtres de lecture et de coups de cœur ainsi que les tris serveur du fonds par pages de vingt ouvrages, la fiche détaillée illustrée avec sa notation et ses notes de lecture, leur ajout et leur suppression, l’ajout d’ouvrage protégé contre la perte de saisie, la modification du statut collectif lu/non lu et la suppression différée depuis une fiche ou une sélection de la liste, avec annulation groupée.
 
 ## Prérequis
 
@@ -59,8 +59,9 @@ Le délai d’annulation d’une suppression reste fixé à cinq secondes : c’
 - barre de critères unique avec les zones verticales « Affiner » puis « Trier » sur écran large, remplacée sur petit écran par un panneau « Filtres et tri » avec résumé des choix ; les radios se parcourent avec les flèches du clavier ;
 - tris serveur par titre, auteur, année ou notation, dans les sens croissant et décroissant, sans règle locale pour les notations absentes ;
 - validation Zod de l’enveloppe paginée et de tous les champs d’un ouvrage ;
-- couverture de chaque ouvrage en 80 × 120 points avec cache mémoire et disque : chemin relatif résolu par rapport à l’API, URL absolue conservée, image stable dérivée de l’identifiant lorsque la valeur est absente et visuel local si la valeur ou le chargement échoue ;
-- notation affichée avec le format numérique de la langue active, et absence de notation distinguée, sans commande de modification ni écriture automatique ;
+- couverture de chaque ouvrage dans le fonds et sur sa fiche, avec dimensions réservées et cache mémoire et disque : chemin relatif résolu par rapport à l’API, URL absolue conservée, image stable dérivée de l’identifiant lorsque la valeur est absente et visuel local si la valeur ou le chargement échoue ;
+- notation du fonds affichée avec le format numérique de la langue active, et absence de notation distinguée, sans commande de modification ni écriture automatique dans la liste ;
+- notation interactive uniquement sur la fiche : six commandes accessibles permettent d’attribuer zéro à cinq étoiles, sans promettre l’effacement vers `null` que l’API ignore ;
 - chargement par squelette, erreur avec réessai, fonds vide et liste en succès ;
 - pagination « Précédent / Suivant » bornée par les métadonnées serveur ;
 - recherche, filtres, tri, ordre et page consultée portés par l’URL de la liste (`/?page=3&q=zola&status=nonlu&favori=true&sort=note&order=desc`) afin d’être restitués et actualisés au retour ;
@@ -69,12 +70,12 @@ Le délai d’annulation d’une suppression reste fixé à cinq secondes : c’
 - cases à cocher limitées aux vingt ouvrages de la page et sélection remise à zéro à chaque changement de page ; l’action compacte « N sélectionnés — Supprimer » apparaît uniquement lorsqu’une sélection existe ;
 - confirmation récapitulative avant l’ajout de la sélection au même groupe annulable que la suppression depuis une fiche ;
 - ouverture de la fiche d’un ouvrage depuis la liste (`/ouvrages/<identifiant>`) avec `GET /books/:id` validé ;
-- bascules cœur et lecture immédiatement optimistes, envoyées par `PATCH` avec le seul champ concerné, `{ favori }` ou `{ lu }`, en conservant les données serveur dont `version` ;
-- une seule bascule en cours par ouvrage : ses commandes cœur et lecture sont verrouillées dans toutes ses vues jusqu’au résultat, y compris en navigant entre liste et fiche, tandis que les autres ouvrages restent utilisables ;
+- bascules cœur, lecture et notation immédiatement optimistes, envoyées par `PATCH` avec le seul champ concerné, `{ favori }`, `{ lu }` ou `{ note }`, en conservant les données serveur dont `version` ;
+- une seule modification collective en cours par ouvrage : ses commandes cœur, lecture et notation sont verrouillées dans toutes ses vues jusqu’au résultat, y compris en navigant entre liste et fiche, tandis que les autres ouvrages restent utilisables ;
 - restauration expliquée et réessai disponible après un refus, avec un réessai automatique temporisé pour une indisponibilité réessayable ;
 - sous filtre actif, coups de cœur comme lecture, maintien de la ligne pendant la bascule optimiste puis retrait après confirmation et actualisation ; après un refus, la valeur revient sans que la ligne disparaisse puis réapparaisse ;
 - un échec de relecture après un `PATCH` confirmé reste distinct d’un refus : l’écriture acquise n’est jamais annoncée comme annulée et la lecture est réessayable ;
-- validation de la réponse d’écriture, protection contre les réponses obsolètes et actualisation ciblée des caches de fiche et de liste ;
+- validation de la réponse d’écriture, conservation de la version la plus récente face à une relecture obsolète et actualisation ciblée des caches de fiche et de liste ;
 - fiche en squelette, erreur avec réessai, absence contextualisée sur `404` et succès ;
 - consultation de `GET /books/:id/notes` dans un cache distinct par ouvrage, avec validation de chaque note, ordre serveur conservé, date et heure françaises, squelette, vide contextualisé et erreur réessayable sans masquer la bibliographie ;
 - ajout d’une note depuis la fiche : champ multiligne, compteur sur 1 000 caractères, validation partagée avec le validateur de l’API, `POST /books/:id/notes` validé à l’exécution, champ et soumission verrouillés pendant l’envoi ;

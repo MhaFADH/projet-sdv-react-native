@@ -4,7 +4,7 @@ import {
   type ConsultationFonds,
   creerCriteresOuvrages,
 } from '@/domain/criteres-ouvrages';
-import type { PageOuvrages } from '@/domain/ouvrage';
+import { conserverVersionsPage, type PageOuvrages } from '@/domain/ouvrage';
 import { fetchBooksPage } from '@/services/api/books-api';
 import type { ErreurApplication } from '@/services/api/erreurs';
 import { autoriserReessai, DELAI_REESSAI_MS } from '@/services/api/politique-reessai';
@@ -44,6 +44,8 @@ export const useBooksPage = (
     queryFn: ({ signal }) => fetchBooksPage(criteres, signal),
     placeholderData: (precedente, requetePrecedente) =>
       memesCriteresHorsPage(requetePrecedente?.queryKey ?? [], cle) ? precedente : undefined,
+    structuralSharing: (courante, recue) =>
+      conserverVersionsPage(courante as PageOuvrages | undefined, recue as PageOuvrages),
     retry: autoriserReessai,
     retryDelay: DELAI_REESSAI_MS,
   });

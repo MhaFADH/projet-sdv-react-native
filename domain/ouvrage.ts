@@ -35,3 +35,21 @@ export const lireNumeroPage = (valeur: string | string[] | undefined): number =>
 };
 
 export const identifiantUtilisable = (id: string): boolean => id.trim() !== '';
+
+export const conserverOuvragePlusRecent = (courant: Ouvrage, recu: Ouvrage): Ouvrage =>
+  courant.version > recu.version ? courant : recu;
+
+export const conserverVersionsPage = (
+  courante: PageOuvrages | undefined,
+  recue: PageOuvrages,
+): PageOuvrages => {
+  if (!courante) return recue;
+  const ouvragesCourants = new Map(courante.items.map((ouvrage) => [ouvrage.id, ouvrage]));
+  return {
+    ...recue,
+    items: recue.items.map((ouvrage) => {
+      const courant = ouvragesCourants.get(ouvrage.id);
+      return courant ? conserverOuvragePlusRecent(courant, ouvrage) : ouvrage;
+    }),
+  };
+};
