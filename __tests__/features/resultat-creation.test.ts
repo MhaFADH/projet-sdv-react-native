@@ -16,7 +16,7 @@ describe('interprétation de l’échec d’une création', () => {
         message: 'Certaines données sont invalides.',
         champs: { titre: 'ne peut pas etre vide' },
       }),
-    ).toEqual({ type: 'refus', parChamp: { titre: 'ne peut pas etre vide' }, message: undefined });
+    ).toEqual({ type: 'refus', parChamp: { titre: 'Le titre est invalide.' }, message: undefined });
   });
 
   it('rend visible un refus portant sur un champ absent du formulaire', () => {
@@ -26,7 +26,7 @@ describe('interprétation de l’échec d’une création', () => {
         message: 'Certaines données sont invalides.',
         champs: { lu: 'doit etre un booleen' },
       }),
-    ).toEqual({ type: 'refus', parChamp: {}, message: 'lu : doit etre un booleen' });
+    ).toEqual({ type: 'refus', parChamp: {}, message: 'Certaines données sont invalides.' });
   });
 
   it('propose un réessai uniquement pour une indisponibilité annoncée par le serveur', () => {

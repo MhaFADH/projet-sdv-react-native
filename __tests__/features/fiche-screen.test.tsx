@@ -184,7 +184,7 @@ describe('parcours de la fiche', () => {
     fireEvent.click(await screen.findByRole('switch', { name: 'Marquer comme lu' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Le statut précédent a été restauré. Modification refusée.',
+      'Le statut précédent a été restauré. Certaines données sont invalides.',
     );
     expect(screen.getByText('Non lu')).toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: 'Réessayer la modification du statut' }));

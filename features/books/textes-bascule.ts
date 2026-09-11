@@ -1,6 +1,6 @@
 import type { AvisReessai } from '@/components/books/avis-echec-bascule';
 import type { ChampBascule } from '@/domain/bascule-ouvrage';
-import { traduire } from '@/services/i18n';
+import type { Traduire } from '@/hooks/use-traduction';
 
 type ChampModification = ChampBascule | 'note';
 
@@ -29,12 +29,13 @@ export const avisEchecBascule = (
   champ: ChampModification,
   message: string,
   reessayer: () => void,
+  t: Traduire,
 ): AvisReessai => ({
-  message: traduire(TEXTES[champ].echec, {
-    sujet: traduire(TEXTES[champ].sujet),
+  message: t(TEXTES[champ].echec, {
+    sujet: t(TEXTES[champ].sujet),
     message,
   }),
-  libelleReessai: traduire(TEXTES[champ].reessai),
+  libelleReessai: t(TEXTES[champ].reessai),
   reessayer,
 });
 
@@ -42,11 +43,12 @@ export const avisEchecActualisation = (
   champ: ChampModification,
   message: string,
   reessayer: () => void,
+  t: Traduire,
 ): AvisReessai => ({
-  message: traduire(TEXTES[champ].actualisation, {
-    sujet: traduire(TEXTES[champ].sujet),
+  message: t(TEXTES[champ].actualisation, {
+    sujet: t(TEXTES[champ].sujet),
     message,
   }),
-  libelleReessai: traduire('bascule.reessaiActualisation'),
+  libelleReessai: t('bascule.reessaiActualisation'),
   reessayer,
 });

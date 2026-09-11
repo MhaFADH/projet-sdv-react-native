@@ -10,15 +10,23 @@ export type ResultatEcriture =
 
 const interpreterRefus = (
   erreur: Extract<ErreurApplication, { type: 'validation' }>,
+  textes: TextesEcriture,
 ): ResultatEcriture => {
   const { parChamp, horsFormulaire } = repartirRefusServeur(erreur.champs);
-  const messages = horsFormulaire.length > 0 ? horsFormulaire : [];
-  if (Object.keys(parChamp).length === 0 && messages.length === 0) messages.push(erreur.message);
+  const champsTraduits = Object.fromEntries(
+    Object.keys(parChamp).map((champ) => [
+      champ,
+      textes.messagesChampsInvalides[champ as ChampSaisieOuvrage],
+    ]),
+  );
 
   return {
     type: 'refus',
-    parChamp,
-    message: messages.length > 0 ? messages.join(' · ') : undefined,
+    parChamp: champsTraduits,
+    message:
+      horsFormulaire.length > 0 || Object.keys(parChamp).length === 0
+        ? textes.messageRefusValidation
+        : undefined,
   };
 };
 
@@ -32,7 +40,7 @@ export const interpreterEchecEcriture = (
   });
 
   if (classe.classe === 'indisponible') {
-    return { type: 'indisponible', message: classe.message };
+    return { type: 'indisponible', message: textes.messageIndisponible };
   }
 
   if (classe.classe === 'incertain') {
@@ -43,8 +51,8 @@ export const interpreterEchecEcriture = (
     if (classe.erreur.champs === undefined) {
       return { type: 'incertain', message: textes.incertainReponseInexploitable };
     }
-    return interpreterRefus(classe.erreur);
+    return interpreterRefus(classe.erreur, textes);
   }
 
-  return { type: 'refus', parChamp: {}, message: classe.erreur.message };
+  return { type: 'refus', parChamp: {}, message: textes.messageErreur(classe.erreur) };
 };

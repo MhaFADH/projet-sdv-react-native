@@ -9,6 +9,7 @@ import {
 import { appliquerNotation, type IntentionNotation } from '@/domain/notation-ouvrage';
 import type { Ouvrage, PageOuvrages } from '@/domain/ouvrage';
 import { clesOuvrages } from '@/hooks/cles-ouvrages';
+import { useTraduction } from '@/hooks/use-traduction';
 import { patchBasculeOuvrage, patchNotationOuvrage } from '@/services/api/books-api';
 import type { ErreurApplication } from '@/services/api/erreurs';
 import {
@@ -16,6 +17,7 @@ import {
   DELAI_REESSAI_MS,
   MODE_RESEAU_BASCULE,
 } from '@/services/api/politique-reessai';
+import { messageErreurApplication } from '@/services/i18n/message-erreur-application';
 import { BasculesContext, type ContexteBascules } from './contexte-bascules';
 import { avisEchecActualisation, avisEchecBascule } from './textes-bascule';
 
@@ -46,6 +48,7 @@ const sansCle = <Valeur,>(entrees: Record<string, Valeur>, cle: string): Record<
   Object.fromEntries(Object.entries(entrees).filter(([courante]) => courante !== cle));
 
 export const BasculesProvider = ({ children }: PropsWithChildren) => {
+  const t = useTraduction();
   const client = useQueryClient();
   const [etat, setEtat] = useState<EtatModifications>(ETAT_INITIAL);
   const envoisEnCours = useRef<Record<string, EnvoiModification>>(ETAT_INITIAL.envois);
@@ -178,8 +181,11 @@ export const BasculesProvider = ({ children }: PropsWithChildren) => {
     const erreurModification = (id: string) => {
       const echec = etat.echecs[id];
       if (!echec) return undefined;
-      return avisEchecBascule(echec.intention.champ, echec.erreur.message, () =>
-        modifier(echec.intention),
+      return avisEchecBascule(
+        echec.intention.champ,
+        messageErreurApplication(echec.erreur, t),
+        () => modifier(echec.intention),
+        t,
       );
     };
     return {
@@ -201,12 +207,13 @@ export const BasculesProvider = ({ children }: PropsWithChildren) => {
         if (!echec) return undefined;
         return avisEchecActualisation(
           echec.contexte.champ,
-          echec.erreur.message,
+          messageErreurApplication(echec.erreur, t),
           () => void actualiser(echec.contexte),
+          t,
         );
       },
     };
-  }, [actualiser, basculer, etat, modifier, noter]);
+  }, [actualiser, basculer, etat, modifier, noter, t]);
 
   return <BasculesContext.Provider value={contexte}>{children}</BasculesContext.Provider>;
 };

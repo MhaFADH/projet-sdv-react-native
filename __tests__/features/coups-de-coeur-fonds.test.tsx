@@ -132,7 +132,7 @@ describe('coups de cœur depuis le fonds', () => {
     );
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Le coup de cœur précédent a été restauré. Modification refusée.',
+      'Le coup de cœur précédent a été restauré. Certaines données sont invalides.',
     );
     expect(coeur('Marquer comme coup de cœur : Bel-Ami')).toHaveAttribute('aria-checked', 'false');
 

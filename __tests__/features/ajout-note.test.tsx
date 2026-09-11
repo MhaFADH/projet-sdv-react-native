@@ -128,7 +128,7 @@ describe('ajout d’une note de lecture', () => {
     });
     const { client } = rendreFiche();
 
-    expect(await screen.findByText('Livre inconnu.')).toBeVisible();
+    expect(await screen.findByText("Cet ouvrage n'existe pas ou plus.")).toBeVisible();
     saisirNote('Brouillon à recopier.');
 
     expect(

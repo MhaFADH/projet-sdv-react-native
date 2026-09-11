@@ -3,7 +3,7 @@ import type { EtatNotes } from '@/components/notes/vue-liste-notes';
 import type { NoteLecture } from '@/domain/note-lecture';
 import type { Traduire } from '@/hooks/use-traduction';
 import type { ErreurApplication } from '@/services/api/erreurs';
-import { messageErreurApplication } from './message-erreur-application';
+import { messageErreurApplication } from '@/services/i18n/message-erreur-application';
 
 export const construireEtatNotes = (
   requete: UseQueryResult<NoteLecture[], ErreurApplication>,

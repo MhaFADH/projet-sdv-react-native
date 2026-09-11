@@ -6,7 +6,9 @@ import { OUVRAGES_PAR_PAGE, type Ouvrage, PAS_DE_PAGE, PREMIERE_PAGE } from '@/d
 import { useBascules } from '@/hooks/use-bascules';
 import { useBooksPage } from '@/hooks/use-books-page';
 import { useSuppressions } from '@/hooks/use-suppressions';
+import { useTraduction } from '@/hooks/use-traduction';
 import { resoudreCouverture } from '@/services/couvertures';
+import { messageErreurApplication } from '@/services/i18n/message-erreur-application';
 
 type FondsScreenProps = {
   pageDemandee: number;
@@ -35,6 +37,7 @@ export const FondsScreen = ({
   ajouterOuvrage,
   ouvrirPreferences,
 }: FondsScreenProps) => {
+  const t = useTraduction();
   const requete = useBooksPage(pageDemandee, consultationDemandee);
   const { confirmerSuppressions, estMasque, suppressionDesactivee } = useSuppressions();
   const bascules = useBascules();
@@ -89,7 +92,7 @@ export const FondsScreen = ({
         criteres={criteres}
         etat={{
           type: 'erreur',
-          message: requete.error.message,
+          message: messageErreurApplication(requete.error, t, t('erreursHttp.reponseOuvrages')),
           reessayer: () => void requete.refetch(),
         }}
         ouvrirPreferences={ouvrirPreferences}
@@ -186,7 +189,14 @@ export const FondsScreen = ({
           masquageTemporaire: pageVisible.items.length < requete.data.items.length,
           pageEnChargement: requete.isPlaceholderData ? pageDemandee : undefined,
           erreurActualisation: requete.isError
-            ? { message: requete.error.message, reessayer: () => void requete.refetch() }
+            ? {
+                message: messageErreurApplication(
+                  requete.error,
+                  t,
+                  t('erreursHttp.reponseOuvrages'),
+                ),
+                reessayer: () => void requete.refetch(),
+              }
             : undefined,
         }}
         ouvrirPreferences={ouvrirPreferences}

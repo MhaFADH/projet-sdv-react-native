@@ -11,14 +11,24 @@ import { SuppressionsProvider } from '@/features/books/suppressions-provider';
 import { PreferencesProvider } from '@/features/preferences/preferences-provider';
 import { usePreferences } from '@/hooks/use-preferences';
 import { useStylesTheme } from '@/hooks/use-theme';
-import { type Theme, theme } from '@/theme/tokens';
+import type { Theme } from '@/theme/tokens';
 
 const queryClient = new QueryClient();
 
-export const ErrorBoundary = ({ retry }: ErrorBoundaryProps) => (
-  <SafeAreaView edges={['top', 'bottom']} style={styles.page}>
-    <GlobalErrorView retry={retry} />
-  </SafeAreaView>
+const ErreurGlobale = ({ retry }: ErrorBoundaryProps) => {
+  const styles = useStylesTheme(creerStyles);
+
+  return (
+    <SafeAreaView edges={['top', 'bottom']} style={styles.page}>
+      <GlobalErrorView retry={retry} />
+    </SafeAreaView>
+  );
+};
+
+export const ErrorBoundary = (proprietes: ErrorBoundaryProps) => (
+  <PreferencesProvider>
+    <ErreurGlobale {...proprietes} />
+  </PreferencesProvider>
 );
 
 const ApplicationThemee = () => {
@@ -58,13 +68,10 @@ const RootLayout = () => (
 const creerStyles = (themeActif: Theme) =>
   StyleSheet.create({
     contenu: { backgroundColor: themeActif.colors.background },
+    page: {
+      flex: 1,
+      backgroundColor: themeActif.colors.background,
+    },
   });
-
-const styles = StyleSheet.create({
-  page: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-});
 
 export default RootLayout;

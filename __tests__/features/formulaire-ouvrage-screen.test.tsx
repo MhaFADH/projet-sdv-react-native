@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { PropsWithChildren } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { FormulaireOuvrageScreen } from '../../features/books/formulaire-ouvrage-screen';
+import { appliquerLangue } from '../../services/i18n';
 
 const ID = '33575fa9-7968-45b3-8447-ec994a0b8402';
 
@@ -51,6 +52,7 @@ const enregistrer = () =>
 const reponseCreation = () => new Response(JSON.stringify(ouvrageCree), { status: 201 });
 
 afterEach(() => {
+  appliquerLangue('fr');
   vi.useRealTimers();
   vi.unstubAllGlobals();
 });
@@ -110,6 +112,20 @@ describe('ajout d’un ouvrage', () => {
     client.clear();
   });
 
+  it('localise l’action du toast de création', async () => {
+    appliquerLangue('en');
+    vi.stubGlobal('fetch', vi.fn<typeof fetch>().mockResolvedValue(reponseCreation()));
+    const { client } = rendreFormulaire();
+
+    saisir('Title', 'Bel-Ami');
+    saisir('Author', 'Guy de Maupassant');
+    saisir('Publication year', '1885');
+    fireEvent.click(screen.getByRole('button', { name: 'Save the book' }));
+
+    expect(await screen.findByRole('button', { name: 'Open the record' })).toBeVisible();
+    client.clear();
+  });
+
   it('verrouille les champs pendant l’envoi et empêche une double soumission', async () => {
     let resoudre: (reponse: Response) => void = () => {};
     const fetchMock = vi
@@ -150,7 +166,7 @@ describe('ajout d’un ouvrage', () => {
     remplirSaisieValide();
     enregistrer();
 
-    expect(await screen.findByText('annee invalide')).toBeVisible();
+    expect(await screen.findByText('L’année de publication est invalide.')).toBeVisible();
     expect(screen.getByRole('textbox', { name: 'Titre' })).toHaveValue('Bel-Ami');
     expect(screen.getByRole('textbox', { name: 'Année de publication' })).toHaveValue('1885');
     expect(screen.queryByText('« Bel-Ami » a été ajouté au fonds.')).not.toBeInTheDocument();

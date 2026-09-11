@@ -13,6 +13,7 @@ import { useOpenLibrary } from '@/hooks/use-openlibrary';
 import { useSuppressions } from '@/hooks/use-suppressions';
 import { useTraduction } from '@/hooks/use-traduction';
 import { resoudreCouverture } from '@/services/couvertures';
+import { messageErreurApplication } from '@/services/i18n/message-erreur-application';
 
 type FicheScreenProps = {
   id: string;
@@ -74,11 +75,11 @@ export const FicheScreen = ({ id, retour, corriger }: FicheScreenProps) => {
 
   if (requete.isError && !requete.data) {
     if (requete.error.type === 'introuvable') {
-      return rendre({ type: 'introuvable', message: requete.error.message });
+      return rendre({ type: 'introuvable', message: messageErreurApplication(requete.error, t) });
     }
     return rendre({
       type: 'erreur',
-      message: requete.error.message,
+      message: messageErreurApplication(requete.error, t, t('erreursHttp.reponseFiche')),
       reessayer: () => void requete.refetch(),
     });
   }
@@ -114,7 +115,7 @@ export const FicheScreen = ({ id, retour, corriger }: FicheScreenProps) => {
           : requete.isError && !modificationEnCours
             ? {
                 titre: t('fiche.actualisationImpossibleTitre'),
-                message: requete.error.message,
+                message: messageErreurApplication(requete.error, t, t('erreursHttp.reponseFiche')),
                 reessayer: () => void requete.refetch(),
               }
             : undefined,

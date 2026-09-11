@@ -87,7 +87,7 @@ describe('envoi d’une correction d’ouvrage', () => {
     saisir('Année de publication', '1886');
     enregistrer();
 
-    expect(await screen.findByText('annee refusée')).toBeVisible();
+    expect(await screen.findByText('L’année de publication est invalide.')).toBeVisible();
     expect(screen.getByRole('textbox', { name: 'Année de publication' })).toHaveValue('1886');
     expect(screen.queryByText(/a été corrigé/)).not.toBeInTheDocument();
     client.clear();

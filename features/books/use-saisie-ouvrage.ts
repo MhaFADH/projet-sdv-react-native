@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import type {
   FormulaireOuvrageViewProps,
@@ -45,7 +45,9 @@ export const useSaisieOuvrage = ({
   const t = useTraduction();
   const temporisation = useTemporisation();
   const succes = useToastSucces<Ouvrage>();
-  const [resultat, setResultat] = useState<ResultatEcriture | null>(null);
+  const [issue, setIssue] = useState<
+    { type: 'sans-changement' } | { type: 'echec'; cause: unknown } | null
+  >(null);
   const [departEnAttente, setDepartEnAttente] = useState<(() => void) | null>(null);
   const [enregistrement, setEnregistrement] = useState<{
     cle: number;
@@ -53,6 +55,12 @@ export const useSaisieOuvrage = ({
   } | null>(null);
   const enregistrements = useRef(0);
   const envoiEnCours = useRef(false);
+  const resultat: ResultatEcriture | null =
+    issue === null
+      ? null
+      : issue.type === 'sans-changement'
+        ? { type: 'refus', parChamp: {}, message: textes.messageSansChangement }
+        : interpreterEchecEcriture(issue.cause, textes);
 
   const formulaire = useForm<SaisieOuvrage, unknown, OuvrageSaisi>({
     resolver: zodResolver(creerSaisieOuvrageSchema(creerMessagesSaisieOuvrage(t))),
@@ -66,22 +74,31 @@ export const useSaisieOuvrage = ({
     reset({ ...enregistrement.valeurs });
   }, [enregistrement, reset]);
 
-  const appliquerRefus = (parChamp: Partial<Record<ChampSaisieOuvrage, string>>) => {
-    for (const [champ, message] of Object.entries(parChamp)) {
-      formulaire.setError(champ as ChampSaisieOuvrage, { type: 'server', message });
-    }
-  };
+  const appliquerRefus = useCallback(
+    (parChamp: Partial<Record<ChampSaisieOuvrage, string>>) => {
+      for (const [champ, message] of Object.entries(parChamp)) {
+        formulaire.setError(champ as ChampSaisieOuvrage, { type: 'server', message });
+      }
+    },
+    [formulaire],
+  );
+
+  useEffect(() => {
+    if (issue?.type !== 'echec') return;
+    const echec = interpreterEchecEcriture(issue.cause, textes);
+    if (echec.type === 'refus') appliquerRefus(echec.parChamp);
+  }, [appliquerRefus, issue, textes]);
 
   const enregistrer = formulaire.handleSubmit(async (valeurs) => {
     if (envoiEnCours.current) return;
     envoiEnCours.current = true;
     temporisation.arreter();
-    setResultat(null);
+    setIssue(null);
 
     try {
       const ouvrage = await envoyer(valeurs);
       if (ouvrage === null) {
-        setResultat({ type: 'refus', parChamp: {}, message: textes.messageSansChangement });
+        setIssue({ type: 'sans-changement' });
         return;
       }
       enregistrements.current += 1;
@@ -89,7 +106,7 @@ export const useSaisieOuvrage = ({
       succes.annoncer(ouvrage);
     } catch (cause) {
       const echec = interpreterEchecEcriture(cause, textes);
-      setResultat(echec);
+      setIssue({ type: 'echec', cause });
       if (echec.type === 'refus') appliquerRefus(echec.parChamp);
       if (echec.type === 'indisponible') temporisation.demarrer();
     } finally {
@@ -137,7 +154,7 @@ export const useSaisieOuvrage = ({
       cle: annonce.cle,
       message: textes.messageSucces(annonce.contenu.titre),
       action: {
-        libelle: 'Ouvrir la fiche',
+        libelle: textes.libelleOuvrirOuvrage,
         executer: () => partir(() => ouvrirOuvrage(annonce.contenu.id)),
       },
       suspendre: succes.suspendre,

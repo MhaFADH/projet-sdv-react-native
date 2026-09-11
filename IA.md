@@ -886,3 +886,42 @@ Le fonds réel a été vérifié dans Chrome avec l’API locale : couvertures f
 - l’export Expo web réussit pour les sept routes ;
 - Chrome headless affiche la fiche réelle en thème sombre avec le bloc « Données OpenLibrary », le cas normal « 0 édition référencée », le formulaire d’ajout et la liste des notes ;
 - aucun commit, push ou pull request n’a été effectué.
+
+## Intervention — issue #39
+
+- Outil : Codex.
+- Fournisseur : OpenAI.
+- Périmètre : achèvement de la migration globale de l’interface au thème et à la langue du lot 3.
+
+### Demande reçue
+
+1. `$implement https://github.com/MhaFADH/projet-sdv-react-native/issues/39, tu as accès à github cli`
+
+### Actions réalisées avec l’IA
+
+- lecture de l’issue #39, de son parent #32, du contrat de l’API voisine et des changements livrés par les tickets précédents ;
+- ajout test-first de la synchronisation de l’attribut HTML `lang`, du thème de la frontière d’erreur globale et de la traduction à chaud des erreurs d’écriture, de consultation et de bascule ;
+- centralisation de la présentation localisée des erreurs applicatives sans afficher directement les messages libres renvoyés par le serveur ;
+- remplacement des derniers libellés français directs dans les parcours de création et de correction, notamment l’absence d’ouvrage et l’action du toast de succès ;
+- ajout d’un audit TypeScript de l’arbre syntaxique qui refuse les textes JSX, attributs accessibles et couleurs littérales directement déclarés dans `app/`, `components/` et `features/` ;
+- tests de parcours avec `PreferencesProvider` prouvant qu’une indisponibilité 503 et un refus 422 se retraduisent sans nouvelle requête ni perte de saisie ;
+- double revue en lecture seule des standards du dépôt et de la conformité au ticket.
+
+### Défauts constatés et corrections réelles
+
+- Le changement de langue mettait à jour React sans synchroniser `document.documentElement.lang`. L’attribut suit désormais la préférence active sur le web.
+- La frontière d’erreur racine utilisait les couleurs claires importées statiquement. Elle est désormais rendue sous le fournisseur de préférences et recalcule ses styles avec le thème actif.
+- Plusieurs erreurs conservaient le texte français ou libre produit lors de l’échec. Les causes applicatives sont désormais conservées et traduites au moment du rendu, y compris les erreurs de champ du formulaire.
+- L’action du toast de création restait « Ouvrir la fiche » en anglais et l’identifiant invalide d’une correction affichait un repli français. Ces deux libellés passent désormais par les traductions.
+- Cinq tests historiques attendaient encore les messages libres de l’API. Leurs attentes portent maintenant sur les messages d’interface localisés.
+- La revue Standards a relevé que l’adaptation commune des erreurs était placée à la racine de `features/` et comparait directement le statut 503. Elle se trouve désormais sous `services/i18n/` et réutilise la constante HTTP existante.
+- La revue Spec a retrouvé deux adaptateurs francophones de coups de cœur devenus sans consommateur. Ils ont été supprimés du domaine avec leurs anciens tests dédiés.
+- Les deux revues ont demandé un audit statique plus fidèle à sa promesse. Il parcourt désormais les sources TypeScript et TSX et couvre aussi les attributs ARIA et HTML, `accessibilityValue.text`, les littéraux de gabarit et toutes les propriétés terminant par `Color`.
+
+### Vérification
+
+- `npm run check`, `npm run typecheck`, `npm run lint` et `npm run knip` réussissent ;
+- `npm test` et `npm run test:coverage` réussissent avec 77 fichiers et 368 tests ; la couverture globale atteint 94,77 % des instructions et 95,76 % des lignes ;
+- Chrome headless confirme le passage à chaud du français à l’anglais, la mise à jour de l’attribut HTML `lang`, l’activation du thème sombre et l’affichage du fonds en anglais sans traduire les titres, auteurs ni éditeurs ;
+- les préférences de la recette ont été remises à « Système » et « Français » ;
+- aucun commit, push ou pull request n’a été effectué.

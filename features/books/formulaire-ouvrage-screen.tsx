@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { FormulaireOuvrageView } from '@/components/books/formulaire-ouvrage-view';
 import { SAISIE_OUVRAGE_VIDE } from '@/domain/saisie-ouvrage';
 import { useCreerOuvrage } from '@/hooks/use-creer-ouvrage';
@@ -16,13 +17,14 @@ export const FormulaireOuvrageScreen = ({
 }: FormulaireOuvrageScreenProps) => {
   const t = useTraduction();
   const creation = useCreerOuvrage();
+  const textes = useMemo(() => creerTextesCreation(t), [t]);
 
   const formulaire = useSaisieOuvrage({
     enEnvoi: creation.isPending,
     envoyer: (valeurs) => creation.mutateAsync(valeurs),
     ouvrirOuvrage,
     quitter: retourAuFonds,
-    textes: creerTextesCreation(t),
+    textes,
     valeursApresSucces: () => SAISIE_OUVRAGE_VIDE,
     valeursInitiales: SAISIE_OUVRAGE_VIDE,
     verifier: retourAuFonds,

@@ -112,7 +112,7 @@ describe('coups de cœur depuis la fiche', () => {
     fireEvent.click(await screen.findByRole('switch', { name: 'Marquer comme coup de cœur' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Le coup de cœur précédent a été restauré. Modification refusée.',
+      'Le coup de cœur précédent a été restauré. Certaines données sont invalides.',
     );
     expect(screen.getByText('Pas un coup de cœur')).toBeVisible();
     expect(coeur('Marquer comme coup de cœur')).toHaveAttribute('aria-checked', 'false');
@@ -141,7 +141,7 @@ describe('coups de cœur depuis la fiche', () => {
     fireEvent.click(await screen.findByRole('switch', { name: 'Marquer comme coup de cœur' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Le coup de cœur a été enregistré, mais la fiche n’a pas pu être actualisée. Lecture impossible.',
+      'Le coup de cœur a été enregistré, mais la fiche n’a pas pu être actualisée. La requête a échoué.',
     );
     expect(screen.getByText('Coup de cœur')).toBeVisible();
     expect(coeur('Retirer le coup de cœur')).toHaveAttribute('aria-checked', 'true');

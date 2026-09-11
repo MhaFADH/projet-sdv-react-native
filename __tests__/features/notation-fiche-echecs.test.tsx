@@ -35,7 +35,7 @@ describe('reprise d’une notation depuis la fiche', () => {
     fireEvent.click(await screen.findByRole('radio', { name: 'Attribuer 4 étoiles' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'La notation précédente a été restaurée. Modification refusée.',
+      'La notation précédente a été restaurée. Certaines données sont invalides.',
     );
     expect(screen.getByText('Aucune notation')).toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: 'Réessayer la notation' }));

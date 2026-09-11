@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { CorrectionIndisponibleView } from '@/components/books/correction-indisponible-view';
 import { FormulaireOuvrageView } from '@/components/books/formulaire-ouvrage-view';
 import { identifiantUtilisable, type Ouvrage } from '@/domain/ouvrage';
@@ -11,10 +11,9 @@ import {
 import { useBook } from '@/hooks/use-book';
 import { useModifierOuvrage } from '@/hooks/use-modifier-ouvrage';
 import { useTraduction } from '@/hooks/use-traduction';
+import { messageErreurApplication } from '@/services/i18n/message-erreur-application';
 import { creerTextesCorrection } from './textes-ecriture';
 import { useSaisieOuvrage } from './use-saisie-ouvrage';
-
-const ABSENCE_PAR_DEFAUT = "Cet ouvrage n'existe pas ou plus.";
 
 type CorrectionOuvrageScreenProps = {
   id: string;
@@ -27,7 +26,8 @@ const FormulaireCorrection = ({
   retourAuFonds,
   ouvrirOuvrage,
 }: { ouvrage: Ouvrage } & Omit<CorrectionOuvrageScreenProps, 'id'>) => {
-  const textes = creerTextesCorrection(useTraduction());
+  const t = useTraduction();
+  const textes = useMemo(() => creerTextesCorrection(t), [t]);
   const modification = useModifierOuvrage();
   const [reference, setReference] = useState<OuvrageSaisi>(() => referenceDepuisOuvrage(ouvrage));
 
@@ -60,7 +60,8 @@ export const CorrectionOuvrageScreen = ({
   ouvrirOuvrage,
 }: CorrectionOuvrageScreenProps) => {
   const requete = useBook(id);
-  const textes = creerTextesCorrection(useTraduction());
+  const t = useTraduction();
+  const textes = useMemo(() => creerTextesCorrection(t), [t]);
   const cadre = {
     libelleQuitter: textes.libelleQuitter,
     retour: retourAuFonds,
@@ -71,7 +72,7 @@ export const CorrectionOuvrageScreen = ({
     return (
       <CorrectionIndisponibleView
         {...cadre}
-        etat={{ type: 'introuvable', message: ABSENCE_PAR_DEFAUT }}
+        etat={{ type: 'introuvable', message: t('fiche.absenceParDefaut') }}
       />
     );
   }
@@ -96,7 +97,7 @@ export const CorrectionOuvrageScreen = ({
       return (
         <CorrectionIndisponibleView
           {...cadre}
-          etat={{ type: 'introuvable', message: requete.error.message }}
+          etat={{ type: 'introuvable', message: messageErreurApplication(requete.error, t) }}
         />
       );
     }
@@ -105,7 +106,7 @@ export const CorrectionOuvrageScreen = ({
         {...cadre}
         etat={{
           type: 'erreur',
-          message: requete.error.message,
+          message: messageErreurApplication(requete.error, t, t('erreursHttp.reponseFiche')),
           reessayer: () => void requete.refetch(),
         }}
       />

@@ -93,7 +93,7 @@ describe('coordination des bascules d’ouvrage', () => {
     expect(result.current.modificationEnCours(ID)).toBe(false);
     expect(result.current.appliquerModificationEnCours(ouvrage).favori).toBe(false);
     expect(result.current.erreurModification(ID)?.message).toBe(
-      'Le coup de cœur précédent a été restauré. Modification refusée.',
+      'Le coup de cœur précédent a été restauré. Certaines données sont invalides.',
     );
 
     act(() => result.current.erreurModification(ID)?.reessayer());

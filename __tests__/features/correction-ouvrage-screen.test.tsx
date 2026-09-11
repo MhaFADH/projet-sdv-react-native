@@ -1,5 +1,6 @@
 import { fireEvent, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { appliquerLangue } from '../../services/i18n';
 import {
   attendrePreremplissage,
   DELAI_ATTENTE_REESSAI_MS,
@@ -10,6 +11,7 @@ import {
 } from './outils-correction';
 
 afterEach(() => {
+  appliquerLangue('fr');
   vi.useRealTimers();
   vi.unstubAllGlobals();
 });
@@ -73,6 +75,15 @@ describe('ouverture du formulaire de correction', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Réessayer' }));
     await attendrePreremplissage();
+    client.clear();
+  });
+
+  it('localise l’absence déduite d’un identifiant inutilisable', () => {
+    appliquerLangue('en');
+
+    const { client } = rendreCorrection('');
+
+    expect(screen.getByText('This book does not exist or is no longer available.')).toBeVisible();
     client.clear();
   });
 });

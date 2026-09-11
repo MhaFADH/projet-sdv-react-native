@@ -1,6 +1,6 @@
 import type { Traduire } from '@/hooks/use-traduction';
 import type { ErreurApplication } from '@/services/api/erreurs';
-import { messageErreurApplication } from './message-erreur-application';
+import { messageErreurApplication } from '@/services/i18n/message-erreur-application';
 
 export type TextesSuppressionNote = {
   titreConfirmation: string;

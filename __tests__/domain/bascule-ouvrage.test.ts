@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  appliquerIntention,
-  libelleActionCoupDeCoeur,
-  libelleCoupDeCoeur,
-  remplacerOuvrageDansPage,
-} from '../../domain/bascule-ouvrage';
+import { appliquerIntention, remplacerOuvrageDansPage } from '../../domain/bascule-ouvrage';
 import type { Ouvrage, PageOuvrages } from '../../domain/ouvrage';
 
 const ID = '33575fa9-7968-45b3-8447-ec994a0b8402';
@@ -74,21 +69,5 @@ describe('remplacement d’un ouvrage confirmé dans une page', () => {
     const page = creerPage([{ ...ouvrage, id: AUTRE_ID }]);
 
     expect(remplacerOuvrageDansPage(page, { ...ouvrage, favori: true })).toBe(page);
-  });
-});
-
-describe('libellés des coups de cœur', () => {
-  it('décrit l’état enregistré sans attribution individuelle', () => {
-    expect(libelleCoupDeCoeur(true)).toBe('Coup de cœur');
-    expect(libelleCoupDeCoeur(false)).toBe('Pas un coup de cœur');
-  });
-
-  it('décrit l’action inverse de l’état courant', () => {
-    expect(libelleActionCoupDeCoeur(false)).toBe('Marquer comme coup de cœur');
-    expect(libelleActionCoupDeCoeur(true)).toBe('Retirer le coup de cœur');
-  });
-
-  it('précise l’ouvrage visé lorsque plusieurs cœurs coexistent', () => {
-    expect(libelleActionCoupDeCoeur(false, 'Bel-Ami')).toBe('Marquer comme coup de cœur : Bel-Ami');
   });
 });

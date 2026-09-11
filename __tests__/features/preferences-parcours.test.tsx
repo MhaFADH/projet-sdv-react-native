@@ -70,6 +70,7 @@ describe('écran Préférences', () => {
     fireEvent.click(await screen.findByRole('radio', { name: 'Anglais' }));
 
     expect(await screen.findByRole('heading', { name: 'Preferences' })).toBeVisible();
+    expect(document.documentElement.lang).toBe('en');
     expect(screen.getByRole('radio', { name: 'English' })).toHaveAttribute('aria-checked', 'true');
     await waitFor(() =>
       expect(window.localStorage.getItem('booklist-pro.preferences.langue')).toBe('en'),

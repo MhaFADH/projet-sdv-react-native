@@ -23,5 +23,6 @@ if (!i18next.isInitialized) {
 export const traduire = i18next.t;
 
 export const appliquerLangue = (langue: Langue): void => {
+  if (typeof document !== 'undefined') document.documentElement.lang = langue;
   void i18next.changeLanguage(langue);
 };

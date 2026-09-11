@@ -1,4 +1,7 @@
+import type { ChampSaisieOuvrage } from '@/domain/saisie-ouvrage';
 import type { Traduire } from '@/hooks/use-traduction';
+import type { ErreurApplication } from '@/services/api/erreurs';
+import { messageErreurApplication } from '@/services/i18n/message-erreur-application';
 
 export type TextesEcriture = {
   titre: string;
@@ -11,10 +14,29 @@ export type TextesEcriture = {
   avertissementReessai: string;
   libelleVerifier: string;
   libelleReessayerIncertain: string;
+  libelleOuvrirOuvrage: string;
+  messageIndisponible: string;
+  messageRefusValidation: string;
+  messagesChampsInvalides: Record<ChampSaisieOuvrage, string>;
+  messageErreur: (erreur: ErreurApplication) => string;
   messageSucces: (titre: string) => string;
 };
 
+const creerTextesPartages = (t: Traduire) => ({
+  libelleOuvrirOuvrage: t('ecriture.ouvrirFiche'),
+  messageIndisponible: t('erreursHttp.indisponible'),
+  messageRefusValidation: t('erreursHttp.validation'),
+  messagesChampsInvalides: {
+    titre: t('validation.champInvalide', { libelle: t('validation.libelleTitre') }),
+    auteur: t('validation.champInvalide', { libelle: t('validation.libelleAuteur') }),
+    editeur: t('validation.champInvalide', { libelle: t('validation.libelleEditeur') }),
+    annee: t('validation.champInvalide', { libelle: t('validation.libelleAnnee') }),
+  },
+  messageErreur: (erreur: ErreurApplication) => messageErreurApplication(erreur, t),
+});
+
 export const creerTextesCreation = (t: Traduire): TextesEcriture => ({
+  ...creerTextesPartages(t),
   titre: t('ecriture.creationTitre'),
   libelleQuitter: t('ecriture.creationQuitter'),
   libelleEnregistrer: t('ecriture.creationEnregistrer'),
@@ -29,6 +51,7 @@ export const creerTextesCreation = (t: Traduire): TextesEcriture => ({
 });
 
 export const creerTextesCorrection = (t: Traduire): TextesEcriture => ({
+  ...creerTextesPartages(t),
   titre: t('ecriture.correctionTitre'),
   libelleQuitter: t('ecriture.correctionQuitter'),
   libelleEnregistrer: t('ecriture.correctionEnregistrer'),
