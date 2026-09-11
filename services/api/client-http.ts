@@ -46,7 +46,7 @@ const erreurTransport = (expiree: boolean, annulee: boolean): ErreurApplication 
     return {
       type: 'reseau',
       cause: 'expiration',
-      message: "Le délai d'attente de la requête est dépassé.",
+      message: traduire('erreursHttp.expiration'),
       reessayable: true,
     };
   }

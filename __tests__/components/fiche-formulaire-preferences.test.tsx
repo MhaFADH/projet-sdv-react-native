@@ -40,6 +40,7 @@ const detail = {
 
 const SURFACE_CLAIRE = 'rgb(255, 255, 255)';
 const SURFACE_SOMBRE = 'rgb(34, 29, 24)';
+const DANGER_SOMBRE = 'rgb(62, 33, 29)';
 
 afterEach(() => appliquerLangue('fr'));
 
@@ -105,6 +106,28 @@ describe('formulaire d’un ouvrage', () => {
     expect(screen.getByRole('textbox', { name: 'Titre' })).toHaveStyle({
       backgroundColor: SURFACE_CLAIRE,
     });
+  });
+
+  it('suit le thème sombre choisi jusque dans son avis d’échec', async () => {
+    window.localStorage.setItem('booklist-pro.preferences.theme', 'sombre');
+    render(
+      <PreferencesProvider>
+        <FormulaireOuvrageViewControle
+          {...proprietes}
+          avis={{ type: 'refus', message: 'Certaines données sont invalides.' }}
+        />
+      </PreferencesProvider>,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByRole('textbox', { name: 'Titre' })).toHaveStyle({
+        backgroundColor: SURFACE_SOMBRE,
+      }),
+    );
+    expect(screen.getByText('Certaines données sont invalides.').parentElement).toHaveStyle({
+      backgroundColor: DANGER_SOMBRE,
+    });
+    window.localStorage.clear();
   });
 });
 

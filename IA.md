@@ -847,3 +847,38 @@ Le fonds réel a été vérifié dans Chrome avec l’API locale : couvertures f
 - `npm test` et `npm run test:coverage` réussissent avec 69 fichiers et 336 tests ; la couverture globale atteint 93,95 % des instructions et 94,93 % des lignes ;
 - l’export statique Expo web réussit pour les sept routes, dont `/ouvrages/[id]` ;
 - aucune capacité de pilotage de navigateur n’était disponible dans cette session. `expo start --web` a démarré Metro mais n’a pas exposé le port 8082 avant l’arrêt de la tentative ; la recette interactive n’a donc pas été revendiquée.
+
+## Intervention — issue #37
+
+- Outil : Claude Code.
+- Fournisseur : Anthropic.
+- Modèle : `claude-opus-5`.
+- Périmètre : issue GitHub #37, création d’un ouvrage avec une couverture Faker stable et migration des formulaires vers le thème et la langue actifs.
+
+### Demandes reçues
+
+1. `/implement https://github.com/MhaFADH/projet-sdv-react-native/issues/37 tu as accès au CLI GitHub pour lire le contenu du ticket.`
+
+### Actions réalisées avec l’IA
+
+- lecture des issues #37 et #32 avec GitHub CLI, des règles du dépôt, du code de l’API voisine pour le champ `couverture` et du parcours de création déjà livré ;
+- ajout de `@faker-js/faker` et de `genererUrlCouverture` dans `services/couvertures.ts`, aux dimensions déjà utilisées par le repli déterministe ;
+- conservation de l’URL dans l’écran de création : une seule génération par saisie, aucune régénération sur rendu, échec, bascule de thème ou de langue ; seule une création confirmée en prépare une nouvelle ;
+- envoi de cette URL dans le champ `couverture` du premier `POST /books`, avec le type `CreationOuvrage` du domaine et la validation Zod existante de la réponse ;
+- migration des dernières chaînes visibles des parcours de création et de correction vers l’internationalisation : libellé de réessai temporisé, message de saisie conservée, ouverture de la fiche, ouvrage introuvable, délai d’attente dépassé et réponse de création invalide ;
+- conservation de la cause brute d’un échec d’écriture plutôt que de son message traduit, afin qu’une bascule de langue mette à jour l’avis déjà affiché ;
+- tests du corps initial, de la stabilité de l’URL sur `422`, `503`, résultat incertain et réessai manuel, de la double soumission, des bascules de langue et de thème, et du repli local d’une URL générée inaccessible.
+
+### Défauts constatés et corrections réelles
+
+- La première version affichait encore l’avis d’un résultat incertain dans la langue active au moment de l’envoi. Un test rouge de bascule de langue a fixé le défaut : le formulaire conserve la cause de l’échec et la retraduit à chaque rendu.
+- La revue Spec a relevé que les messages de validation déjà affichés ne suivaient pas une bascule de langue. La validation est désormais relancée au changement de langue, sauf lorsqu’un refus serveur occupe les champs. Le test correspondant échoue sans cette correction.
+- La revue Spec a relevé deux preuves manquantes : la stabilité de l’URL lors d’une bascule de thème et le repli local d’une URL Faker inaccessible. Les deux sont maintenant couvertes.
+- La revue Standards a relevé que le nouveau fichier de tests de création redéclarait les utilitaires de ses voisins. Ces utilitaires ont été extraits dans `__tests__/features/outils-creation.tsx`, ce qui a aussi ramené le fichier sous la limite de 250 lignes.
+- La revue Spec a relevé un écart non corrigé : « Vérifier dans le fonds » quitte le formulaire après confirmation d’abandon, donc la saisie et l’URL sont perdues, alors que le ticket demande une vérification sans effacer les valeurs. Ce comportement vient du lot 1 et sa correction demande une décision de navigation qui n’a pas été prise dans cette session.
+
+### Vérification
+
+- `npm run check`, `npm run typecheck`, `npm run lint` et `npm run knip` réussissent ;
+- `npm test` réussit avec 74 fichiers et 356 tests ; `npm run test:coverage` donne 94 % des instructions sur l’ensemble, 97,92 % sur `domain/` et 96,66 % sur `services/` ;
+- recette navigateur sur `http://localhost:8081` avec l’API voisine démarrée : une création envoie bien une URL Faker enregistrée par le serveur et affichée sur la fiche, la bascule thème sombre et anglais s’applique à chaud aux libellés, validations et notifications du formulaire. Les ouvrages créés pour la recette ont été supprimés et les préférences remises à « Système » et « Français ».

@@ -68,6 +68,11 @@ export const SAISIE_OUVRAGE_VIDE: SaisieOuvrage = {
   lu: false,
 };
 
+export type CreationOuvrage = {
+  saisie: OuvrageSaisi;
+  couverture: string;
+};
+
 export type CorrectionOuvrage = Partial<OuvrageSaisi>;
 
 type OuvrageEditable = Pick<Ouvrage, 'titre' | 'auteur' | 'editeur' | 'annee' | 'lu'>;

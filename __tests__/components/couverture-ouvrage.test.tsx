@@ -1,6 +1,9 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { CouvertureOuvrage } from '../../components/books/couverture-ouvrage';
+import { genererUrlCouverture, resoudreCouverture } from '../../services/couvertures';
+
+const IDENTIFIANT = '33575fa9-7968-45b3-8447-ec994a0b8401';
 
 describe('couverture d’un ouvrage', () => {
   it('réserve ses dimensions et remplace une ressource inaccessible par le visuel local', () => {
@@ -17,6 +20,15 @@ describe('couverture d’un ouvrage', () => {
     const visuelLocal = screen.getByRole('img', { name: 'Couverture indisponible pour Bel-Ami' });
     expect(visuelLocal).not.toHaveAttribute('src', url);
     expect(visuelLocal).toHaveStyle({ width: '80px', height: '120px' });
+  });
+
+  it('remplace par le visuel local une URL générée qui ne mène à aucune image', () => {
+    const couverture = resoudreCouverture(genererUrlCouverture(), IDENTIFIANT);
+    render(<CouvertureOuvrage couverture={couverture} titre="Bel-Ami" />);
+
+    fireEvent.error(screen.getByRole('img', { name: 'Couverture de Bel-Ami' }));
+
+    expect(screen.getByRole('img', { name: 'Couverture indisponible pour Bel-Ami' })).toBeVisible();
   });
 
   it('affiche directement le visuel local pour une valeur invalide', () => {

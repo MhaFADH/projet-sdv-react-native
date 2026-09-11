@@ -1,9 +1,22 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { resoudreCouverture } from '../../services/couvertures';
+import { genererUrlCouverture, resoudreCouverture } from '../../services/couvertures';
 
 const IDENTIFIANT = '33575fa9-7968-45b3-8447-ec994a0b8401';
 
 afterEach(() => vi.unstubAllEnvs());
+
+describe('génération d’une couverture', () => {
+  it('produit une URL absolue affichable sans nouvelle construction', () => {
+    const url = genererUrlCouverture();
+
+    expect(url).toMatch(/^https:\/\//);
+    expect(resoudreCouverture(url, IDENTIFIANT)).toEqual({ type: 'distante', url });
+  });
+
+  it('produit une valeur propre à chaque appel', () => {
+    expect(genererUrlCouverture()).not.toBe(genererUrlCouverture());
+  });
+});
 
 describe('résolution d’une couverture', () => {
   it('préfixe un chemin relatif avec l’URL de l’API', () => {
