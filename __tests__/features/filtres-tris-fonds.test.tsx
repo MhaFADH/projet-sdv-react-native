@@ -1,6 +1,6 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { type PropsWithChildren, useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   CONSULTATION_FONDS_PAR_DEFAUT,
@@ -8,8 +8,8 @@ import {
 } from '../../domain/criteres-ouvrages';
 import type { Ouvrage } from '../../domain/ouvrage';
 import { FondsScreen } from '../../features/books/fonds-screen';
-import { SuppressionsProvider } from '../../features/books/suppressions-provider';
 import { clesOuvrages } from '../../hooks/cles-ouvrages';
+import { creerEnveloppeOuvrages } from '../outils-rendu';
 
 const ouvrage: Ouvrage = {
   id: '33575fa9-7968-45b3-8447-ec994a0b8401',
@@ -55,11 +55,7 @@ const FondsControle = () => {
 
 const rendreFonds = () => {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  const enveloppe = ({ children }: PropsWithChildren) => (
-    <QueryClientProvider client={client}>
-      <SuppressionsProvider>{children}</SuppressionsProvider>
-    </QueryClientProvider>
-  );
+  const enveloppe = creerEnveloppeOuvrages(client);
   render(<FondsControle />, { wrapper: enveloppe });
   const filtresCompacts = screen.queryByRole('button', { name: /^Filtres et tri\./ });
   if (filtresCompacts) fireEvent.click(filtresCompacts);

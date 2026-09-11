@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { FondsView } from '../../components/books/fonds-view';
+import { creerCoupsDeCoeurInertes } from './outils-fonds';
 
 const etatVide = {
   type: 'succes' as const,
@@ -8,6 +9,7 @@ const etatVide = {
   pagePrecedente: vi.fn(),
   pageSuivante: vi.fn(),
   ouvrirOuvrage: vi.fn(),
+  coupsDeCoeur: creerCoupsDeCoeurInertes(),
   selection: {
     identifiants: new Set<string>(),
     basculer: vi.fn(),

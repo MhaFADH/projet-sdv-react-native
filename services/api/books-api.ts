@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { IntentionBascule } from '@/domain/bascule-ouvrage';
 import type { CriteresOuvrages } from '@/domain/criteres-ouvrages';
 import {
   ANNEE_PUBLICATION_MINIMALE,
@@ -88,13 +89,15 @@ export const createBook = async (saisie: OuvrageSaisi): Promise<Ouvrage> => {
   return resultat.data;
 };
 
-export const patchBookReadStatus = async (id: string, lu: boolean): Promise<Ouvrage> => {
-  const corps = await clientHttp.patch(`/books/${encodeURIComponent(id)}`, {
-    lu,
-  });
+export const patchBasculeOuvrage = async ({
+  id,
+  champ,
+  valeur,
+}: IntentionBascule): Promise<Ouvrage> => {
+  const corps = await clientHttp.patch(`/books/${encodeURIComponent(id)}`, { [champ]: valeur });
   const resultat = ouvrageSchema.safeParse(corps);
   if (!resultat.success || resultat.data.id !== id) {
-    throw creerErreurValidation('La réponse du serveur après modification du statut est invalide.');
+    throw creerErreurValidation('La réponse du serveur après la bascule est invalide.');
   }
   return resultat.data;
 };

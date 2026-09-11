@@ -1,11 +1,11 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { type PropsWithChildren, useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CONSULTATION_FONDS_PAR_DEFAUT } from '../../domain/criteres-ouvrages';
 import type { Ouvrage } from '../../domain/ouvrage';
 import { FondsScreen } from '../../features/books/fonds-screen';
-import { SuppressionsProvider } from '../../features/books/suppressions-provider';
+import { creerEnveloppeOuvrages } from '../outils-rendu';
 
 const ID_BEL_AMI = '33575fa9-7968-45b3-8447-ec994a0b8401';
 const ID_GERMINAL = '33575fa9-7968-45b3-8447-ec994a0b8402';
@@ -62,11 +62,7 @@ const FondsControle = ({ pageInitiale = 1 }: ProprietesFondsControle) => {
 
 const rendreFonds = (pageInitiale = 1) => {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  const enveloppe = ({ children }: PropsWithChildren) => (
-    <QueryClientProvider client={client}>
-      <SuppressionsProvider>{children}</SuppressionsProvider>
-    </QueryClientProvider>
-  );
+  const enveloppe = creerEnveloppeOuvrages(client);
   render(<FondsControle pageInitiale={pageInitiale} />, { wrapper: enveloppe });
   return client;
 };

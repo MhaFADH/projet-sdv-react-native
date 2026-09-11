@@ -2,23 +2,16 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 import { libelleStatutLecture, type Ouvrage } from '@/domain/ouvrage';
 import { theme } from '@/theme/tokens';
 
-export type ErreurStatutLecture = {
-  message: string;
-  reessayer: () => void;
-};
-
 type ControleStatutLectureProps = {
   ouvrage: Ouvrage;
   basculerStatut: () => void;
-  statutEnCours: boolean;
-  erreurStatut?: ErreurStatutLecture;
+  basculeEnCours: boolean;
 };
 
 export const ControleStatutLecture = ({
   ouvrage,
   basculerStatut,
-  statutEnCours,
-  erreurStatut,
+  basculeEnCours,
 }: ControleStatutLectureProps) => {
   const action = ouvrage.lu ? 'Marquer comme non lu' : 'Marquer comme lu';
   return (
@@ -28,20 +21,20 @@ export const ControleStatutLecture = ({
       <Pressable
         accessibilityLabel={action}
         accessibilityRole="switch"
-        accessibilityState={{ checked: ouvrage.lu, disabled: statutEnCours }}
+        accessibilityState={{ checked: ouvrage.lu, disabled: basculeEnCours }}
         aria-checked={ouvrage.lu}
-        aria-disabled={statutEnCours}
-        disabled={statutEnCours}
+        aria-disabled={basculeEnCours}
+        disabled={basculeEnCours}
         onPress={basculerStatut}
-        style={[styles.boutonStatut, statutEnCours && styles.boutonDesactive]}
+        style={[styles.boutonStatut, basculeEnCours && styles.boutonDesactive]}
       >
         <Text
           selectable={false}
-          style={[styles.texteBoutonStatut, statutEnCours && styles.texteMasque]}
+          style={[styles.texteBoutonStatut, basculeEnCours && styles.texteMasque]}
         >
           {action}
         </Text>
-        {statutEnCours ? (
+        {basculeEnCours ? (
           <ActivityIndicator
             accessibilityLabel="Enregistrement du statut en cours"
             color={theme.colors.primaryText}
@@ -50,21 +43,6 @@ export const ControleStatutLecture = ({
           />
         ) : null}
       </Pressable>
-      {erreurStatut ? (
-        <View accessibilityRole="alert" style={styles.erreurStatut}>
-          <Text style={styles.texteErreur}>{erreurStatut.message}</Text>
-          <Pressable
-            accessibilityLabel="Réessayer la modification du statut"
-            accessibilityRole="button"
-            onPress={erreurStatut.reessayer}
-            style={styles.boutonReessai}
-          >
-            <Text selectable={false} style={styles.texteBoutonReessai}>
-              Réessayer
-            </Text>
-          </Pressable>
-        </View>
-      ) : null}
     </View>
   );
 };
@@ -99,29 +77,4 @@ const styles = StyleSheet.create({
   },
   texteMasque: { opacity: 0 },
   indicateurStatut: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 },
-  erreurStatut: {
-    gap: theme.spacing.sm,
-    padding: theme.spacing.md,
-    borderRadius: theme.radius.sm,
-    backgroundColor: theme.colors.dangerBackground,
-  },
-  texteErreur: {
-    color: theme.colors.dangerText,
-    fontSize: theme.typography.body,
-    lineHeight: theme.typography.bodyLineHeight,
-  },
-  boutonReessai: {
-    minHeight: theme.minTargetSize,
-    alignSelf: 'flex-start',
-    justifyContent: 'center',
-    borderWidth: theme.borderWidth,
-    borderColor: theme.colors.dangerText,
-    borderRadius: theme.radius.sm,
-    paddingHorizontal: theme.spacing.md,
-  },
-  texteBoutonReessai: {
-    color: theme.colors.dangerText,
-    fontSize: theme.typography.body,
-    fontWeight: '700',
-  },
 });

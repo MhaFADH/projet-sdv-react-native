@@ -1,10 +1,9 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import type { PropsWithChildren } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { FicheScreen } from '../../features/books/fiche-screen';
-import { SuppressionsProvider } from '../../features/books/suppressions-provider';
 import { clesNotes } from '../../hooks/cles-notes';
+import { creerEnveloppeOuvrages } from '../outils-rendu';
 
 const PREMIER_ID = '33575fa9-7968-45b3-8447-ec994a0b8401';
 const SECOND_ID = '33575fa9-7968-45b3-8447-ec994a0b8402';
@@ -42,11 +41,7 @@ const notes = [
 
 const rendreFiche = (id = PREMIER_ID) => {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  const wrapper = ({ children }: PropsWithChildren) => (
-    <QueryClientProvider client={client}>
-      <SuppressionsProvider>{children}</SuppressionsProvider>
-    </QueryClientProvider>
-  );
+  const wrapper = creerEnveloppeOuvrages(client);
   const vue = render(<FicheScreen corriger={vi.fn()} id={id} retour={vi.fn()} />, { wrapper });
   return { client, ...vue };
 };

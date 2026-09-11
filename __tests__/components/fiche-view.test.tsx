@@ -2,9 +2,10 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { FicheView } from '../../components/books/fiche-view';
 
-const actionStatut = {
+const actionsBascule = {
   basculerStatut: vi.fn(),
-  statutEnCours: false,
+  basculerCoupDeCoeur: vi.fn(),
+  basculeEnCours: false,
   corriger: vi.fn(),
 };
 
@@ -26,7 +27,7 @@ const ouvrage = {
 const etatSucces = (valeur = ouvrage) => ({
   type: 'succes' as const,
   ouvrage: valeur,
-  ...actionStatut,
+  ...actionsBascule,
   demanderSuppression: vi.fn(),
   suppressionDesactivee: false,
   corriger: vi.fn(),
@@ -119,7 +120,7 @@ describe('présentation de la fiche', () => {
     const basculerStatut = vi.fn();
     render(
       <FicheView
-        etat={{ ...etatSucces(), basculerStatut, statutEnCours: false }}
+        etat={{ ...etatSucces(), basculerStatut, basculeEnCours: false }}
         retour={vi.fn()}
       />,
     );
@@ -139,7 +140,7 @@ describe('présentation de la fiche', () => {
   it('affiche le chargement dans le bouton sans modifier son contenu dimensionnant', () => {
     render(
       <FicheView
-        etat={{ ...etatSucces(), basculerStatut: vi.fn(), statutEnCours: true }}
+        etat={{ ...etatSucces(), basculerStatut: vi.fn(), basculeEnCours: true }}
         retour={vi.fn()}
       />,
     );
@@ -156,8 +157,9 @@ describe('présentation de la fiche', () => {
       <FicheView
         etat={{
           ...etatSucces(),
-          erreurStatut: {
+          erreurBascule: {
             message: 'Le statut précédent a été restauré. Service indisponible.',
+            libelleReessai: 'Réessayer la modification du statut',
             reessayer,
           },
         }}

@@ -12,6 +12,8 @@ export const theme = {
     successText: '#205C3B',
     neutralBackground: '#ECEFF2',
     dangerBackground: '#FBE9E7',
+    favoriBackground: '#FCEAF1',
+    favoriText: '#A32F5B',
     dangerText: '#8A2C24',
     overlay: 'rgba(31, 41, 51, 0.45)',
   },

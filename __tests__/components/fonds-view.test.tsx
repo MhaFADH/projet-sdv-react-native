@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { FondsView } from '../../components/books/fonds-view';
+import { creerCoupsDeCoeurInertes } from './outils-fonds';
 
 const ouvrageLu = {
   id: '33575fa9-7968-45b3-8447-ec994a0b8401',
@@ -68,6 +69,7 @@ describe('présentation du fonds', () => {
           pagePrecedente: vi.fn(),
           pageSuivante: vi.fn(),
           ouvrirOuvrage: vi.fn(),
+          coupsDeCoeur: creerCoupsDeCoeurInertes(),
           selection: creerSelectionVide(),
         }}
       />,
@@ -88,6 +90,7 @@ describe('présentation du fonds', () => {
           pagePrecedente: vi.fn(),
           pageSuivante: vi.fn(),
           ouvrirOuvrage: vi.fn(),
+          coupsDeCoeur: creerCoupsDeCoeurInertes(),
           selection: creerSelectionVide(),
         }}
       />,
@@ -108,6 +111,7 @@ describe('présentation du fonds', () => {
           pagePrecedente: vi.fn(),
           pageSuivante: vi.fn(),
           ouvrirOuvrage: vi.fn(),
+          coupsDeCoeur: creerCoupsDeCoeurInertes(),
           selection: creerSelectionVide(),
           masquageTemporaire: true,
         }}
@@ -138,6 +142,7 @@ describe('présentation du fonds', () => {
           pagePrecedente: vi.fn(),
           pageSuivante,
           ouvrirOuvrage: vi.fn(),
+          coupsDeCoeur: creerCoupsDeCoeurInertes(),
           selection: creerSelectionVide(),
         }}
       />,
@@ -153,7 +158,10 @@ describe('présentation du fonds', () => {
     expect(screen.getByRole('button', { name: 'Précédent' })).toBeDisabled();
     const boutonSuivant = screen.getByRole('button', { name: 'Suivant' });
     expect(boutonSuivant).toHaveStyle({ minHeight: '44px' });
-    expect(screen.queryByRole('switch')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('switch', { name: /Marquer comme (non )?lu/ }),
+    ).not.toBeInTheDocument();
+    expect(screen.getAllByRole('switch', { name: /coup de cœur/ })).toHaveLength(2);
 
     fireEvent.click(boutonSuivant);
     expect(pageSuivante).toHaveBeenCalledOnce();
@@ -169,6 +177,7 @@ describe('présentation du fonds', () => {
           pagePrecedente: vi.fn(),
           pageSuivante: vi.fn(),
           ouvrirOuvrage: vi.fn(),
+          coupsDeCoeur: creerCoupsDeCoeurInertes(),
           selection: creerSelectionVide(),
         }}
       />,
@@ -195,6 +204,7 @@ describe('présentation du fonds', () => {
           pagePrecedente: vi.fn(),
           pageSuivante: vi.fn(),
           ouvrirOuvrage,
+          coupsDeCoeur: creerCoupsDeCoeurInertes(),
           selection: creerSelectionVide(),
         }}
       />,
@@ -222,6 +232,7 @@ describe('présentation du fonds', () => {
           pagePrecedente: vi.fn(),
           pageSuivante: vi.fn(),
           ouvrirOuvrage: vi.fn(),
+          coupsDeCoeur: creerCoupsDeCoeurInertes(),
           selection: creerSelectionVide(),
         }}
       />,

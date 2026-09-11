@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { FondsView } from '../../components/books/fonds-view';
+import { creerCoupsDeCoeurInertes } from './outils-fonds';
 
 const ouvrage = {
   id: '33575fa9-7968-45b3-8447-ec994a0b8401',
@@ -27,6 +28,7 @@ const creerEtat = (
   pagePrecedente: vi.fn(),
   pageSuivante: vi.fn(),
   ouvrirOuvrage: vi.fn(),
+  coupsDeCoeur: creerCoupsDeCoeurInertes(),
   selection: {
     identifiants,
     basculer,

@@ -5,33 +5,11 @@ import { FiltresTriFonds } from '@/components/books/filtres-tri-fonds';
 import { Bouton } from '@/components/bouton';
 import { EtatAbsence, EtatErreur, SqueletteDonnees } from '@/components/etats-donnees';
 import type { ConsultationFonds } from '@/domain/criteres-ouvrages';
-import type { PageOuvrages } from '@/domain/ouvrage';
 import { theme } from '@/theme/tokens';
+import type { EtatFonds } from './etat-fonds';
 import { OuvragesList } from './ouvrages-list';
 import { Pagination } from './pagination';
 import { RechercheFonds } from './recherche-fonds';
-
-type SelectionFonds = {
-  identifiants: ReadonlySet<string>;
-  basculer: (id: string) => void;
-  demanderSuppression: () => void;
-  suppressionDesactivee: boolean;
-};
-
-type EtatFonds =
-  | { type: 'chargement' }
-  | { type: 'erreur'; message: string; reessayer: () => void }
-  | {
-      type: 'succes';
-      page: PageOuvrages;
-      pagePrecedente: () => void;
-      pageSuivante: () => void;
-      ouvrirOuvrage: (id: string) => void;
-      selection: SelectionFonds;
-      masquageTemporaire?: boolean;
-      pageEnChargement?: number;
-      erreurActualisation?: { message: string; reessayer: () => void };
-    };
 
 type FondsViewProps = {
   etat: EtatFonds;
@@ -140,6 +118,7 @@ const FondsRempli = ({
   pageSuivante,
   ouvrirOuvrage,
   selection,
+  coupsDeCoeur,
   pageEnChargement,
   erreurActualisation,
 }: Extract<EtatFonds, { type: 'succes' }>) => {
@@ -170,6 +149,7 @@ const FondsRempli = ({
       />
       <OuvragesList
         basculerSelection={selection.basculer}
+        coupsDeCoeur={coupsDeCoeur}
         identifiantsSelectionnes={selection.identifiants}
         ouvrages={page.items}
         ouvertureDesactivee={interactionsDesactivees}
