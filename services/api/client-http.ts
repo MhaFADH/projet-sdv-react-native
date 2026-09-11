@@ -1,8 +1,8 @@
+import { configuration } from '@/services/configuration';
 import { traduire } from '@/services/i18n';
 import { creerErreurValidation, type ErreurApplication, traduireErreurHttp } from './erreurs';
 import { construireUrlApi } from './url-api';
 
-const DELAI_EXPIRATION_MS = 10_000;
 const EN_TETES_JSON = { Accept: 'application/json' } as const;
 const EN_TETES_ENVOI_JSON = { ...EN_TETES_JSON, 'Content-Type': 'application/json' } as const;
 
@@ -85,7 +85,7 @@ const executer = async ({
   const expiration = setTimeout(() => {
     expiree = true;
     controleur.abort();
-  }, DELAI_EXPIRATION_MS);
+  }, configuration.delaiExpirationMs);
 
   let reponse: Response;
   let reponseCorps: unknown;

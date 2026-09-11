@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
+import { configuration } from '@/services/configuration';
 
-const DELAI_TEMPORISATION_MS = 3_000;
+const DELAI_TEMPORISATION_MS = configuration.delaiTemporisationMs;
 
 const PAS_MS = 1_000;
 const MILLISECONDES_PAR_SECONDE = 1_000;

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { configuration } from '@/services/configuration';
 
-const DUREE_TOAST_MS = 5_000;
+const DUREE_TOAST_MS = configuration.dureeToastMs;
 
 type Annonce<Contenu> = {
   cle: number;

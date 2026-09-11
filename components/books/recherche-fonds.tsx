@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useStylesTheme, useTheme } from '@/hooks/use-theme';
 import { useTraduction } from '@/hooks/use-traduction';
+import { configuration } from '@/services/configuration';
 import type { Theme } from '@/theme/tokens';
 
-const DELAI_RECHERCHE_MS = 300;
+const DELAI_RECHERCHE_MS = configuration.delaiRechercheMs;
 
 type ProprietesRechercheFonds = {
   valeurAppliquee: string;

@@ -36,6 +36,21 @@ Ouvrir l’URL indiquée par Expo dans le navigateur. `EXPO_PUBLIC_API_URL` est 
 
 Pour tester depuis un appareil mobile, remplacer `localhost` dans `.env.local` par l’adresse IP locale de la machine qui exécute l’API, puis redémarrer Expo.
 
+### 3. Régler le comportement de l’application
+
+`.env.example` liste les paramètres réglables. Chacun est facultatif : absent ou vide, la valeur par défaut s’applique. Ces variables sont intégrées au bundle à la compilation, un redémarrage d’Expo est donc nécessaire après modification. Une valeur non entière ou inférieure au minimum arrête le démarrage avec un message nommant la variable.
+
+| Variable | Défaut | Minimum | Effet |
+| --- | --- | --- | --- |
+| `EXPO_PUBLIC_DELAI_EXPIRATION_MS` | `10000` | `1` | délai avant expiration d’une requête HTTP |
+| `EXPO_PUBLIC_DELAI_REESSAI_MS` | `1000` | `0` | attente avant un réessai automatique |
+| `EXPO_PUBLIC_NOMBRE_REESSAIS_AUTOMATIQUES` | `1` | `0` | réessais automatiques après une erreur réseau réessayable ; `0` les désactive |
+| `EXPO_PUBLIC_DUREE_TOAST_MS` | `5000` | `1` | durée d’affichage d’un message de succès |
+| `EXPO_PUBLIC_DELAI_TEMPORISATION_MS` | `3000` | `1` | temporisation proposée avant un nouvel essai après une erreur `503` |
+| `EXPO_PUBLIC_DELAI_RECHERCHE_MS` | `300` | `0` | attente après la dernière frappe avant l’envoi de la recherche |
+
+Le délai d’annulation d’une suppression reste fixé à cinq secondes : c’est une règle métier de `domain/`, pas un réglage.
+
 ## Comportement livré
 
 - appel de `GET /books` avec `page`, `limit=20`, `q`, `status`, `favori`, `sort` et `order`, en omettant les filtres inactifs ;
