@@ -1,6 +1,6 @@
 # BookList Pro
 
-BookList Pro numérise le cahier de lecture des Comptoirs du Livre. Cette version livre la consultation, la recherche, les filtres de lecture et de coups de cœur ainsi que les tris serveur du fonds par pages de vingt ouvrages, la fiche détaillée avec ses notes de lecture, leur ajout et leur suppression, l’ajout d’ouvrage protégé contre la perte de saisie, la modification du statut collectif lu/non lu et la suppression différée depuis une fiche ou une sélection de la liste, avec annulation groupée.
+BookList Pro numérise le cahier de lecture des Comptoirs du Livre. Cette version livre la consultation illustrée, la recherche, les filtres de lecture et de coups de cœur ainsi que les tris serveur du fonds par pages de vingt ouvrages, la fiche détaillée avec ses notes de lecture, leur ajout et leur suppression, l’ajout d’ouvrage protégé contre la perte de saisie, la modification du statut collectif lu/non lu et la suppression différée depuis une fiche ou une sélection de la liste, avec annulation groupée.
 
 ## Prérequis
 
@@ -44,6 +44,8 @@ Pour tester depuis un appareil mobile, remplacer `localhost` dans `.env.local` p
 - barre de critères unique avec les zones verticales « Affiner » puis « Trier » sur écran large, remplacée sur petit écran par un panneau « Filtres et tri » avec résumé des choix ; les radios se parcourent avec les flèches du clavier ;
 - tris serveur par titre, auteur, année ou notation, dans les sens croissant et décroissant, sans règle locale pour les notations absentes ;
 - validation Zod de l’enveloppe paginée et de tous les champs d’un ouvrage ;
+- couverture de chaque ouvrage en 80 × 120 points avec cache mémoire et disque : chemin relatif résolu par rapport à l’API, URL absolue conservée, image stable dérivée de l’identifiant lorsque la valeur est absente et visuel local si la valeur ou le chargement échoue ;
+- notation affichée avec le format numérique de la langue active, et absence de notation distinguée, sans commande de modification ni écriture automatique ;
 - chargement par squelette, erreur avec réessai, fonds vide et liste en succès ;
 - pagination « Précédent / Suivant » bornée par les métadonnées serveur ;
 - recherche, filtres, tri, ordre et page consultée portés par l’URL de la liste (`/?page=3&q=zola&status=nonlu&favori=true&sort=note&order=desc`) afin d’être restitués et actualisés au retour ;
@@ -113,6 +115,7 @@ npx expo install --check
 - `features/notes/` compose la saisie et la suppression d’une note de lecture, et les états de présentation des notes ;
 - `hooks/` porte l’intégration React avec TanStack Query ;
 - `services/api/` centralise HTTP, validation et erreurs ;
+- `services/couvertures.ts` résout les différentes formes de couverture avant leur transmission aux composants ;
 - `services/plateforme/` porte les capacités dépendant de la plateforme derrière une interface unique, dont le stockage des préférences ;
 - `services/i18n/` initialise i18next et porte les dictionnaires français et anglais ;
 - `domain/` contient les types et constantes métier purs ;

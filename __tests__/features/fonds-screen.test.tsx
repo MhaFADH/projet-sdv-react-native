@@ -58,6 +58,20 @@ const rendreFonds = (pageInitiale: number) => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('parcours du fonds', () => {
+  it('ne déclenche aucune écriture pour une couverture absente', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(creerReponse(1, 1, 1));
+    vi.stubGlobal('fetch', fetchMock);
+    const { client } = rendreFonds(1);
+
+    expect(await screen.findByRole('img', { name: 'Couverture de Bel-Ami' })).toBeVisible();
+    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:3000/books?page=1&limit=20&sort=titre&order=asc',
+      expect.objectContaining({ method: 'GET' }),
+    );
+    client.clear();
+  });
+
   it('revient à la dernière page serveur lorsqu’une page disparaît', async () => {
     const fetchMock = vi
       .fn<typeof fetch>()

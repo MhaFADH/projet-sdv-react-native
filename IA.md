@@ -775,3 +775,35 @@ Défauts constatés pendant cette extension :
 - trois libellés traduits s'écartaient des chaînes d'origine sans raison (`Confirmation de suppression de note`, deux messages de validation de note) ; les tests existants l'ont signalé et le texte d'origine a été rétabli.
 
 Recette navigateur de cette extension, en thème sombre et en anglais : le formulaire d'ajout, la fiche avec ses bascules et sa section de notes, et l'écran de correction s'affichent entièrement traduits et thémés ; un titre vidé produit « The title is required. » ; les titres, auteurs et éditeurs restent inchangés ; l'avertissement de départ du navigateur fonctionne toujours sur une saisie modifiée ; la console reste vide. Les préférences ont été remises à « Système » et « Français ».
+
+## Intervention — issue #34
+
+- Outil : Codex.
+- Fournisseur : OpenAI.
+- Modèle : GPT-5.
+- Périmètre : issue GitHub #34, illustration et adaptation du fonds au lot 3.
+
+### Demande reçue
+
+1. `$implement https://github.com/MhaFADH/projet-sdv-react-native/issues/34, tu as accès au github cli`
+
+### Actions réalisées avec l’IA
+
+- lecture des issues #34, #32 et #35 avec GitHub CLI, du contrat de l’API voisine, de l’architecture et de la documentation Expo SDK 54 pour Expo Image ;
+- ajout test-first de la résolution des couvertures relatives, absolues, absentes et invalides, puis du repli local après un échec de chargement ;
+- installation d’`expo-image` dans sa version compatible avec Expo SDK 54 et activation du cache mémoire et disque ;
+- ajout des couvertures fixes, de la notation localisée et de l’état sans notation dans les lignes du fonds, sans interaction ni écriture automatique ;
+- génération du visuel local `assets/images/couverture-indisponible.png` avec l’outil d’image intégré, à partir d’un prompt demandant un livre générique sans texte, logo ni filigrane, dans une palette beige, brune et bleue ;
+- tests de composant, de service, d’internationalisation à chaud, de petit écran et de non-écriture, puis vérification du fonds dans Chrome en grand écran et à 390 pixels de large ;
+- revues Standards et Spec sur l’écart depuis le commit de départ, suivies des corrections d’architecture et de documentation relevées.
+
+### Défauts constatés et corrections réelles
+
+- La première présentation compacte laissait les commandes de sélection et de coup de cœur sortir de l’écran. La carte occupe désormais toute la largeur et les deux commandes sont regroupées sur la ligne suivante.
+- La première version résolvait la couverture depuis `LigneOuvrage`, ce qui faisait dépendre un composant pur de la configuration de l’API. `FondsScreen` fournit désormais les couvertures déjà résolues à la présentation.
+- La résolution d’un chemin relatif transformait aussi une configuration d’API absente ou invalide en visuel local. Cette erreur de configuration est désormais propagée et couverte par un test.
+- Le visuel généré était surdimensionné pour son usage. Il a été ramené à 320 × 480 pixels avant son ajout aux assets.
+
+### Vérification navigateur
+
+Le fonds réel a été vérifié dans Chrome avec l’API locale : couvertures fixes et notations localisées sont visibles sans modifier la pagination serveur. À 390 pixels de large, les cartes et leurs commandes restent dans la fenêtre. Aucun serveur Expo temporaire n’a été laissé actif.

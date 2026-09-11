@@ -1,19 +1,12 @@
 import { StyleSheet, View } from 'react-native';
-import type { Ouvrage } from '@/domain/ouvrage';
 import { useStylesTheme } from '@/hooks/use-theme';
 import { useTraduction } from '@/hooks/use-traduction';
 import type { Theme } from '@/theme/tokens';
-import type { AvisReessai } from './avis-echec-bascule';
+import type { CoupsDeCoeurFonds, OuvrageIllustre } from './etat-fonds';
 import { LigneOuvrage } from './ligne-ouvrage';
 
-export type CoupsDeCoeurFonds = {
-  basculer: (ouvrage: Ouvrage) => void;
-  enCours: (id: string) => boolean;
-  erreur: (id: string) => AvisReessai | undefined;
-};
-
 type OuvragesListProps = {
-  ouvrages: Ouvrage[];
+  ouvrages: OuvrageIllustre[];
   identifiantsSelectionnes: ReadonlySet<string>;
   basculerSelection: (id: string) => void;
   ouvrirOuvrage: (id: string) => void;
@@ -36,11 +29,12 @@ export const OuvragesList = ({
 
   return (
     <View accessibilityLabel={t('fonds.liste')} role="list" style={styles.liste}>
-      {ouvrages.map((ouvrage) => (
+      {ouvrages.map(({ ouvrage, couverture }) => (
         <LigneOuvrage
           basculeEnCours={coupsDeCoeur.enCours(ouvrage.id)}
           basculerCoupDeCoeur={() => coupsDeCoeur.basculer(ouvrage)}
           basculerSelection={() => basculerSelection(ouvrage.id)}
+          couverture={couverture}
           erreurBascule={coupsDeCoeur.erreur(ouvrage.id)}
           key={ouvrage.id}
           ouvertureDesactivee={ouvertureDesactivee}

@@ -3,7 +3,16 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { FondsView } from '../../components/books/fonds-view';
 import { Pagination } from '../../components/books/pagination';
 import { appliquerLangue } from '../../services/i18n';
-import { creerCoupsDeCoeurInertes } from './outils-fonds';
+import { creerOuvrageTest } from '../fixtures/ouvrage';
+import { creerCoupsDeCoeurInertes, illustrerOuvrage } from './outils-fonds';
+
+const ouvrage = creerOuvrageTest({
+  titre: 'L’Étranger',
+  auteur: 'Albert Camus',
+  editeur: 'Gallimard',
+  annee: 1942,
+  note: 4.5,
+});
 
 const etatVide = {
   type: 'succes' as const,
@@ -18,6 +27,11 @@ const etatVide = {
     demanderSuppression: vi.fn(),
     suppressionDesactivee: false,
   },
+};
+
+const etatRempli = {
+  ...etatVide,
+  page: { items: [illustrerOuvrage(ouvrage)], page: 1, limit: 20, total: 1, totalPages: 1 },
 };
 
 afterEach(() => appliquerLangue('fr'));
@@ -43,6 +57,19 @@ describe('accès aux préférences depuis l’en-tête du fonds', () => {
 
     expect(screen.getByRole('heading', { name: 'Book collection' })).toBeVisible();
     expect(screen.getByRole('button', { name: 'Preferences' })).toBeVisible();
+  });
+
+  it('traduit la ligne à chaud sans modifier les contenus métier', async () => {
+    render(<FondsView ajouterOuvrage={vi.fn()} etat={etatRempli} ouvrirPreferences={vi.fn()} />);
+
+    expect(screen.getByText('Notation : 4,5 sur 5')).toBeVisible();
+
+    appliquerLangue('en');
+
+    expect(await screen.findByText('Rating: 4.5 out of 5')).toBeVisible();
+    expect(screen.getByText('L’Étranger')).toBeVisible();
+    expect(screen.getByText('Albert Camus')).toBeVisible();
+    expect(screen.getByText('Gallimard · 1942')).toBeVisible();
   });
 });
 

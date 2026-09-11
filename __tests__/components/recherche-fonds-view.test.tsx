@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { FondsView } from '../../components/books/fonds-view';
-import { creerCoupsDeCoeurInertes } from './outils-fonds';
+import { creerCoupsDeCoeurInertes, illustrerOuvrage } from './outils-fonds';
 
 const etatVide = {
   type: 'succes' as const,
@@ -43,7 +43,7 @@ describe('recherche présentée dans le fonds', () => {
           page: {
             ...etatVide.page,
             items: [
-              {
+              illustrerOuvrage({
                 id: '33575fa9-7968-45b3-8447-ec994a0b8401',
                 titre: 'Bel-Ami',
                 auteur: 'Guy de Maupassant',
@@ -56,7 +56,7 @@ describe('recherche présentée dans le fonds', () => {
                 createdAt: '2025-01-01T10:00:00.000Z',
                 updatedAt: '2025-01-02T10:00:00.000Z',
                 version: 4,
-              },
+              }),
             ],
             total: 1,
           },

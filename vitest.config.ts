@@ -7,6 +7,10 @@ export default defineConfig({
   resolve: {
     extensions: ['.web.ts', '.web.tsx', '.ts', '.tsx', '.mjs', '.js', '.jsx', '.json'],
     alias: [
+      {
+        find: 'expo-image',
+        replacement: new URL('./__tests__/simulations/expo-image.tsx', import.meta.url).pathname,
+      },
       { find: /^react-native$/, replacement: 'react-native-web' },
       { find: '@', replacement: new URL('.', import.meta.url).pathname },
     ],

@@ -1,5 +1,6 @@
 import { traduire } from '@/services/i18n';
 import { creerErreurValidation, type ErreurApplication, traduireErreurHttp } from './erreurs';
+import { construireUrlApi } from './url-api';
 
 const DELAI_EXPIRATION_MS = 10_000;
 const EN_TETES_JSON = { Accept: 'application/json' } as const;
@@ -27,23 +28,6 @@ type RequeteHttp = {
 type ResultatRequete = {
   corps: unknown;
   statut: number;
-};
-
-const construireUrl = (chemin: string, parametres: Record<string, ParametreRequete>): string => {
-  const baseUrl = process.env.EXPO_PUBLIC_API_URL;
-  if (!baseUrl) {
-    throw creerErreurValidation("La variable EXPO_PUBLIC_API_URL n'est pas configurée.");
-  }
-
-  try {
-    const url = new URL(`${baseUrl.replace(/\/+$/, '')}${chemin}`);
-    for (const [cle, valeur] of Object.entries(parametres)) {
-      if (valeur !== undefined) url.searchParams.set(cle, String(valeur));
-    }
-    return url.toString();
-  } catch {
-    throw creerErreurValidation("La variable EXPO_PUBLIC_API_URL n'est pas une URL valide.");
-  }
 };
 
 const lireCorps = async (reponse: Response): Promise<unknown> => {
@@ -91,7 +75,7 @@ const executer = async ({
   corps,
   signal,
 }: RequeteHttp): Promise<ResultatRequete> => {
-  const url = construireUrl(chemin, parametres);
+  const url = construireUrlApi(chemin, parametres);
   const controleur = new AbortController();
   let expiree = false;
   const annuler = () => controleur.abort(signal?.reason);
