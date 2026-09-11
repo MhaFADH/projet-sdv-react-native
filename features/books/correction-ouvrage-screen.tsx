@@ -14,8 +14,6 @@ import { useTraduction } from '@/hooks/use-traduction';
 import { creerTextesCorrection } from './textes-ecriture';
 import { useSaisieOuvrage } from './use-saisie-ouvrage';
 
-const ABSENCE_PAR_DEFAUT = "Cet ouvrage n'existe pas ou plus.";
-
 type CorrectionOuvrageScreenProps = {
   id: string;
   retourAuFonds: () => void;
@@ -60,7 +58,8 @@ export const CorrectionOuvrageScreen = ({
   ouvrirOuvrage,
 }: CorrectionOuvrageScreenProps) => {
   const requete = useBook(id);
-  const textes = creerTextesCorrection(useTraduction());
+  const t = useTraduction();
+  const textes = creerTextesCorrection(t);
   const cadre = {
     libelleQuitter: textes.libelleQuitter,
     retour: retourAuFonds,
@@ -71,7 +70,7 @@ export const CorrectionOuvrageScreen = ({
     return (
       <CorrectionIndisponibleView
         {...cadre}
-        etat={{ type: 'introuvable', message: ABSENCE_PAR_DEFAUT }}
+        etat={{ type: 'introuvable', message: t('fiche.absenceParDefaut') }}
       />
     );
   }

@@ -9,7 +9,7 @@ import {
   type Ouvrage,
   type PageOuvrages,
 } from '@/domain/ouvrage';
-import type { CorrectionOuvrage, OuvrageSaisi } from '@/domain/saisie-ouvrage';
+import type { CorrectionOuvrage, CreationOuvrage } from '@/domain/saisie-ouvrage';
 import { traduire } from '@/services/i18n';
 import { clientHttp } from './client-http';
 import { creerErreurValidation } from './erreurs';
@@ -76,17 +76,18 @@ export const fetchBook = async (id: string, signal?: AbortSignal): Promise<Ouvra
   return resultat.data;
 };
 
-export const createBook = async (saisie: OuvrageSaisi): Promise<Ouvrage> => {
+export const createBook = async ({ saisie, couverture }: CreationOuvrage): Promise<Ouvrage> => {
   const corps = await clientHttp.post('/books', {
     titre: saisie.titre,
     auteur: saisie.auteur,
     editeur: saisie.editeur,
     annee: saisie.annee,
     lu: saisie.lu,
+    couverture,
   });
   const resultat = ouvrageSchema.safeParse(corps);
   if (!resultat.success) {
-    throw creerErreurValidation("La réponse du serveur pour l'ouvrage créé est invalide.");
+    throw creerErreurValidation(traduire('erreursHttp.reponseCreation'));
   }
   return resultat.data;
 };

@@ -3,12 +3,17 @@ import { createBook } from '../../services/api/books-api';
 
 const DELAI_EXPIRATION_MS = 10_000;
 
-const saisie = {
-  titre: 'Bel-Ami',
-  auteur: 'Guy de Maupassant',
-  editeur: '',
-  annee: 1885,
-  lu: false,
+const COUVERTURE = 'https://picsum.photos/seed/Kq4zPb/160/240';
+
+const creation = {
+  saisie: {
+    titre: 'Bel-Ami',
+    auteur: 'Guy de Maupassant',
+    editeur: '',
+    annee: 1885,
+    lu: false,
+  },
+  couverture: COUVERTURE,
 };
 
 const ouvrageCree = {
@@ -32,13 +37,13 @@ afterEach(() => {
 });
 
 describe('création d’un ouvrage', () => {
-  it('envoie les champs du lot 1 en POST et valide la réponse du serveur', async () => {
+  it('envoie les champs saisis et l’URL de couverture en POST et valide la réponse du serveur', async () => {
     const fetchMock = vi
       .fn<typeof fetch>()
       .mockResolvedValue(new Response(JSON.stringify(ouvrageCree), { status: 201 }));
     vi.stubGlobal('fetch', fetchMock);
 
-    const ouvrage = await createBook(saisie);
+    const ouvrage = await createBook(creation);
 
     expect(ouvrage).toEqual(ouvrageCree);
     expect(fetchMock).toHaveBeenCalledWith(
@@ -46,7 +51,7 @@ describe('création d’un ouvrage', () => {
       expect.objectContaining({
         method: 'POST',
         headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
-        body: JSON.stringify(saisie),
+        body: JSON.stringify({ ...creation.saisie, couverture: COUVERTURE }),
       }),
     );
   });
@@ -57,10 +62,11 @@ describe('création d’un ouvrage', () => {
       .mockResolvedValue(new Response(JSON.stringify(ouvrageCree), { status: 201 }));
     vi.stubGlobal('fetch', fetchMock);
 
-    await createBook(saisie);
+    await createBook(creation);
 
     const corps = JSON.parse(String(fetchMock.mock.calls[0][1]?.body));
     expect(corps.editeur).toBe('');
+    expect(corps.couverture).toBe(COUVERTURE);
     expect(corps.lu).toBe(false);
     expect(corps.annee).toBe(1885);
   });
@@ -75,7 +81,7 @@ describe('création d’un ouvrage', () => {
       ),
     );
 
-    await expect(createBook(saisie)).rejects.toMatchObject({ type: 'validation' });
+    await expect(createBook(creation)).rejects.toMatchObject({ type: 'validation' });
   });
 
   it('traduit un refus 422 en erreurs par champ, même sans message général', async () => {
@@ -91,7 +97,7 @@ describe('création d’un ouvrage', () => {
         ),
     );
 
-    const erreur = await createBook(saisie).catch((cause: unknown) => cause);
+    const erreur = await createBook(creation).catch((cause: unknown) => cause);
 
     expect(erreur).toMatchObject({
       type: 'validation',
@@ -109,7 +115,7 @@ describe('création d’un ouvrage', () => {
       ),
     );
 
-    const erreur = await createBook(saisie).catch((cause: unknown) => cause);
+    const erreur = await createBook(creation).catch((cause: unknown) => cause);
 
     expect(erreur).toMatchObject({ type: 'reseau', cause: 'indisponible', statut: 503 });
   });
@@ -120,7 +126,7 @@ describe('création d’un ouvrage', () => {
       vi.fn<typeof fetch>().mockRejectedValue(new TypeError('Failed to fetch')),
     );
 
-    const erreur = await createBook(saisie).catch((cause: unknown) => cause);
+    const erreur = await createBook(creation).catch((cause: unknown) => cause);
 
     expect(erreur).toMatchObject({ type: 'reseau', cause: 'indisponible' });
     expect(erreur).not.toHaveProperty('statut');
@@ -138,7 +144,7 @@ describe('création d’un ouvrage', () => {
       ),
     );
 
-    const promesse = createBook(saisie).catch((cause: unknown) => cause);
+    const promesse = createBook(creation).catch((cause: unknown) => cause);
     await vi.advanceTimersByTimeAsync(DELAI_EXPIRATION_MS);
     const erreur = await promesse;
 

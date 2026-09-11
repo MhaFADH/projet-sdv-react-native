@@ -16,7 +16,7 @@ import {
 import { useAvertissementDepart } from '@/hooks/use-avertissement-depart';
 import { useTemporisation } from '@/hooks/use-temporisation';
 import { useToastSucces } from '@/hooks/use-toast-succes';
-import { useTraduction } from '@/hooks/use-traduction';
+import { useLangueActive, useTraduction } from '@/hooks/use-traduction';
 import { creerMessagesSaisieOuvrage } from './messages-saisie';
 import { interpreterEchecEcriture, type ResultatEcriture } from './resultat-ecriture';
 import type { TextesEcriture } from './textes-ecriture';
@@ -32,6 +32,19 @@ type OptionsSaisieOuvrage = {
   ouvrirOuvrage: (id: string) => void;
 };
 
+type EchecEnregistrement = { origine: 'envoi'; cause: unknown } | { origine: 'sansChangement' };
+
+const interpreterEchec = (
+  echec: EchecEnregistrement | null,
+  textes: TextesEcriture,
+): ResultatEcriture | null => {
+  if (echec === null) return null;
+  if (echec.origine === 'sansChangement') {
+    return { type: 'refus', parChamp: {}, message: textes.messageSansChangement };
+  }
+  return interpreterEchecEcriture(echec.cause, textes);
+};
+
 export const useSaisieOuvrage = ({
   textes,
   valeursInitiales,
@@ -43,9 +56,10 @@ export const useSaisieOuvrage = ({
   ouvrirOuvrage,
 }: OptionsSaisieOuvrage): FormulaireOuvrageViewProps => {
   const t = useTraduction();
+  const langue = useLangueActive();
   const temporisation = useTemporisation();
   const succes = useToastSucces<Ouvrage>();
-  const [resultat, setResultat] = useState<ResultatEcriture | null>(null);
+  const [echec, setEchec] = useState<EchecEnregistrement | null>(null);
   const [departEnAttente, setDepartEnAttente] = useState<(() => void) | null>(null);
   const [enregistrement, setEnregistrement] = useState<{
     cle: number;
@@ -58,8 +72,18 @@ export const useSaisieOuvrage = ({
     resolver: zodResolver(creerSaisieOuvrageSchema(creerMessagesSaisieOuvrage(t))),
     defaultValues: valeursInitiales,
   });
-  const { reset } = formulaire;
+  const { reset, trigger } = formulaire;
   useAvertissementDepart(formulaire.formState.isDirty);
+
+  const langueValidee = useRef(langue);
+
+  useEffect(() => {
+    if (langueValidee.current === langue) return;
+    langueValidee.current = langue;
+    const erreurs = Object.values(formulaire.formState.errors);
+    if (erreurs.length === 0 || erreurs.some((erreur) => erreur?.type === 'server')) return;
+    void trigger();
+  }, [langue, trigger, formulaire.formState.errors]);
 
   useEffect(() => {
     if (enregistrement === null) return;
@@ -76,22 +100,22 @@ export const useSaisieOuvrage = ({
     if (envoiEnCours.current) return;
     envoiEnCours.current = true;
     temporisation.arreter();
-    setResultat(null);
+    setEchec(null);
 
     try {
       const ouvrage = await envoyer(valeurs);
       if (ouvrage === null) {
-        setResultat({ type: 'refus', parChamp: {}, message: textes.messageSansChangement });
+        setEchec({ origine: 'sansChangement' });
         return;
       }
       enregistrements.current += 1;
       setEnregistrement({ cle: enregistrements.current, valeurs: valeursApresSucces(ouvrage) });
       succes.annoncer(ouvrage);
     } catch (cause) {
-      const echec = interpreterEchecEcriture(cause, textes);
-      setResultat(echec);
-      if (echec.type === 'refus') appliquerRefus(echec.parChamp);
-      if (echec.type === 'indisponible') temporisation.demarrer();
+      const resultatEchec = interpreterEchecEcriture(cause, textes);
+      setEchec({ origine: 'envoi', cause });
+      if (resultatEchec.type === 'refus') appliquerRefus(resultatEchec.parChamp);
+      if (resultatEchec.type === 'indisponible') temporisation.demarrer();
     } finally {
       envoiEnCours.current = false;
     }
@@ -104,6 +128,8 @@ export const useSaisieOuvrage = ({
     }
     setDepartEnAttente(() => depart);
   };
+
+  const resultat = interpreterEchec(echec, textes);
 
   const construireAvis = (): AvisEcriture | null => {
     if (resultat === null) return null;
@@ -137,7 +163,7 @@ export const useSaisieOuvrage = ({
       cle: annonce.cle,
       message: textes.messageSucces(annonce.contenu.titre),
       action: {
-        libelle: 'Ouvrir la fiche',
+        libelle: t('ecriture.ouvrirFiche'),
         executer: () => partir(() => ouvrirOuvrage(annonce.contenu.id)),
       },
       suspendre: succes.suspendre,
