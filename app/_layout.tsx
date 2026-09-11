@@ -6,6 +6,7 @@ import 'react-native-reanimated';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { GlobalErrorView } from '@/components/global-error-view';
+import { BasculesProvider } from '@/features/books/bascules-provider';
 import { SuppressionsProvider } from '@/features/books/suppressions-provider';
 import { theme } from '@/theme/tokens';
 
@@ -21,17 +22,19 @@ const RootLayout = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider value={DefaultTheme}>
       <SuppressionsProvider>
-        <Stack
-          screenOptions={{
-            contentStyle: { backgroundColor: theme.colors.background },
-            headerShown: false,
-          }}
-        >
-          <Stack.Screen name="index" />
-          <Stack.Screen name="ouvrages/nouveau" />
-          <Stack.Screen name="ouvrages/[id]" />
-        </Stack>
-        <StatusBar style="dark" />
+        <BasculesProvider>
+          <Stack
+            screenOptions={{
+              contentStyle: { backgroundColor: theme.colors.background },
+              headerShown: false,
+            }}
+          >
+            <Stack.Screen name="index" />
+            <Stack.Screen name="ouvrages/nouveau" />
+            <Stack.Screen name="ouvrages/[id]" />
+          </Stack>
+          <StatusBar style="dark" />
+        </BasculesProvider>
       </SuppressionsProvider>
     </ThemeProvider>
   </QueryClientProvider>

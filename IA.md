@@ -602,3 +602,55 @@ Après le retour produit sur la densité de l’interface, une seconde recette r
 - à 768 px, la barre reste verticale, « Recommandations » expose `white-space: nowrap`, la séparation avant « Trier » mesure 1 px et aucun panneau mobile n’est présent ;
 - à 390 px, le panneau est fermé par défaut, aucun groupe radio n’est monté et son bouton expose `aria-expanded="false"` ; après ouverture, les quatre groupes sont présents et `aria-expanded` vaut `true` ;
 - à zéro sélection, aucune action de suppression n’est présente ; sélectionner le premier ouvrage fait apparaître uniquement « 1 sélectionné — Supprimer ».
+
+## Intervention — issue #20
+
+- Outil : Claude Code.
+- Fournisseur : Anthropic.
+- Modèle : `claude-opus-5[1m]`.
+- Périmètre : issue GitHub #20, bascule des coups de cœur sans incohérence.
+
+### Demandes reçues
+
+1. `/mattpocock-skills:implement https://github.com/MhaFADH/projet-sdv-react-native/issues/20 tu as accès à GitHub CLI pour lire le ticket`
+
+### Actions réalisées avec l'IA
+
+- lecture du ticket #20 par `gh issue view`, de la spécification parent, du découpage du lot, du contrat de l'API et de l'architecture livrée ;
+- constat que le verrou de `useToggleBookReadStatus` vivait dans l'écran appelant et ne pouvait donc pas survivre à une navigation liste–fiche, et que son retour arrière restaurait des instantanés de pages entières ;
+- remplacement de ce hook par une coordination unique montée à la racine, `BasculesProvider`, partagée par le fonds et la fiche pour les deux champs `favori` et `lu` ;
+- passage de l'optimisme d'une écriture dans le cache à une superposition de l'intention au moment du rendu, ce qui supprime tout instantané de liste à restaurer et empêche une actualisation concurrente de masquer une intention en cours ;
+- ajout test-first du domaine pur des bascules, du `PATCH` partiel générique `{ favori }` ou `{ lu }` et de la validation Zod de sa réponse ;
+- ajout du cœur de rôle `switch` sur chaque ligne du fonds et sur la fiche, placé en frère du bouton d'ouverture et de la case de sélection ;
+- extraction de la ligne du fonds, du détail de fiche, des types d'état du fonds et de l'avis d'échec partagé, pour respecter la limite de 250 lignes ;
+- ajout des parcours de test du fonds, de la fiche et des deux vues montées ensemble, avec TanStack Query réel et transport simulé ;
+- mise à jour du `README.md` et de `docs/ARCHITECTURE.md` ;
+- exécution du formatage, du lint, du typage, des tests, de la couverture et d'une recette Chrome contre l'API en mode chaos.
+
+### Défauts constatés et corrections réelles
+
+- Les premiers parcours échouaient en lisant le résolveur de réponse différée juste après le clic : `mutateAsync` n'émet la requête qu'au micro-tic suivant. Les tests attendent désormais l'envoi réel du `PATCH` avant de le résoudre.
+- La lecture du code de `MutationObserver` a montré que `mutate` retire l'observateur de la mutation précédente et écrase les rappels passés par appel : deux bascules simultanées sur deux ouvrages auraient perdu les rappels de la première. La coordination suit la promesse propre à chaque appel de `mutateAsync` plutôt que les rappels d'observateur.
+- Le test de deux ouvrages terminant dans un ordre différent, l'un en succès et l'autre en échec, a confirmé que le retour arrière ne touche qu'un seul ouvrage.
+- `components/books/fonds-view.tsx` dépassait 250 lignes après l'ajout des coups de cœur, sans être signalé par le lint. Ses types d'état ont été déplacés dans `components/books/etat-fonds.ts`.
+- La duplication du fournisseur ajouté dans dix fichiers de test a fait dépasser la limite de lignes à `recherche-fonds.test.tsx`. L'enveloppe commune des parcours a été extraite dans `__tests__/outils-rendu.tsx`.
+- La recette navigateur a montré qu'une bascule refusée pouvait rester en attente sans résultat ni erreur, le cœur figé sur son indicateur d'envoi. Le diagnostic a d'abord attribué ce blocage à la connectivité jugée absente ; la lecture du `retryer` de TanStack Query a montré que sa reprise exige aussi le focus du document, et que l'onglet piloté par l'automatisation était masqué. Le blocage observé venait donc de l'onglet en arrière-plan, pas d'un défaut rencontré par un libraire qui clique dans une fenêtre au premier plan.
+- La condition de connectivité reste néanmoins réelle : une écriture refusée alors que la bibliothèque juge l'application hors ligne resterait en pause, verrou compris, sans erreur ni réessai. Les bascules déclarent `networkMode: 'always'`, couvert par un test qui force cet état. Le réglage reste limité à ce parcours : l'étendre aux autres écritures livrées relève du responsable.
+- La revue Standards a relevé que trois composants importaient leur type d'avis depuis `features/`, alors que `components/` doit rester indépendant du store. Le type est passé dans `components/books/avis-echec-bascule.tsx` et le contexte l'importe désormais depuis la présentation ; `git grep '@/features' -- components/` ne renvoie plus rien.
+- La même revue a relevé que le fournisseur assemblait lui-même les libellés d'erreur. Leur construction a rejoint `features/books/textes-bascule.ts`.
+- La revue Spec a relevé qu'un cœur en cours d'envoi remplaçait son glyphe par l'indicateur, alors que le critère demande la ligne conservée « avec le cœur déjà modifié ». Le glyphe reste affiché et l'indicateur se superpose ; un test vérifie les deux et échoue avec l'ancienne version.
+- La revue Spec a signalé un risque de faux positif : une erreur de fiche antérieure serait annoncée comme un échec d'actualisation. Le cas s'est révélé non reproductible, l'écriture confirmée étant inscrite dans le cache de la fiche avant l'invalidation, ce qui efface l'erreur précédente. La lecture d'erreur a tout de même été restreinte aux fiches réellement relues et le comportement est fixé par un test.
+- La revue Spec a signalé que le réessai d'un refus contournait la garde du verrou. Le cas n'est pas atteignable, l'avis d'échec et l'envoi en cours étant exclusifs, mais le réessai passe désormais par la même garde que la bascule initiale.
+- La scission du fichier de tests du fournisseur, imposée par la limite de lignes après ces ajouts, a fait apparaître une aide de test exportée sans consommateur, signalée par `knip` et rendue locale.
+
+### Vérification navigateur
+
+Réalisée avec Chrome piloté par le protocole MCP, contre `npx expo start --web` et l'API voisine lancée en mode chaos sur un port distinct, afin de ne pas interrompre le serveur du responsable :
+
+- sous le filtre « Coups de cœur », chaque ligne porte un cœur actif et des ouvrages « Non lu » y figurent ;
+- un clic retire le cœur immédiatement, avant la réponse, la ligne étant conservée pendant l'envoi avec son indicateur d'enregistrement ;
+- après confirmation, la page est actualisée depuis le serveur et l'ouvrage quitte la liste filtrée ;
+- avec un taux d'échec de 100 %, le cœur est restauré et la ligne affiche « Le coup de cœur précédent a été restauré. Le service est temporairement indisponible. Reessayez. » avec un bouton « Réessayer » ;
+- l'échec de relecture du fonds reste affiché séparément, sous « Impossible d'actualiser le fonds », sans annoncer l'annulation d'une écriture confirmée ;
+- le journal du serveur montre deux tentatives de `PATCH` pour un refus `503`, conformément à l'unique réessai temporisé.
+

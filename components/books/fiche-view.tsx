@@ -1,38 +1,21 @@
 import type { PropsWithChildren, ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import {
-  ControleStatutLecture,
-  type ErreurStatutLecture,
-} from '@/components/books/controle-statut-lecture';
-import { Bouton } from '@/components/bouton';
+import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 import { EtatAbsence, EtatErreur, SqueletteDonnees } from '@/components/etats-donnees';
-import { libelleEditeur, type Ouvrage } from '@/domain/ouvrage';
 import { theme } from '@/theme/tokens';
+import { type DetailFiche, FicheDetail } from './fiche-detail';
 
 export type EtatFiche =
   | { type: 'chargement' }
   | { type: 'erreur'; message: string; reessayer: () => void }
   | { type: 'introuvable'; message: string }
   | { type: 'masquee' }
-  | {
-      type: 'succes';
-      ouvrage: Ouvrage;
-      corriger: () => void;
-      basculerStatut: () => void;
-      statutEnCours: boolean;
-      erreurStatut?: ErreurStatutLecture;
-      erreurActualisation?: { titre: string; message: string; reessayer: () => void };
-      demanderSuppression: () => void;
-      suppressionDesactivee: boolean;
-    };
+  | ({ type: 'succes' } & DetailFiche);
 
 type FicheViewProps = {
   etat: EtatFiche;
   retour: () => void;
   sectionNotes?: ReactNode;
 };
-
-type EtatSucces = Extract<EtatFiche, { type: 'succes' }>;
 
 const NOMBRE_LIGNES_SQUELETTE = 3;
 
@@ -50,51 +33,6 @@ const CadreFiche = ({ retour, children }: PropsWithChildren<Pick<FicheViewProps,
     </Pressable>
     {children}
   </ScrollView>
-);
-
-const Renseignement = ({ libelle, valeur }: { libelle: string; valeur: string }) => (
-  <View style={styles.renseignement}>
-    <Text style={styles.libelle}>{libelle}</Text>
-    <Text style={styles.valeur}>{valeur}</Text>
-  </View>
-);
-
-const FicheDetail = (etat: EtatSucces) => (
-  <View style={styles.carte}>
-    <Text accessibilityRole="header" style={styles.titre}>
-      {etat.ouvrage.titre}
-    </Text>
-    <Renseignement libelle="Auteur" valeur={etat.ouvrage.auteur} />
-    <Renseignement libelle="Éditeur" valeur={libelleEditeur(etat.ouvrage.editeur)} />
-    <Renseignement libelle="Année de publication" valeur={String(etat.ouvrage.annee)} />
-    <ControleStatutLecture
-      basculerStatut={etat.basculerStatut}
-      erreurStatut={etat.erreurStatut}
-      ouvrage={etat.ouvrage}
-      statutEnCours={etat.statutEnCours}
-    />
-    {etat.erreurActualisation ? (
-      <EtatErreur
-        {...etat.erreurActualisation}
-        libelleReessai="Réessayer l’actualisation de la fiche"
-      />
-    ) : null}
-    <Pressable
-      accessibilityLabel={`Supprimer ${etat.ouvrage.titre}`}
-      accessibilityRole="button"
-      accessibilityState={{ disabled: etat.suppressionDesactivee }}
-      disabled={etat.suppressionDesactivee}
-      onPress={etat.demanderSuppression}
-      style={[styles.boutonSuppression, etat.suppressionDesactivee && styles.boutonDesactive]}
-    >
-      <Text selectable={false} style={styles.texteBoutonSuppression}>
-        {etat.suppressionDesactivee
-          ? 'Suppression indisponible pendant l’envoi'
-          : 'Supprimer cet ouvrage'}
-      </Text>
-    </Pressable>
-    <Bouton action={etat.corriger} libelle="Corriger cet ouvrage" />
-  </View>
 );
 
 const ContenuFiche = ({ etat }: Pick<FicheViewProps, 'etat'>) => {
@@ -145,32 +83,6 @@ const styles = StyleSheet.create({
     padding: theme.spacing.md,
     gap: theme.spacing.lg,
   },
-  carte: {
-    gap: theme.spacing.md,
-    padding: theme.spacing.lg,
-    borderWidth: theme.borderWidth,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.surface,
-  },
-  titre: {
-    color: theme.colors.text,
-    fontSize: theme.typography.pageTitle,
-    fontWeight: '700',
-  },
-  renseignement: { gap: theme.spacing.xs },
-  libelle: {
-    color: theme.colors.primary,
-    fontSize: theme.typography.caption,
-    fontWeight: '700',
-    letterSpacing: theme.typography.overlineLetterSpacing,
-    textTransform: 'uppercase',
-  },
-  valeur: {
-    color: theme.colors.text,
-    fontSize: theme.typography.body,
-    lineHeight: theme.typography.bodyLineHeight,
-  },
   boutonRetour: {
     minHeight: theme.minTargetSize,
     alignSelf: 'flex-start',
@@ -183,21 +95,6 @@ const styles = StyleSheet.create({
   },
   texteBoutonRetour: {
     color: theme.colors.primary,
-    fontSize: theme.typography.body,
-    fontWeight: '700',
-  },
-  boutonSuppression: {
-    minHeight: theme.minTargetSize,
-    alignSelf: 'flex-start',
-    justifyContent: 'center',
-    marginTop: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    borderRadius: theme.radius.sm,
-    backgroundColor: theme.colors.dangerText,
-  },
-  boutonDesactive: { opacity: 0.5 },
-  texteBoutonSuppression: {
-    color: theme.colors.primaryText,
     fontSize: theme.typography.body,
     fontWeight: '700',
   },

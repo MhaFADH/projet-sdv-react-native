@@ -6,10 +6,10 @@ import { identifiantUtilisable } from '@/domain/ouvrage';
 import { construireEtatNotes } from '@/features/notes/etat-notes';
 import { type CauseBlocageNote, useSaisieNote } from '@/features/notes/use-saisie-note';
 import { useSuppressionNote } from '@/features/notes/use-suppression-note';
+import { useBascules } from '@/hooks/use-bascules';
 import { useBook } from '@/hooks/use-book';
 import { useNotes } from '@/hooks/use-notes';
 import { useSuppressions } from '@/hooks/use-suppressions';
-import { useToggleBookReadStatus } from '@/hooks/use-toggle-book-read-status';
 
 const ABSENCE_PAR_DEFAUT = "Cet ouvrage n'existe pas ou plus.";
 
@@ -21,7 +21,7 @@ type FicheScreenProps = {
 
 export const FicheScreen = ({ id, retour, corriger }: FicheScreenProps) => {
   const requete = useBook(id);
-  const basculeStatut = useToggleBookReadStatus(id);
+  const bascules = useBascules();
   const { confirmerSuppressions, estMasque, suppressionDesactivee } = useSuppressions();
   const [confirmationVisible, setConfirmationVisible] = useState(false);
   const identifiantValide = identifiantUtilisable(id);
@@ -85,21 +85,27 @@ export const FicheScreen = ({ id, retour, corriger }: FicheScreenProps) => {
     confirmerSuppressions([ouvrageASupprimer]);
     setConfirmationVisible(false);
   };
+  const ouvrageAffiche = bascules.appliquerBasculeEnCours(requete.data);
+  const basculeEnCours = bascules.basculeEnCours(id);
+  const echecActualisation = bascules.erreurActualisation(id);
 
   return (
     <>
       {rendre({
         type: 'succes',
-        ouvrage: requete.data,
-        basculerStatut: () => basculeStatut.basculer(!requete.data.lu),
-        statutEnCours: basculeStatut.enCours,
-        erreurStatut: basculeStatut.erreur,
-        erreurActualisation: basculeStatut.erreurActualisation
+        ouvrage: ouvrageAffiche,
+        basculerStatut: () => bascules.basculer({ id, champ: 'lu', valeur: !ouvrageAffiche.lu }),
+        basculerCoupDeCoeur: () =>
+          bascules.basculer({ id, champ: 'favori', valeur: !ouvrageAffiche.favori }),
+        basculeEnCours,
+        erreurBascule: bascules.erreurBascule(id),
+        erreurActualisation: echecActualisation
           ? {
               titre: 'Actualisation de la fiche impossible',
-              ...basculeStatut.erreurActualisation,
+              message: echecActualisation.message,
+              reessayer: echecActualisation.reessayer,
             }
-          : requete.isError && !basculeStatut.enCours
+          : requete.isError && !basculeEnCours
             ? {
                 titre: 'Impossible d’actualiser la fiche',
                 message: requete.error.message,

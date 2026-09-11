@@ -1,8 +1,7 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient } from '@tanstack/react-query';
 import { fireEvent, render, screen } from '@testing-library/react';
-import type { PropsWithChildren } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { SuppressionsProvider } from '../../features/books/suppressions-provider';
+import { creerEnveloppeOuvrages } from '../outils-rendu';
 
 const routeur = {
   back: vi.fn(),
@@ -41,11 +40,7 @@ const ouvrage = {
 
 const creerEnvironnement = () => {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  const enveloppe = ({ children }: PropsWithChildren) => (
-    <QueryClientProvider client={client}>
-      <SuppressionsProvider>{children}</SuppressionsProvider>
-    </QueryClientProvider>
-  );
+  const enveloppe = creerEnveloppeOuvrages(client);
   return { client, enveloppe };
 };
 

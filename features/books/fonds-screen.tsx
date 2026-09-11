@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { ConfirmationSuppression } from '@/components/books/confirmation-suppression';
 import { FondsView } from '@/components/books/fonds-view';
 import { type ConsultationFonds, consultationsEgales } from '@/domain/criteres-ouvrages';
-import { OUVRAGES_PAR_PAGE, PAS_DE_PAGE, PREMIERE_PAGE } from '@/domain/ouvrage';
+import { OUVRAGES_PAR_PAGE, type Ouvrage, PAS_DE_PAGE, PREMIERE_PAGE } from '@/domain/ouvrage';
+import { useBascules } from '@/hooks/use-bascules';
 import { useBooksPage } from '@/hooks/use-books-page';
 import { useSuppressions } from '@/hooks/use-suppressions';
 
@@ -33,6 +34,7 @@ export const FondsScreen = ({
 }: FondsScreenProps) => {
   const requete = useBooksPage(pageDemandee, consultationDemandee);
   const { confirmerSuppressions, estMasque, suppressionDesactivee } = useSuppressions();
+  const bascules = useBascules();
   const [selection, setSelection] = useState<EtatSelection>(() => ({
     page: pageDemandee,
     consultation: consultationDemandee,
@@ -104,7 +106,15 @@ export const FondsScreen = ({
   };
   const pageVisible = {
     ...requete.data,
-    items: requete.data.items.filter(({ id }) => !estMasque(id)),
+    items: requete.data.items
+      .filter(({ id }) => !estMasque(id))
+      .map(bascules.appliquerBasculeEnCours),
+  };
+  const coupsDeCoeur = {
+    basculer: (ouvrage: Ouvrage) =>
+      bascules.basculer({ id: ouvrage.id, champ: 'favori', valeur: !ouvrage.favori }),
+    enCours: bascules.basculeEnCours,
+    erreur: bascules.erreurBascule,
   };
   const ouvragesSelectionnes = pageVisible.items
     .filter(({ id }) => identifiantsSelectionnes.has(id))
@@ -154,6 +164,7 @@ export const FondsScreen = ({
           pagePrecedente,
           pageSuivante,
           ouvrirOuvrage: ouvrirFiche,
+          coupsDeCoeur,
           selection: {
             identifiants: identifiantsSelectionnes,
             basculer: basculerSelection,
