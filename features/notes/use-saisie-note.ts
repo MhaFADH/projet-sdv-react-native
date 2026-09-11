@@ -5,26 +5,29 @@ import type { AvisEcriture } from '@/components/messages-ecriture';
 import type { FormulaireNoteViewProps, ToastNote } from '@/components/notes/formulaire-note-view';
 import { LONGUEUR_MAXIMALE_NOTE, type NoteLecture } from '@/domain/note-lecture';
 import {
+  creerSaisieNoteSchema,
   longueurContenuNote,
   type NoteSaisie,
   SAISIE_NOTE_VIDE,
   type SaisieNote,
   saisieNoteRenseignee,
-  saisieNoteSchema,
 } from '@/domain/saisie-note';
 import { useAjouterNote } from '@/hooks/use-ajouter-note';
 import { useAvertissementDepart } from '@/hooks/use-avertissement-depart';
 import { useTemporisation } from '@/hooks/use-temporisation';
 import { useToastSucces } from '@/hooks/use-toast-succes';
+import { useTraduction } from '@/hooks/use-traduction';
+import { creerMessagesSaisieNote } from './messages-saisie';
 import { interpreterEchecAjoutNote, type ResultatAjoutNote } from './resultat-note';
-import { TEXTES_NOTE } from './textes-note';
+import { creerTextesNote } from './textes-note';
 
 export type CauseBlocageNote = 'ouvrage-introuvable' | 'ouvrage-masque';
 
-const TEXTE_BLOCAGE: Record<CauseBlocageNote, string> = {
-  'ouvrage-introuvable': TEXTES_NOTE.blocageOuvrageIntrouvable,
-  'ouvrage-masque': TEXTES_NOTE.blocageOuvrageMasque,
-};
+const CLES_BLOCAGE: Record<CauseBlocageNote, 'blocageOuvrageIntrouvable' | 'blocageOuvrageMasque'> =
+  {
+    'ouvrage-introuvable': 'blocageOuvrageIntrouvable',
+    'ouvrage-masque': 'blocageOuvrageMasque',
+  };
 
 type OptionsSaisieNote = {
   livreId: string;
@@ -42,6 +45,8 @@ export const useSaisieNote = ({
   causeBlocage,
   rafraichirNotes,
 }: OptionsSaisieNote): SaisieNoteCoordonnee => {
+  const t = useTraduction();
+  const textes = creerTextesNote(t);
   const ajout = useAjouterNote(livreId);
   const temporisation = useTemporisation();
   const succes = useToastSucces<NoteLecture>();
@@ -50,7 +55,7 @@ export const useSaisieNote = ({
   const envoiEnCours = useRef(false);
 
   const formulaire = useForm<SaisieNote, unknown, NoteSaisie>({
-    resolver: zodResolver(saisieNoteSchema),
+    resolver: zodResolver(creerSaisieNoteSchema(creerMessagesSaisieNote(t))),
     defaultValues: SAISIE_NOTE_VIDE,
   });
   const contenu = formulaire.watch('contenu');
@@ -68,7 +73,7 @@ export const useSaisieNote = ({
       formulaire.reset(SAISIE_NOTE_VIDE);
       succes.annoncer(note);
     } catch (cause) {
-      const echec = interpreterEchecAjoutNote(cause);
+      const echec = interpreterEchecAjoutNote(cause, textes);
       setResultat(echec);
       if (echec.type === 'refus' && echec.parChamp.contenu !== undefined) {
         formulaire.setError('contenu', { type: 'server', message: echec.parChamp.contenu });
@@ -101,9 +106,9 @@ export const useSaisieNote = ({
       return {
         type: 'incertain',
         message: resultat.message,
-        avertissement: TEXTES_NOTE.avertissementDoublon,
-        libelleVerifier: TEXTES_NOTE.libelleVerifier,
-        libelleReessayer: TEXTES_NOTE.libelleRenvoyer,
+        avertissement: textes.avertissementDoublon,
+        libelleVerifier: textes.libelleVerifier,
+        libelleReessayer: textes.libelleRenvoyer,
         verifier: rafraichirNotes,
         reessayer: () => void envoyer(),
       };
@@ -116,7 +121,7 @@ export const useSaisieNote = ({
       ? null
       : {
           cle: succes.toast.cle,
-          message: TEXTES_NOTE.messageSucces,
+          message: textes.messageSucces,
           suspendre: succes.suspendre,
           reprendre: succes.reprendre,
         };
@@ -124,18 +129,16 @@ export const useSaisieNote = ({
   return {
     partir,
     vue: {
-      libelleChamp: TEXTES_NOTE.libelleChamp,
-      libelleEnvoyer: ajout.isPending
-        ? TEXTES_NOTE.libelleEnvoiEnCours
-        : TEXTES_NOTE.libelleAjouter,
-      libelleEffacer: TEXTES_NOTE.libelleEffacer,
+      libelleChamp: textes.libelleChamp,
+      libelleEnvoyer: ajout.isPending ? textes.libelleEnvoiEnCours : textes.libelleAjouter,
+      libelleEffacer: textes.libelleEffacer,
       controle: formulaire.control,
       caracteresUtilises: longueurContenuNote(contenu),
       caracteresMaximum: LONGUEUR_MAXIMALE_NOTE,
       enEnvoi: ajout.isPending,
       envoyer: () => void envoyer(),
       effacer: saisieRenseignee ? () => partir(() => formulaire.reset(SAISIE_NOTE_VIDE)) : null,
-      blocage: causeBlocage === null ? null : TEXTE_BLOCAGE[causeBlocage],
+      blocage: causeBlocage === null ? null : textes[CLES_BLOCAGE[causeBlocage]],
       avis: construireAvis(),
       toast: construireToast(),
       confirmationAbandon:

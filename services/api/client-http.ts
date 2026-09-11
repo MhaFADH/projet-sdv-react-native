@@ -1,3 +1,4 @@
+import { traduire } from '@/services/i18n';
 import { creerErreurValidation, type ErreurApplication, traduireErreurHttp } from './erreurs';
 
 const DELAI_EXPIRATION_MS = 10_000;
@@ -70,7 +71,7 @@ const erreurTransport = (expiree: boolean, annulee: boolean): ErreurApplication 
     return {
       type: 'reseau',
       cause: 'annulation',
-      message: 'La requête a été annulée.',
+      message: traduire('erreursHttp.annulee'),
       reessayable: false,
     };
   }
@@ -78,7 +79,7 @@ const erreurTransport = (expiree: boolean, annulee: boolean): ErreurApplication 
   return {
     type: 'reseau',
     cause: 'indisponible',
-    message: 'Le serveur est injoignable.',
+    message: traduire('erreursHttp.injoignable'),
     reessayable: true,
   };
 };
@@ -143,7 +144,7 @@ const patch = async (
 const supprimer = async (chemin: string, options: OptionsEcriture = {}): Promise<void> => {
   const resultat = await executer({ chemin, methode: 'DELETE', signal: options.signal });
   if (resultat.statut !== 204 || resultat.corps !== undefined) {
-    throw creerErreurValidation('La réponse du serveur pour la suppression est invalide.');
+    throw creerErreurValidation(traduire('erreursHttp.reponseSuppression'));
   }
 };
 

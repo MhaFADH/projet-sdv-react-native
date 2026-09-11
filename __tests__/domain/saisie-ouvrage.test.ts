@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import {
   anneeMaximaleAutorisee,
+  creerSaisieOuvrageSchema,
   LONGUEUR_MAXIMALE_TEXTE,
   repartirRefusServeur,
   SAISIE_OUVRAGE_VIDE,
-  saisieOuvrageSchema,
 } from '../../domain/saisie-ouvrage';
+import { creerMessagesSaisieOuvrage } from '../../features/books/messages-saisie';
+import { traduireEnTest } from '../outils-traduction';
+
+const saisieOuvrageSchema = creerSaisieOuvrageSchema(creerMessagesSaisieOuvrage(traduireEnTest));
 
 const saisieValide = {
   titre: 'Bel-Ami',

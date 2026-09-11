@@ -9,13 +9,15 @@ import type { AvisEcriture } from '@/components/messages-ecriture';
 import type { Ouvrage } from '@/domain/ouvrage';
 import {
   type ChampSaisieOuvrage,
+  creerSaisieOuvrageSchema,
   type OuvrageSaisi,
   type SaisieOuvrage,
-  saisieOuvrageSchema,
 } from '@/domain/saisie-ouvrage';
 import { useAvertissementDepart } from '@/hooks/use-avertissement-depart';
 import { useTemporisation } from '@/hooks/use-temporisation';
 import { useToastSucces } from '@/hooks/use-toast-succes';
+import { useTraduction } from '@/hooks/use-traduction';
+import { creerMessagesSaisieOuvrage } from './messages-saisie';
 import { interpreterEchecEcriture, type ResultatEcriture } from './resultat-ecriture';
 import type { TextesEcriture } from './textes-ecriture';
 
@@ -40,6 +42,7 @@ export const useSaisieOuvrage = ({
   verifier,
   ouvrirOuvrage,
 }: OptionsSaisieOuvrage): FormulaireOuvrageViewProps => {
+  const t = useTraduction();
   const temporisation = useTemporisation();
   const succes = useToastSucces<Ouvrage>();
   const [resultat, setResultat] = useState<ResultatEcriture | null>(null);
@@ -52,7 +55,7 @@ export const useSaisieOuvrage = ({
   const envoiEnCours = useRef(false);
 
   const formulaire = useForm<SaisieOuvrage, unknown, OuvrageSaisi>({
-    resolver: zodResolver(saisieOuvrageSchema),
+    resolver: zodResolver(creerSaisieOuvrageSchema(creerMessagesSaisieOuvrage(t))),
     defaultValues: valeursInitiales,
   });
   const { reset } = formulaire;

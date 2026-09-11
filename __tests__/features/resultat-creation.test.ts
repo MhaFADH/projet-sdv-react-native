@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { interpreterEchecEcriture } from '../../features/books/resultat-ecriture';
-import { TEXTES_CREATION } from '../../features/books/textes-ecriture';
+import { creerTextesCreation } from '../../features/books/textes-ecriture';
+import { traduireEnTest } from '../outils-traduction';
+
+const TEXTES_CREATION = creerTextesCreation(traduireEnTest);
 
 const interpreterEchecCreation = (cause: unknown) =>
   interpreterEchecEcriture(cause, TEXTES_CREATION);

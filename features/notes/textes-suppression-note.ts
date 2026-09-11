@@ -1,17 +1,29 @@
-export const TEXTES_SUPPRESSION_NOTE = {
-  titreConfirmation: 'Confirmer la suppression de la note',
-  avertissementSansAnnulation:
-    'Cette note part immédiatement après confirmation, sans délai ni annulation. Aucune restauration n’est possible ensuite.',
-  libelleRenoncer: 'Renoncer à la suppression',
-  libelleConfirmer: 'Supprimer la note',
-  libelleSupprimer: 'Supprimer',
-  libelleEnvoiEnCours: 'Suppression en cours',
-  messageDejaAbsente:
-    'Cette note n’est plus sur le serveur : elle avait peut-être déjà été supprimée.',
-  incertainSansReponse:
-    'Aucune réponse du serveur : la note a peut-être été supprimée. Actualisez les notes pour vérifier avant de réessayer.',
-  incertainReponseInexploitable:
-    'La réponse du serveur est inexploitable : la note a peut-être été supprimée. Actualisez les notes pour vérifier avant de réessayer.',
-  libelleVerifier: 'Actualiser les notes',
-  libelleReessayer: 'Réessayer la suppression',
-} as const;
+import type { Traduire } from '@/hooks/use-traduction';
+
+export type TextesSuppressionNote = {
+  titreConfirmation: string;
+  avertissementSansAnnulation: string;
+  libelleRenoncer: string;
+  libelleConfirmer: string;
+  libelleSupprimer: string;
+  libelleEnvoiEnCours: string;
+  messageDejaAbsente: string;
+  incertainSansReponse: string;
+  incertainReponseInexploitable: string;
+  libelleVerifier: string;
+  libelleReessayer: string;
+};
+
+export const creerTextesSuppressionNote = (t: Traduire): TextesSuppressionNote => ({
+  titreConfirmation: t('suppressionNote.titreConfirmation'),
+  avertissementSansAnnulation: t('suppressionNote.avertissementSansAnnulation'),
+  libelleRenoncer: t('suppressionNote.renoncer'),
+  libelleConfirmer: t('suppressionNote.confirmer'),
+  libelleSupprimer: t('suppressionNote.supprimer'),
+  libelleEnvoiEnCours: t('suppressionNote.envoiEnCours'),
+  messageDejaAbsente: t('suppressionNote.dejaAbsente'),
+  incertainSansReponse: t('suppressionNote.incertainSansReponse'),
+  incertainReponseInexploitable: t('suppressionNote.incertainReponseInexploitable'),
+  libelleVerifier: t('suppressionNote.verifier'),
+  libelleReessayer: t('suppressionNote.reessayer'),
+});

@@ -1,26 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { extraitNote, formaterDateNote, libelleNote } from '../../domain/note-lecture';
-
-const note = {
-  id: '03c36090-9281-40c4-8cf2-4e36c18304c6',
-  livreId: '33575fa9-7968-45b3-8447-ec994a0b8401',
-  contenu: 'Observation ancienne.',
-  createdAt: '2025-01-02T10:30:00',
-};
+import { extraitNote, formaterDateNote } from '../../domain/note-lecture';
 
 describe('note de lecture', () => {
-  it('formate la date et l’heure en français', () => {
-    expect(formaterDateNote('2025-01-02T10:30:00')).toBe('2 janvier 2025 à 10:30');
-  });
-
-  it('identifie une note par sa date et son contenu, la minute ne suffisant pas', () => {
-    expect(libelleNote(note)).toBe('note du 2 janvier 2025 à 10:30 : « Observation ancienne. »');
-  });
-
-  it('distingue deux notes de la même minute', () => {
-    const autre = { ...note, id: 'autre', contenu: 'Observation récente.' };
-
-    expect(libelleNote(note)).not.toBe(libelleNote(autre));
+  it('formate la date et l’heure selon la locale demandée', () => {
+    expect(formaterDateNote('2025-01-02T10:30:00', 'fr-FR')).toBe('2 janvier 2025 à 10:30');
+    expect(formaterDateNote('2025-01-02T10:30:00', 'en-US')).toBe('January 2, 2025 at 10:30 AM');
   });
 });
 

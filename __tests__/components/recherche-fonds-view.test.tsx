@@ -24,6 +24,7 @@ describe('recherche présentée dans le fonds', () => {
       <FondsView
         ajouterOuvrage={vi.fn()}
         etat={etatVide}
+        ouvrirPreferences={vi.fn()}
         recherche={{ valeurAppliquee: 'inconnu', appliquer: vi.fn() }}
       />,
     );
@@ -61,6 +62,7 @@ describe('recherche présentée dans le fonds', () => {
           },
           erreurActualisation: { message: 'Lecture impossible.', reessayer },
         }}
+        ouvrirPreferences={vi.fn()}
       />,
     );
 

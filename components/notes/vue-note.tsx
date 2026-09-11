@@ -1,6 +1,9 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { formaterDateNote, libelleNote, type NoteLecture } from '@/domain/note-lecture';
-import { theme } from '@/theme/tokens';
+import { extraitNote, formaterDateNote, type NoteLecture } from '@/domain/note-lecture';
+import { useFormats } from '@/hooks/use-formats';
+import { useStylesTheme } from '@/hooks/use-theme';
+import { useTraduction } from '@/hooks/use-traduction';
+import type { Theme } from '@/theme/tokens';
 import { type AvisSuppressionNote, VueAvisSuppressionNote } from './avis-suppression-note';
 
 type ActionSuppressionNote = {
@@ -17,15 +20,20 @@ type VueNoteProps = {
 };
 
 export const VueNote = ({ note, suppression }: VueNoteProps) => {
+  const t = useTraduction();
+  const { locale } = useFormats();
+  const styles = useStylesTheme(creerStyles);
   const { enEnvoi, avis } = suppression;
+  const date = formaterDateNote(note.createdAt, locale);
+  const libelle = t('notes.libelle', { date, extrait: extraitNote(note.contenu) });
 
   return (
     <View role="listitem" style={styles.note}>
       <Text style={styles.contenu}>{note.contenu}</Text>
       <View style={styles.pied}>
-        <Text style={styles.date}>{formaterDateNote(note.createdAt)}</Text>
+        <Text style={styles.date}>{date}</Text>
         <Pressable
-          accessibilityLabel={`Supprimer la ${libelleNote(note)}`}
+          accessibilityLabel={t('notes.supprimerCible', { note: libelle })}
           accessibilityRole="button"
           accessibilityState={{ disabled: enEnvoi, busy: enEnvoi }}
           disabled={enEnvoi}
@@ -42,42 +50,43 @@ export const VueNote = ({ note, suppression }: VueNoteProps) => {
   );
 };
 
-const styles = StyleSheet.create({
-  note: {
-    gap: theme.spacing.sm,
-    paddingVertical: theme.spacing.md,
-    borderBottomWidth: theme.borderWidth,
-    borderBottomColor: theme.colors.border,
-  },
-  contenu: {
-    color: theme.colors.text,
-    fontSize: theme.typography.body,
-    lineHeight: theme.typography.bodyLineHeight,
-  },
-  pied: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: theme.spacing.sm,
-  },
-  date: {
-    color: theme.colors.textMuted,
-    fontSize: theme.typography.metadata,
-  },
-  bouton: {
-    minHeight: theme.minTargetSize,
-    justifyContent: 'center',
-    paddingHorizontal: theme.spacing.md,
-    borderWidth: theme.borderWidth,
-    borderColor: theme.colors.dangerText,
-    borderRadius: theme.radius.sm,
-    backgroundColor: theme.colors.surface,
-  },
-  boutonDesactive: { opacity: 0.5 },
-  texteBouton: {
-    color: theme.colors.dangerText,
-    fontSize: theme.typography.body,
-    fontWeight: '700',
-  },
-});
+const creerStyles = (theme: Theme) =>
+  StyleSheet.create({
+    note: {
+      gap: theme.spacing.sm,
+      paddingVertical: theme.spacing.md,
+      borderBottomWidth: theme.borderWidth,
+      borderBottomColor: theme.colors.border,
+    },
+    contenu: {
+      color: theme.colors.text,
+      fontSize: theme.typography.body,
+      lineHeight: theme.typography.bodyLineHeight,
+    },
+    pied: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: theme.spacing.sm,
+    },
+    date: {
+      color: theme.colors.textMuted,
+      fontSize: theme.typography.metadata,
+    },
+    bouton: {
+      minHeight: theme.minTargetSize,
+      justifyContent: 'center',
+      paddingHorizontal: theme.spacing.md,
+      borderWidth: theme.borderWidth,
+      borderColor: theme.colors.dangerText,
+      borderRadius: theme.radius.sm,
+      backgroundColor: theme.colors.surface,
+    },
+    boutonDesactive: { opacity: 0.5 },
+    texteBouton: {
+      color: theme.colors.dangerText,
+      fontSize: theme.typography.body,
+      fontWeight: '700',
+    },
+  });

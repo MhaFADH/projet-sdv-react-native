@@ -28,6 +28,7 @@ const ouvrageNonLu = {
   lu: false,
 };
 
+const creerEntete = () => ({ ajouterOuvrage: vi.fn(), ouvrirPreferences: vi.fn() });
 const creerSelectionVide = () => ({
   identifiants: new Set<string>(),
   basculer: vi.fn(),
@@ -37,7 +38,7 @@ const creerSelectionVide = () => ({
 
 describe('présentation du fonds', () => {
   it('affiche un squelette accessible pendant le chargement', () => {
-    render(<FondsView ajouterOuvrage={vi.fn()} etat={{ type: 'chargement' }} />);
+    render(<FondsView {...creerEntete()} etat={{ type: 'chargement' }} />);
 
     expect(screen.getByRole('progressbar', { name: 'Chargement des ouvrages' })).toBeVisible();
     expect(screen.getAllByTestId('ligne-squelette')).toHaveLength(5);
@@ -47,7 +48,7 @@ describe('présentation du fonds', () => {
     const reessayer = vi.fn();
     render(
       <FondsView
-        ajouterOuvrage={vi.fn()}
+        {...creerEntete()}
         etat={{ type: 'erreur', message: 'Le serveur est injoignable.', reessayer }}
       />,
     );
@@ -62,7 +63,7 @@ describe('présentation du fonds', () => {
   it("explique que le fonds est vide sans proposer d'accès fictif à l'ajout", () => {
     render(
       <FondsView
-        ajouterOuvrage={vi.fn()}
+        {...creerEntete()}
         etat={{
           type: 'succes',
           page: { items: [], page: 1, limit: 20, total: 0, totalPages: 1 },
@@ -83,7 +84,7 @@ describe('présentation du fonds', () => {
   it("ne confond pas une page devenue vide avec l'ensemble du fonds", () => {
     render(
       <FondsView
-        ajouterOuvrage={vi.fn()}
+        {...creerEntete()}
         etat={{
           type: 'succes',
           page: { items: [], page: 2, limit: 20, total: 20, totalPages: 1 },
@@ -104,7 +105,7 @@ describe('présentation du fonds', () => {
   it('distingue le masquage temporaire d’une page serveur disparue', () => {
     render(
       <FondsView
-        ajouterOuvrage={vi.fn()}
+        {...creerEntete()}
         etat={{
           type: 'succes',
           page: { items: [], page: 1, limit: 20, total: 40, totalPages: 2 },
@@ -129,7 +130,7 @@ describe('présentation du fonds', () => {
     const pageSuivante = vi.fn();
     render(
       <FondsView
-        ajouterOuvrage={vi.fn()}
+        {...creerEntete()}
         etat={{
           type: 'succes',
           page: {
@@ -170,7 +171,7 @@ describe('présentation du fonds', () => {
   it('empêche de dépasser la dernière page serveur', () => {
     render(
       <FondsView
-        ajouterOuvrage={vi.fn()}
+        {...creerEntete()}
         etat={{
           type: 'succes',
           page: { items: [ouvrageLu], page: 2, limit: 20, total: 40, totalPages: 2 },
@@ -191,7 +192,7 @@ describe('présentation du fonds', () => {
     const ouvrirOuvrage = vi.fn();
     render(
       <FondsView
-        ajouterOuvrage={vi.fn()}
+        {...creerEntete()}
         etat={{
           type: 'succes',
           page: {
@@ -225,6 +226,7 @@ describe('présentation du fonds', () => {
     const ajouterOuvrage = vi.fn();
     render(
       <FondsView
+        {...creerEntete()}
         ajouterOuvrage={ajouterOuvrage}
         etat={{
           type: 'succes',

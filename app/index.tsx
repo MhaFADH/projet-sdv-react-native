@@ -14,10 +14,12 @@ import {
 import { lireNumeroPage } from '@/domain/ouvrage';
 import { FondsScreen } from '@/features/books/fonds-screen';
 import { useRafraichirFondsAuFocus } from '@/hooks/use-rafraichir-fonds-au-focus';
-import { theme } from '@/theme/tokens';
+import { useStylesTheme } from '@/hooks/use-theme';
+import type { Theme } from '@/theme/tokens';
 
 const FondsRoute = () => {
   const router = useRouter();
+  const styles = useStylesTheme(creerStyles);
   const parametres = useLocalSearchParams<{
     page?: string;
     q?: string;
@@ -67,6 +69,7 @@ const FondsRoute = () => {
     [consultationDemandee, pageDemandee, router],
   );
   const ajouterOuvrage = useCallback(() => router.push('/ouvrages/nouveau'), [router]);
+  const ouvrirPreferences = useCallback(() => router.push('/preferences'), [router]);
 
   return (
     <SafeAreaView edges={['top', 'bottom']} style={styles.page}>
@@ -76,17 +79,19 @@ const FondsRoute = () => {
         changerPage={changerPage}
         consultationDemandee={consultationDemandee}
         ouvrirOuvrage={ouvrirOuvrage}
+        ouvrirPreferences={ouvrirPreferences}
         pageDemandee={pageDemandee}
       />
     </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
-  page: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-});
+const creerStyles = (theme: Theme) =>
+  StyleSheet.create({
+    page: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+  });
 
 export default FondsRoute;

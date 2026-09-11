@@ -690,3 +690,88 @@ Réalisée avec Chrome piloté par le protocole MCP, contre `npx expo start --we
 
 Le détail, les conditions, les valeurs observées, les contrôles automatisés et les limites non vérifiées sont consignés dans [`docs/RECETTE-LOT-2.md`](docs/RECETTE-LOT-2.md). Les données jetables ont été nettoyées et tous les serveurs et outils temporaires ont été arrêtés.
 
+
+## Intervention — issue #33
+
+- Outil : Claude Code.
+- Fournisseur : Anthropic.
+- Modèle : `claude-opus-5[1m]`.
+- Périmètre : issue GitHub #33, préférences globales d’apparence et de langue.
+
+### Demandes reçues
+
+1. `/mattpocock-skills:implement https://github.com/MhaFADH/projet-sdv-react-native/issues/33 tu as accès au CLI GitHub pour lire le contenu du ticket. Attention, pour l'implémentation des langues veilles à utiliser du i18n.`
+2. Réponse à une question de cadrage : dépendances `i18next`, `react-i18next` et `@react-native-async-storage/async-storage`.
+3. Réponse à une question de cadrage : migrer aussi l’écran Fonds, et pas seulement l’écran Préférences et son accès.
+
+### Actions réalisées avec l’IA
+
+- lecture du ticket #33 et de sa spécification parente #32 avec GitHub CLI, puis de l’architecture, des conventions du dépôt et du code existant du fonds ;
+- deux questions de cadrage posées avant implémentation, sur les dépendances et sur le périmètre de migration ;
+- installation de `i18next@^26.4.2`, `react-i18next@^17.0.13` et `@react-native-async-storage/async-storage@2.2.0` par `npx expo install` ;
+- ajout de `domain/preferences.ts` avec ses tests, validation Zod des valeurs stockées, locales `fr-FR` et `en-US` et calcul de l’apparence effective ;
+- ajout du stockage multiplateforme `services/plateforme/stockage-preferences.ts` et de son implémentation `.web.ts`, avec test du chemin navigateur ;
+- ajout de `services/i18n/` avec les dictionnaires `fr` et `en` et le typage des clés par déclaration de module i18next ;
+- ajout de `features/preferences/` — provider, contexte de thème et contexte de préférences — et des hooks `use-preferences`, `use-theme`, `use-traduction` et `use-formats` ;
+- déclinaison des couleurs en palettes claire et sombre dans `theme/palettes.ts`, `theme/tokens.ts` exposant désormais `creerTheme` ;
+- ajout de l’écran Préférences, de sa vue pure, de son groupe de choix accessible et de la route `app/preferences.tsx` ;
+- migration de l’en-tête et de l’arbre de composants du fonds vers l’internationalisation et le thème dynamique, avec l’accès aux préférences dans l’en-tête ;
+- ajout de douze tests de parcours couvrant valeurs initiales, bascule à chaud, persistance, restauration, valeurs invalides, suivi du système, accès depuis l’en-tête, accessibilité des contrôles et formats de nombres.
+
+### Défauts constatés et corrections réelles
+
+- Les premières traductions françaises employaient l’apostrophe typographique là où le code existant utilisait l’apostrophe droite, et ajoutaient des points de suspension au libellé accessible du chargement de page. Trois tests existants ont échoué ; les chaînes ont été alignées sur l’existant et le libellé accessible séparé du texte affiché.
+- La migration de `ligne-ouvrage.tsx` a rendu `libelleEdition` inutilisé dans `domain/ouvrage.ts`. `knip` l’a signalé ; la fonction orpheline créée par ce changement a été supprimée.
+- L’ajout d’une prop dans `__tests__/components/fonds-view.test.tsx` a porté le fichier à 262 lignes, au-delà de la limite de 250 appliquée par Biome. Les props communes ont été factorisées dans un utilitaire local.
+- Une première version du provider appelait la persistance depuis la fonction de mise à jour d’état, ce qui produisait un effet de bord dans un `setState`. Le calcul du choix suivant a été sorti de l’updater.
+
+### Corrections issues des revues Standards et Spec
+
+- `components/books/fonds-view.tsx` atteignait 281 lignes après la migration, au-delà de la limite de 250 d’AGENTS.md que Biome ne mesure pas de la même façon. Les états du fonds ont été extraits dans `components/books/contenu-fonds.tsx`.
+- `services/plateforme/stockage-preferences.ts` transformait une lecture en échec en « aucune préférence » par un `catch` silencieux, interdit par AGENTS.md. Les deux implémentations sont désormais `async` et symétriques : elles propagent l’échec.
+- L’implémentation web appelait `setItem` de façon synchrone dans une fonction déclarée `Promise<void>` : en navigation privée ou sur quota dépassé, l’exception échappait au gestionnaire de rejet et l’alerte d’échec ne pouvait jamais s’afficher. Le passage en `async` rend ces échecs observables, et deux tests couvrent désormais la lecture et l’écriture indisponibles.
+- Le provider écrivait les deux préférences à chaque choix : un thème choisi avant la fin de la restauration réécrivait la langue initiale par-dessus une langue enregistrée. Seule la clé modifiée est maintenant écrite, et la restauration ne repeuple que les préférences non encore choisies explicitement.
+- Le critère « focus visible » n’était pas couvert : un token `focus` a été ajouté aux deux palettes, appliqué aux options de choix et aux boutons de l’écran, avec un test.
+- `NavigationThemee` a été renommé `ApplicationThemee` : le nom était fautif et ne décrivait pas ce que le composant compose.
+- Les libellés de thème et de langue passaient par des clés de traduction construites par littéral gabarit, hors du typage déclaré pour i18next. Ils passent désormais par deux tables de correspondance typées.
+
+Restent hors du périmètre de ce ticket, et signalés : `app/+html.tsx` déclare `lang="fr"` en dur, `domain/note-lecture.ts` fige le format de date en `fr-FR`, et l’écran d’erreur global conserve le thème clair — ces trois points concernent des écrans que les tickets suivants doivent migrer.
+
+### Vérification navigateur
+
+Recette menée dans Chrome sur `http://localhost:8081` avec l’API v2 locale peuplée de 495 ouvrages :
+
+- l’en-tête du fonds expose « Préférences » et ouvre `/preferences` ;
+- les valeurs initiales observées sont « Système » et « Français » ;
+- le passage en « Sombre » puis en « Anglais » s’applique immédiatement sur l’écran Préférences, sans rechargement ;
+- le retour au fonds montre l’en-tête, la recherche, la barre de critères, les lignes, les statuts et la pagination en anglais et en thème sombre ;
+- les titres, auteurs et éditeurs restent inchangés par la bascule de langue ;
+- après rechargement complet de la page, le thème sombre et l’anglais sont restaurés ;
+- la pagination affiche « Page 1 of 25 · 495 books », les années d’édition restant sans séparateur ;
+- aucune erreur ni avertissement n’apparaît dans la console ;
+- après les corrections des revues, le parcours a été rejoué : la bascule en thème sombre reste immédiate, l’option qui reçoit le focus porte un contour visible et la console reste vide.
+
+Les préférences ont ensuite été remises à « Système » et « Français », et l’onglet fermé.
+
+### Demande de correction reçue après les revues
+
+« La fiche d'un ouvrage ne prend pas en considération le thème ni même la langue pour les traductions. C'est pareil pour la page d'édition et d'ajout d'un ouvrage. »
+
+La migration a donc été étendue à la fiche, à l'ajout et à la correction d'un ouvrage, ainsi qu'aux notes de lecture qu'ils contiennent :
+
+- les vingt-quatre composants restants passent du thème statique à `useStylesTheme`, plus aucun fichier n'importe la constante `theme` hors de l'`ErrorBoundary` racine ;
+- les dictionnaires `fr` et `en` sont découpés par domaine sous `services/i18n/traductions/<langue>/` pour rester sous la limite de 250 lignes ;
+- les constantes `TEXTES_CREATION`, `TEXTES_CORRECTION`, `TEXTES_NOTE` et `TEXTES_SUPPRESSION_NOTE` deviennent des fabriques `creerTextes*(t)` ; les fonctions pures d'interprétation reçoivent ces textes en paramètre ;
+- `saisieOuvrageSchema` et `saisieNoteSchema` deviennent `creerSaisieOuvrageSchema` et `creerSaisieNoteSchema`, qui reçoivent leurs messages : le domaine reste sans dépendance à l'internationalisation ;
+- `formaterDateNote` reçoit sa locale au lieu de figer `fr-FR` ; `libelleNote`, `libelleEditeur` et `libelleStatutLecture`, rendus orphelins par ces changements, ont été supprimés ;
+- les messages de repli du client HTTP et des erreurs de validation de réponse passent par `traduire`, l'instance i18next hors React.
+
+Un message renvoyé par l'API reste affiché tel quel : c'est une donnée du serveur et non une chaîne d'interface. Un message d'erreur déjà rendu garde la langue active au moment de sa production jusqu'à la requête suivante.
+
+Défauts constatés pendant cette extension :
+
+- un script de migration automatique a mal converti `components/notes/vue-liste-notes.tsx` en insérant un appel de hook dans une fonction de rappel `map` ; le fichier a été restauré depuis Git et migré à la main ;
+- une seconde version de ce script, écrite comme `open(chemin, 'w').write(transformer(open(chemin).read()))`, a vidé `components/confirmation-abandon.tsx` : Python ouvre le fichier en écriture — donc le tronque — avant d'évaluer la lecture. Le fichier a été restauré depuis Git et réécrit ;
+- trois libellés traduits s'écartaient des chaînes d'origine sans raison (`Confirmation de suppression de note`, deux messages de validation de note) ; les tests existants l'ont signalé et le texte d'origine a été rétabli.
+
+Recette navigateur de cette extension, en thème sombre et en anglais : le formulaire d'ajout, la fiche avec ses bascules et sa section de notes, et l'écran de correction s'affichent entièrement traduits et thémés ; un titre vidé produit « The title is required. » ; les titres, auteurs et éditeurs restent inchangés ; l'avertissement de départ du navigateur fonctionne toujours sur une saisie modifiée ; la console reste vide. Les préférences ont été remises à « Système » et « Français ».

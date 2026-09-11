@@ -35,6 +35,7 @@ const rendreLesDeuxVues = (consultation: ConsultationFonds = CONSULTATION_FONDS_
         changerPage={vi.fn()}
         consultationDemandee={consultation}
         ouvrirOuvrage={vi.fn()}
+        ouvrirPreferences={vi.fn()}
         pageDemandee={1}
       />
       <FicheScreen corriger={vi.fn()} id={belAmi.id} retour={vi.fn()} />

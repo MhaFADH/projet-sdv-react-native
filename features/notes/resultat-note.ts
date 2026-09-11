@@ -1,7 +1,7 @@
 import { type ChampSaisieNote, repartirRefusNote } from '@/domain/saisie-note';
 import type { ErreurApplication } from '@/services/api/erreurs';
 import { classerEchecEcriture } from '@/services/api/issue-ecriture';
-import { TEXTES_NOTE } from './textes-note';
+import type { TextesNote } from './textes-note';
 
 export type ResultatAjoutNote =
   | { type: 'refus'; parChamp: Partial<Record<ChampSaisieNote, string>>; message?: string }
@@ -22,10 +22,13 @@ const interpreterRefus = (
   };
 };
 
-export const interpreterEchecAjoutNote = (cause: unknown): ResultatAjoutNote => {
+export const interpreterEchecAjoutNote = (
+  cause: unknown,
+  textes: TextesNote,
+): ResultatAjoutNote => {
   const classe = classerEchecEcriture(cause, {
-    sansReponse: TEXTES_NOTE.incertainSansReponse,
-    reponseInexploitable: TEXTES_NOTE.incertainReponseInexploitable,
+    sansReponse: textes.incertainSansReponse,
+    reponseInexploitable: textes.incertainReponseInexploitable,
   });
 
   if (classe.classe === 'indisponible') {
@@ -38,13 +41,13 @@ export const interpreterEchecAjoutNote = (cause: unknown): ResultatAjoutNote => 
 
   if (classe.erreur.type === 'validation') {
     if (classe.erreur.champs === undefined) {
-      return { type: 'incertain', message: TEXTES_NOTE.incertainReponseInexploitable };
+      return { type: 'incertain', message: textes.incertainReponseInexploitable };
     }
     return interpreterRefus(classe.erreur);
   }
 
   if (classe.erreur.type === 'introuvable') {
-    return { type: 'refus', parChamp: {}, message: TEXTES_NOTE.refusIntrouvable };
+    return { type: 'refus', parChamp: {}, message: textes.refusIntrouvable };
   }
 
   return { type: 'refus', parChamp: {}, message: classe.erreur.message };
