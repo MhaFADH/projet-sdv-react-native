@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { IntentionBascule } from '@/domain/bascule-ouvrage';
 import type { CriteresOuvrages } from '@/domain/criteres-ouvrages';
+import type { IntentionNotation } from '@/domain/notation-ouvrage';
 import {
   ANNEE_PUBLICATION_MINIMALE,
   NOMBRE_ANNEES_FUTURES_AUTORISEES,
@@ -99,6 +100,15 @@ export const patchBasculeOuvrage = async ({
   const resultat = ouvrageSchema.safeParse(corps);
   if (!resultat.success || resultat.data.id !== id) {
     throw creerErreurValidation(traduire('erreursHttp.reponseBascule'));
+  }
+  return resultat.data;
+};
+
+export const patchNotationOuvrage = async ({ id, valeur }: IntentionNotation): Promise<Ouvrage> => {
+  const corps = await clientHttp.patch(`/books/${encodeURIComponent(id)}`, { note: valeur });
+  const resultat = ouvrageSchema.safeParse(corps);
+  if (!resultat.success || resultat.data.id !== id) {
+    throw creerErreurValidation(traduire('erreursHttp.reponseNotation'));
   }
   return resultat.data;
 };

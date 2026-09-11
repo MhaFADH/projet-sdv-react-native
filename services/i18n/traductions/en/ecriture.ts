@@ -68,6 +68,7 @@ export const ecritureEn = {
     reponseOuvrages: 'The server response for the books is invalid.',
     reponseFiche: 'The server response for this record is invalid.',
     reponseBascule: 'The server response after the toggle is invalid.',
+    reponseNotation: 'The server response after rating is invalid.',
     reponseCorrection: 'The server response for the edited book is invalid.',
     reponseNotes: 'The server response for the notes is invalid.',
     reponseNoteAjoutee: 'The server response for the added note is invalid.',

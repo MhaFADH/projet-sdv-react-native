@@ -26,8 +26,8 @@ describe('coordination des bascules d’ouvrage', () => {
 
     act(() => result.current.basculer({ id: ID, champ: 'favori', valeur: true }));
 
-    await waitFor(() => expect(result.current.basculeEnCours(ID)).toBe(true));
-    expect(result.current.appliquerBasculeEnCours(ouvrage).favori).toBe(true);
+    await waitFor(() => expect(result.current.modificationEnCours(ID)).toBe(true));
+    expect(result.current.appliquerModificationEnCours(ouvrage).favori).toBe(true);
     expect(lireOuvrage(client, ID)?.favori).toBe(false);
     expect(fetchMock.mock.calls[0]?.[1]).toMatchObject({
       method: 'PATCH',
@@ -40,7 +40,7 @@ describe('coordination des bascules d’ouvrage', () => {
       ),
     );
 
-    await waitFor(() => expect(result.current.basculeEnCours(ID)).toBe(false));
+    await waitFor(() => expect(result.current.modificationEnCours(ID)).toBe(false));
     expect(lireOuvrage(client, ID)).toMatchObject({ favori: true, version: 4, titre: 'Bel-Ami' });
     expect(client.getQueryData(clesOuvrages.fiche(ID))).toMatchObject({ favori: true, version: 4 });
     expect(client.getQueryState(clesOuvrages.liste(1))?.isInvalidated).toBe(true);
@@ -55,20 +55,20 @@ describe('coordination des bascules d’ouvrage', () => {
     const { client, result } = creerEnvironnement([ouvrage, autreOuvrage]);
 
     act(() => result.current.basculer({ id: ID, champ: 'favori', valeur: true }));
-    await waitFor(() => expect(result.current.basculeEnCours(ID)).toBe(true));
+    await waitFor(() => expect(result.current.modificationEnCours(ID)).toBe(true));
 
     act(() => result.current.basculer({ id: ID, champ: 'lu', valeur: true }));
     act(() => result.current.basculer({ id: ID, champ: 'favori', valeur: false }));
 
     expect(fetchMock).toHaveBeenCalledOnce();
-    expect(result.current.appliquerBasculeEnCours(ouvrage)).toMatchObject({
+    expect(result.current.appliquerModificationEnCours(ouvrage)).toMatchObject({
       favori: true,
       lu: false,
     });
-    expect(result.current.basculeEnCours(AUTRE_ID)).toBe(false);
+    expect(result.current.modificationEnCours(AUTRE_ID)).toBe(false);
 
     act(() => result.current.basculer({ id: AUTRE_ID, champ: 'favori', valeur: true }));
-    await waitFor(() => expect(result.current.basculeEnCours(AUTRE_ID)).toBe(true));
+    await waitFor(() => expect(result.current.modificationEnCours(AUTRE_ID)).toBe(true));
     expect(fetchMock).toHaveBeenCalledTimes(2);
     client.clear();
   });
@@ -89,17 +89,17 @@ describe('coordination des bascules d’ouvrage', () => {
 
     act(() => result.current.basculer({ id: ID, champ: 'favori', valeur: true }));
 
-    await waitFor(() => expect(result.current.erreurBascule(ID)).toBeDefined());
-    expect(result.current.basculeEnCours(ID)).toBe(false);
-    expect(result.current.appliquerBasculeEnCours(ouvrage).favori).toBe(false);
-    expect(result.current.erreurBascule(ID)?.message).toBe(
+    await waitFor(() => expect(result.current.erreurModification(ID)).toBeDefined());
+    expect(result.current.modificationEnCours(ID)).toBe(false);
+    expect(result.current.appliquerModificationEnCours(ouvrage).favori).toBe(false);
+    expect(result.current.erreurModification(ID)?.message).toBe(
       'Le coup de cœur précédent a été restauré. Modification refusée.',
     );
 
-    act(() => result.current.erreurBascule(ID)?.reessayer());
+    act(() => result.current.erreurModification(ID)?.reessayer());
 
     await waitFor(() => expect(lireOuvrage(client, ID)?.favori).toBe(true));
-    expect(result.current.erreurBascule(ID)).toBeUndefined();
+    expect(result.current.erreurModification(ID)).toBeUndefined();
     expect(fetchMock).toHaveBeenCalledTimes(2);
     client.clear();
   });
@@ -138,10 +138,10 @@ describe('coordination des bascules d’ouvrage', () => {
       ),
     );
 
-    await waitFor(() => expect(result.current.erreurBascule(AUTRE_ID)).toBeDefined());
+    await waitFor(() => expect(result.current.erreurModification(AUTRE_ID)).toBeDefined());
     expect(lireOuvrage(client, ID)?.favori).toBe(true);
     expect(lireOuvrage(client, AUTRE_ID)?.favori).toBe(false);
-    expect(result.current.erreurBascule(ID)).toBeUndefined();
+    expect(result.current.erreurModification(ID)).toBeUndefined();
     client.clear();
   });
 });

@@ -1,19 +1,25 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Bouton } from '@/components/bouton';
 import { EtatErreur } from '@/components/etats-donnees';
+import type { ValeurNotation } from '@/domain/notation-ouvrage';
 import type { Ouvrage } from '@/domain/ouvrage';
 import { useStylesTheme } from '@/hooks/use-theme';
 import { useTraduction } from '@/hooks/use-traduction';
+import type { CouvertureResolue } from '@/services/couvertures';
 import type { Theme } from '@/theme/tokens';
 import { AvisEchecBascule, type AvisReessai } from './avis-echec-bascule';
 import { ControleCoupDeCoeur } from './controle-coup-de-coeur';
+import { ControleNotation } from './controle-notation';
 import { ControleStatutLecture } from './controle-statut-lecture';
+import { CouvertureOuvrage } from './couverture-ouvrage';
 
 export type DetailFiche = {
   ouvrage: Ouvrage;
+  couverture: CouvertureResolue;
   corriger: () => void;
   basculerStatut: () => void;
   basculerCoupDeCoeur: () => void;
+  noter: (valeur: ValeurNotation) => void;
   basculeEnCours: boolean;
   erreurBascule?: AvisReessai;
   erreurActualisation?: { titre: string; message: string; reessayer: () => void };
@@ -42,12 +48,18 @@ export const FicheDetail = (detail: DetailFiche) => {
 
   return (
     <View style={styles.carte}>
+      <CouvertureOuvrage couverture={detail.couverture} titre={detail.ouvrage.titre} />
       <Text accessibilityRole="header" style={styles.titre}>
         {detail.ouvrage.titre}
       </Text>
       <Renseignement libelle={t('fiche.auteur')} valeur={detail.ouvrage.auteur} />
       <Renseignement libelle={t('fiche.editeur')} valeur={editeur} />
       <Renseignement libelle={t('fiche.annee')} valeur={String(detail.ouvrage.annee)} />
+      <ControleNotation
+        modificationEnCours={detail.basculeEnCours}
+        noter={detail.noter}
+        ouvrage={detail.ouvrage}
+      />
       <ControleCoupDeCoeur
         basculeEnCours={detail.basculeEnCours}
         basculerCoupDeCoeur={detail.basculerCoupDeCoeur}

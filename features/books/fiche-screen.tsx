@@ -10,8 +10,8 @@ import { useBascules } from '@/hooks/use-bascules';
 import { useBook } from '@/hooks/use-book';
 import { useNotes } from '@/hooks/use-notes';
 import { useSuppressions } from '@/hooks/use-suppressions';
-
-const ABSENCE_PAR_DEFAUT = "Cet ouvrage n'existe pas ou plus.";
+import { useTraduction } from '@/hooks/use-traduction';
+import { resoudreCouverture } from '@/services/couvertures';
 
 type FicheScreenProps = {
   id: string;
@@ -20,6 +20,7 @@ type FicheScreenProps = {
 };
 
 export const FicheScreen = ({ id, retour, corriger }: FicheScreenProps) => {
+  const t = useTraduction();
   const requete = useBook(id);
   const bascules = useBascules();
   const { confirmerSuppressions, estMasque, suppressionDesactivee } = useSuppressions();
@@ -62,7 +63,7 @@ export const FicheScreen = ({ id, retour, corriger }: FicheScreenProps) => {
   );
 
   if (!identifiantValide) {
-    return rendre({ type: 'introuvable', message: ABSENCE_PAR_DEFAUT });
+    return rendre({ type: 'introuvable', message: t('fiche.absenceParDefaut') });
   }
 
   if (ouvrageMasque) return rendre({ type: 'masquee' });
@@ -85,8 +86,8 @@ export const FicheScreen = ({ id, retour, corriger }: FicheScreenProps) => {
     confirmerSuppressions([ouvrageASupprimer]);
     setConfirmationVisible(false);
   };
-  const ouvrageAffiche = bascules.appliquerBasculeEnCours(requete.data);
-  const basculeEnCours = bascules.basculeEnCours(id);
+  const ouvrageAffiche = bascules.appliquerModificationEnCours(requete.data);
+  const modificationEnCours = bascules.modificationEnCours(id);
   const echecActualisation = bascules.erreurActualisation(id);
 
   return (
@@ -94,20 +95,22 @@ export const FicheScreen = ({ id, retour, corriger }: FicheScreenProps) => {
       {rendre({
         type: 'succes',
         ouvrage: ouvrageAffiche,
+        couverture: resoudreCouverture(ouvrageAffiche.couverture, ouvrageAffiche.id),
         basculerStatut: () => bascules.basculer({ id, champ: 'lu', valeur: !ouvrageAffiche.lu }),
         basculerCoupDeCoeur: () =>
           bascules.basculer({ id, champ: 'favori', valeur: !ouvrageAffiche.favori }),
-        basculeEnCours,
-        erreurBascule: bascules.erreurBascule(id),
+        noter: (valeur) => bascules.noter({ id, valeur }),
+        basculeEnCours: modificationEnCours,
+        erreurBascule: bascules.erreurModification(id),
         erreurActualisation: echecActualisation
           ? {
-              titre: 'Actualisation de la fiche impossible',
+              titre: t('fiche.actualisationImpossibleTitre'),
               message: echecActualisation.message,
               reessayer: echecActualisation.reessayer,
             }
-          : requete.isError && !basculeEnCours
+          : requete.isError && !modificationEnCours
             ? {
-                titre: 'Impossible d’actualiser la fiche',
+                titre: t('fiche.actualisationImpossibleTitre'),
                 message: requete.error.message,
                 reessayer: () => void requete.refetch(),
               }
