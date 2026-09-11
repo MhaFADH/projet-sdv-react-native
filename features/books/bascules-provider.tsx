@@ -23,11 +23,15 @@ type IntentionModification = IntentionBascule | (IntentionNotation & { champ: 'n
 type ChampModification = ChampBascule | 'note';
 type EnvoiModification = { intention: IntentionModification; sequence: number };
 type EchecModification = { intention: IntentionModification; erreur: ErreurApplication };
-type EchecActualisation = {
+type ContexteActualisation = {
+  id: string;
   champ: ChampModification;
-  erreur: ErreurApplication;
   ouvrageConfirme: Ouvrage;
   sequence: number;
+};
+type EchecActualisation = {
+  contexte: ContexteActualisation;
+  erreur: ErreurApplication;
 };
 
 type EtatModifications = {
@@ -79,7 +83,7 @@ export const BasculesProvider = ({ children }: PropsWithChildren) => {
   );
 
   const actualiser = useCallback(
-    async (id: string, champ: ChampModification, ouvrageConfirme: Ouvrage, sequence: number) => {
+    async ({ id, champ, ouvrageConfirme, sequence }: ContexteActualisation) => {
       if (dernieresSequences.current[id] !== sequence) return;
       setEtat((courant) => ({
         ...courant,
@@ -102,7 +106,7 @@ export const BasculesProvider = ({ children }: PropsWithChildren) => {
         ...courant,
         echecsActualisation: {
           ...courant.echecsActualisation,
-          [id]: { champ, erreur, ouvrageConfirme, sequence },
+          [id]: { contexte: { id, champ, ouvrageConfirme, sequence }, erreur },
         },
       }));
     },
@@ -113,7 +117,12 @@ export const BasculesProvider = ({ children }: PropsWithChildren) => {
     (ouvrage: Ouvrage, intention: IntentionModification, sequence: number) => {
       conserverDonneesLesPlusRecentes(ouvrage);
       setEtat((courant) => ({ ...courant, envois: sansCle(courant.envois, intention.id) }));
-      void actualiser(intention.id, intention.champ, ouvrage, sequence);
+      void actualiser({
+        id: intention.id,
+        champ: intention.champ,
+        ouvrageConfirme: ouvrage,
+        sequence,
+      });
     },
     [actualiser, conserverDonneesLesPlusRecentes],
   );
@@ -165,8 +174,15 @@ export const BasculesProvider = ({ children }: PropsWithChildren) => {
     [modifier],
   );
 
-  const contexte = useMemo<ContexteBascules>(
-    () => ({
+  const contexte = useMemo<ContexteBascules>(() => {
+    const erreurModification = (id: string) => {
+      const echec = etat.echecs[id];
+      if (!echec) return undefined;
+      return avisEchecBascule(echec.intention.champ, echec.erreur.message, () =>
+        modifier(echec.intention),
+      );
+    };
+    return {
       basculer,
       noter,
       modificationEnCours: (id) => etat.envois[id] !== undefined,
@@ -177,23 +193,20 @@ export const BasculesProvider = ({ children }: PropsWithChildren) => {
           ? appliquerNotation(ouvrage, envoi.intention)
           : appliquerIntention(ouvrage, envoi.intention);
       },
-      erreurModification: (id) => {
-        const echec = etat.echecs[id];
-        if (!echec) return undefined;
-        return avisEchecBascule(echec.intention.champ, echec.erreur.message, () =>
-          modifier(echec.intention),
-        );
-      },
+      erreurModification,
+      erreurBascule: (id) =>
+        etat.echecs[id]?.intention.champ === 'note' ? undefined : erreurModification(id),
       erreurActualisation: (id) => {
         const echec = etat.echecsActualisation[id];
         if (!echec) return undefined;
-        return avisEchecActualisation(echec.champ, echec.erreur.message, () => {
-          void actualiser(id, echec.champ, echec.ouvrageConfirme, echec.sequence);
-        });
+        return avisEchecActualisation(
+          echec.contexte.champ,
+          echec.erreur.message,
+          () => void actualiser(echec.contexte),
+        );
       },
-    }),
-    [actualiser, basculer, etat, modifier, noter],
-  );
+    };
+  }, [actualiser, basculer, etat, modifier, noter]);
 
   return <BasculesContext.Provider value={contexte}>{children}</BasculesContext.Provider>;
 };

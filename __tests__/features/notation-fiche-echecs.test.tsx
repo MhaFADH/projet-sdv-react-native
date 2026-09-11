@@ -18,7 +18,7 @@ describe('reprise d’une notation depuis la fiche', () => {
       if (String(entree).endsWith('/notes')) return Promise.resolve(reponseJson([]));
       if (initialisation?.method === 'PATCH') {
         const nombreEnvois = transport.mock.calls.filter(
-          ([, options]) => options?.method === 'PATCH',
+          ([, initialisation]) => initialisation?.method === 'PATCH',
         ).length;
         return Promise.resolve(
           nombreEnvois === 1

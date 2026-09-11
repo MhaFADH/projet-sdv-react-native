@@ -126,7 +126,7 @@ export const FondsScreen = ({
     basculer: (ouvrage: Ouvrage) =>
       bascules.basculer({ id: ouvrage.id, champ: 'favori', valeur: !ouvrage.favori }),
     enCours: bascules.modificationEnCours,
-    erreur: bascules.erreurModification,
+    erreur: bascules.erreurBascule,
   };
   const ouvragesSelectionnes = pageVisible.items
     .filter(({ id }) => identifiantsSelectionnes.has(id))

@@ -10,6 +10,7 @@ export type ContexteBascules = {
   modificationEnCours: (id: string) => boolean;
   appliquerModificationEnCours: (ouvrage: Ouvrage) => Ouvrage;
   erreurModification: (id: string) => AvisReessai | undefined;
+  erreurBascule: (id: string) => AvisReessai | undefined;
   erreurActualisation: (id: string) => AvisReessai | undefined;
 };
 

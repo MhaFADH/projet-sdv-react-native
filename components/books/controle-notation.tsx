@@ -11,17 +11,84 @@ import type { Theme } from '@/theme/tokens';
 
 const VALEURS_NOTATION = [0, 1, 2, 3, 4, 5] as const satisfies readonly ValeurNotation[];
 
-type ControleNotationProps = {
+type ProprietesControleNotation = {
   ouvrage: Ouvrage;
   noter: (valeur: ValeurNotation) => void;
   modificationEnCours: boolean;
+};
+
+type ProprietesCommandeNotation = {
+  note: ValeurNotation;
+  noteActuelle: number | null;
+  noteFocalisee: number | null;
+  modificationEnCours: boolean;
+  noter: (valeur: ValeurNotation) => void;
+  noterIndex: (index: number) => void;
+  definirReference: (note: ValeurNotation, element: VueNative | null) => void;
+  focaliser: (note: ValeurNotation | null) => void;
+};
+
+const CommandeNotation = ({
+  note,
+  noteActuelle,
+  noteFocalisee,
+  modificationEnCours,
+  noter,
+  noterIndex,
+  definirReference,
+  focaliser,
+}: ProprietesCommandeNotation) => {
+  const t = useTraduction();
+  const styles = useStylesTheme(creerStyles);
+  const selectionnee = noteActuelle === note;
+  const remplie = note > 0 && noteActuelle !== null && note <= noteActuelle;
+  const selectionner = () => noter(note);
+  const libelle = t(note === 0 ? 'fiche.attribuerZero' : 'fiche.attribuerNotation', {
+    count: note,
+  });
+  return (
+    <Pressable
+      {...creerNavigationGroupeRadio({
+        activer: selectionner,
+        precedent: () => noterIndex(note - 1),
+        suivant: () => noterIndex(note + 1),
+        premier: () => noterIndex(0),
+        dernier: () => noterIndex(VALEURS_NOTATION.length - 1),
+      })}
+      accessibilityLabel={libelle}
+      accessibilityRole="radio"
+      accessibilityState={{
+        checked: selectionnee,
+        disabled: modificationEnCours,
+        selected: selectionnee,
+      }}
+      aria-checked={selectionnee}
+      aria-disabled={modificationEnCours}
+      disabled={modificationEnCours}
+      onBlur={() => focaliser(null)}
+      onFocus={() => focaliser(note)}
+      onPress={selectionner}
+      ref={(element) => definirReference(note, element)}
+      style={[
+        styles.bouton,
+        selectionnee && styles.boutonSelectionne,
+        note === noteFocalisee && styles.boutonFocalise,
+        modificationEnCours && styles.boutonDesactive,
+      ]}
+      tabIndex={selectionnee || (noteActuelle === null && note === 0) ? 0 : -1}
+    >
+      <Text selectable={false} style={[styles.etoile, selectionnee && styles.etoileSelectionnee]}>
+        {note === 0 ? '0' : remplie ? '★' : '☆'}
+      </Text>
+    </Pressable>
+  );
 };
 
 export const ControleNotation = ({
   ouvrage,
   noter,
   modificationEnCours,
-}: ControleNotationProps) => {
+}: ProprietesControleNotation) => {
   const t = useTraduction();
   const { nombre } = useFormats();
   const styles = useStylesTheme(creerStyles);
@@ -36,6 +103,9 @@ export const ControleNotation = ({
     noter(VALEURS_NOTATION[indexNormalise]);
     references.current[indexNormalise]?.focus();
   };
+  const definirReference = (note: ValeurNotation, element: VueNative | null) => {
+    references.current[note] = element;
+  };
 
   return (
     <View style={styles.conteneur}>
@@ -48,56 +118,19 @@ export const ControleNotation = ({
         accessibilityRole="radiogroup"
         style={styles.choix}
       >
-        {VALEURS_NOTATION.map((note) => {
-          const selectionnee = ouvrage.note === note;
-          const libelle = t(note === 0 ? 'fiche.attribuerZero' : 'fiche.attribuerNotation', {
-            count: note,
-          });
-          const remplie = note > 0 && ouvrage.note !== null && note <= ouvrage.note;
-          const selectionner = () => noter(note);
-          return (
-            <Pressable
-              {...creerNavigationGroupeRadio({
-                activer: selectionner,
-                precedent: () => noterIndex(note - 1),
-                suivant: () => noterIndex(note + 1),
-                premier: () => noterIndex(0),
-                dernier: () => noterIndex(VALEURS_NOTATION.length - 1),
-              })}
-              accessibilityLabel={libelle}
-              accessibilityRole="radio"
-              accessibilityState={{
-                checked: selectionnee,
-                disabled: modificationEnCours,
-                selected: selectionnee,
-              }}
-              aria-checked={selectionnee}
-              aria-disabled={modificationEnCours}
-              disabled={modificationEnCours}
-              key={note}
-              onBlur={() => setNoteFocalisee(null)}
-              onFocus={() => setNoteFocalisee(note)}
-              onPress={selectionner}
-              ref={(element) => {
-                references.current[note] = element;
-              }}
-              style={[
-                styles.bouton,
-                selectionnee && styles.boutonSelectionne,
-                note === noteFocalisee && styles.boutonFocalise,
-                modificationEnCours && styles.boutonDesactive,
-              ]}
-              tabIndex={selectionnee || (ouvrage.note === null && note === 0) ? 0 : -1}
-            >
-              <Text
-                selectable={false}
-                style={[styles.etoile, selectionnee && styles.etoileSelectionnee]}
-              >
-                {note === 0 ? '0' : remplie ? '★' : '☆'}
-              </Text>
-            </Pressable>
-          );
-        })}
+        {VALEURS_NOTATION.map((note) => (
+          <CommandeNotation
+            definirReference={definirReference}
+            focaliser={setNoteFocalisee}
+            key={note}
+            modificationEnCours={modificationEnCours}
+            note={note}
+            noteActuelle={ouvrage.note}
+            noteFocalisee={noteFocalisee}
+            noter={noter}
+            noterIndex={noterIndex}
+          />
+        ))}
       </View>
     </View>
   );

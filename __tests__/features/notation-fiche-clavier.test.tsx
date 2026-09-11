@@ -11,9 +11,9 @@ describe('navigation clavier de la notation', () => {
     ['End', 5, 'Attribuer 5 étoiles'],
   ] as const)('remplace la note existante avec %s', async (touche, note, libelle) => {
     const initial = { ...ouvrage, note: 2 };
-    const transport = vi.fn<typeof fetch>().mockImplementation((entree, options) => {
+    const transport = vi.fn<typeof fetch>().mockImplementation((entree, initialisation) => {
       if (String(entree).endsWith('/notes')) return Promise.resolve(reponseJson([]));
-      if (options?.method === 'PATCH') return new Promise<Response>(() => undefined);
+      if (initialisation?.method === 'PATCH') return new Promise<Response>(() => undefined);
       return Promise.resolve(reponseJson(initial));
     });
     vi.stubGlobal('fetch', transport);

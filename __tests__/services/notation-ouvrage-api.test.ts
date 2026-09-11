@@ -20,13 +20,13 @@ afterEach(() => vi.unstubAllGlobals());
 
 describe('API de notation d’un ouvrage', () => {
   it('envoie uniquement la notation numérique et conserve la réponse serveur complète', async () => {
-    const fetchMock = vi
+    const transportSimule = vi
       .fn<typeof fetch>()
       .mockResolvedValue(new Response(JSON.stringify(ouvrage), { status: 200 }));
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal('fetch', transportSimule);
 
     await expect(patchNotationOuvrage({ id: ouvrage.id, valeur: 3 })).resolves.toEqual(ouvrage);
-    expect(fetchMock).toHaveBeenCalledWith(
+    expect(transportSimule).toHaveBeenCalledWith(
       `http://localhost:3000/books/${ouvrage.id}`,
       expect.objectContaining({
         method: 'PATCH',
