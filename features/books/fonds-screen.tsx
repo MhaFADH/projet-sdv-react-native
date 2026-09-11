@@ -6,6 +6,7 @@ import { OUVRAGES_PAR_PAGE, type Ouvrage, PAS_DE_PAGE, PREMIERE_PAGE } from '@/d
 import { useBascules } from '@/hooks/use-bascules';
 import { useBooksPage } from '@/hooks/use-books-page';
 import { useSuppressions } from '@/hooks/use-suppressions';
+import { resoudreCouverture } from '@/services/couvertures';
 
 type FondsScreenProps = {
   pageDemandee: number;
@@ -114,6 +115,13 @@ export const FondsScreen = ({
       .filter(({ id }) => !estMasque(id))
       .map(bascules.appliquerBasculeEnCours),
   };
+  const pageIllustree = {
+    ...pageVisible,
+    items: pageVisible.items.map((ouvrage) => ({
+      ouvrage,
+      couverture: resoudreCouverture(ouvrage.couverture, ouvrage.id),
+    })),
+  };
   const coupsDeCoeur = {
     basculer: (ouvrage: Ouvrage) =>
       bascules.basculer({ id: ouvrage.id, champ: 'favori', valeur: !ouvrage.favori }),
@@ -164,7 +172,7 @@ export const FondsScreen = ({
         criteres={criteres}
         etat={{
           type: 'succes',
-          page: pageVisible,
+          page: pageIllustree,
           pagePrecedente,
           pageSuivante,
           ouvrirOuvrage: ouvrirFiche,

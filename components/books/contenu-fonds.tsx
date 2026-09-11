@@ -102,7 +102,9 @@ const FondsRempli = ({
   const t = useTraduction();
   const styles = useStylesTheme(creerStyles);
   const interactionsDesactivees = pageEnChargement !== undefined;
-  const nombreSelectionnes = page.items.filter(({ id }) => selection.identifiants.has(id)).length;
+  const nombreSelectionnes = page.items.filter(({ ouvrage }) =>
+    selection.identifiants.has(ouvrage.id),
+  ).length;
 
   return (
     <>

@@ -1,15 +1,18 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import type { Ouvrage } from '@/domain/ouvrage';
-import { useStylesTheme } from '@/hooks/use-theme';
+import { useFormats } from '@/hooks/use-formats';
+import { useStylesTheme, useTheme } from '@/hooks/use-theme';
 import { useTraduction } from '@/hooks/use-traduction';
-import { creerActivationParEspace } from '@/services/plateforme/activation-clavier';
+import type { CouvertureResolue } from '@/services/couvertures';
 import type { Theme } from '@/theme/tokens';
 import { AvisEchecBascule, type AvisReessai } from './avis-echec-bascule';
 import { BoutonCoupDeCoeur } from './bouton-coup-de-coeur';
-import { StatutLecture } from './statut-lecture';
+import { CarteLigneOuvrage } from './carte-ligne-ouvrage';
+import { CaseSelectionOuvrage } from './case-selection-ouvrage';
 
 export type LigneOuvrageProps = {
   ouvrage: Ouvrage;
+  couverture: CouvertureResolue;
   selectionne: boolean;
   basculerSelection: () => void;
   ouvrirOuvrage: () => void;
@@ -22,6 +25,7 @@ export type LigneOuvrageProps = {
 
 export const LigneOuvrage = ({
   ouvrage,
+  couverture,
   selectionne,
   basculerSelection,
   ouvrirOuvrage,
@@ -32,63 +36,64 @@ export const LigneOuvrage = ({
   erreurBascule,
 }: LigneOuvrageProps) => {
   const t = useTraduction();
+  const { nombre } = useFormats();
+  const theme = useTheme();
+  const { width } = useWindowDimensions();
   const styles = useStylesTheme(creerStyles);
+  const compact = width < theme.layout.compactBreakpoint;
   const statut = t(ouvrage.lu ? 'ouvrage.lu' : 'ouvrage.nonLu');
   const editeur =
     ouvrage.editeur.trim() === '' ? t('ouvrage.editeurNonRenseigne') : ouvrage.editeur;
+  const notation =
+    ouvrage.note === null
+      ? t('ouvrage.sansNotation')
+      : t('ouvrage.notation', { note: nombre(ouvrage.note) });
+  const selection = (
+    <CaseSelectionOuvrage
+      basculer={basculerSelection}
+      desactivee={selectionDesactivee}
+      selectionne={selectionne}
+      titre={ouvrage.titre}
+    />
+  );
+  const carte = (
+    <CarteLigneOuvrage
+      compacte={compact}
+      couverture={couverture}
+      editeur={editeur}
+      notation={notation}
+      ouvertureDesactivee={ouvertureDesactivee}
+      ouvrage={ouvrage}
+      ouvrirOuvrage={ouvrirOuvrage}
+      statut={statut}
+    />
+  );
+  const coupDeCoeur = (
+    <BoutonCoupDeCoeur
+      basculer={basculerCoupDeCoeur}
+      enCours={basculeEnCours}
+      favori={ouvrage.favori}
+      titre={ouvrage.titre}
+    />
+  );
 
   return (
     <View role="listitem" style={styles.element}>
-      <View style={styles.ligne}>
-        <Pressable
-          {...creerActivationParEspace(basculerSelection)}
-          accessibilityLabel={t('ouvrage.selectionner', { titre: ouvrage.titre })}
-          accessibilityRole="checkbox"
-          accessibilityState={{ checked: selectionne, disabled: selectionDesactivee }}
-          aria-checked={selectionne}
-          disabled={selectionDesactivee}
-          onPress={basculerSelection}
-          style={[
-            styles.caseSelection,
-            selectionne && styles.caseSelectionnee,
-            selectionDesactivee && styles.caseSelectionDesactivee,
-          ]}
-        >
-          <Text selectable={false} style={styles.coche}>
-            {selectionne ? '✓' : ''}
-          </Text>
-        </Pressable>
-        <Pressable
-          accessibilityHint={t(
-            ouvertureDesactivee ? 'ouvrage.ouvertureIndisponible' : 'ouvrage.ouvrir',
-          )}
-          accessibilityLabel={t('ouvrage.resume', {
-            titre: ouvrage.titre,
-            auteur: ouvrage.auteur,
-            statut,
-          })}
-          accessibilityRole="button"
-          accessibilityState={{ disabled: ouvertureDesactivee }}
-          disabled={ouvertureDesactivee}
-          onPress={ouvrirOuvrage}
-          style={[styles.carte, ouvertureDesactivee && styles.carteDesactivee]}
-        >
-          <View style={styles.description}>
-            <Text style={styles.titre}>{ouvrage.titre}</Text>
-            <Text style={styles.auteur}>{ouvrage.auteur}</Text>
-            <Text style={styles.edition}>
-              {t('ouvrage.edition', { editeur, annee: ouvrage.annee })}
-            </Text>
+      {compact ? (
+        <View style={styles.ligneCompacte}>
+          {carte}
+          <View style={styles.commandesCompactes}>
+            {selection}
+            {coupDeCoeur}
           </View>
-          <StatutLecture lu={ouvrage.lu} />
-        </Pressable>
-        <BoutonCoupDeCoeur
-          basculer={basculerCoupDeCoeur}
-          enCours={basculeEnCours}
-          favori={ouvrage.favori}
-          titre={ouvrage.titre}
-        />
-      </View>
+        </View>
+      ) : (
+        <View style={styles.ligne}>
+          {selection}
+          {carte}
+          {coupDeCoeur}
+        </View>
+      )}
       {erreurBascule ? (
         <AvisEchecBascule
           libelleReessai={`${erreurBascule.libelleReessai} : ${ouvrage.titre}`}
@@ -110,64 +115,13 @@ const creerStyles = (theme: Theme) =>
       alignItems: 'center',
       gap: theme.spacing.sm,
     },
-    caseSelection: {
-      width: theme.minTargetSize,
-      minWidth: theme.minTargetSize,
-      minHeight: theme.minTargetSize,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: theme.borderWidth,
-      borderColor: theme.colors.border,
-      borderRadius: theme.radius.sm,
-      backgroundColor: theme.colors.surface,
+    ligneCompacte: {
+      alignItems: 'stretch',
+      gap: theme.spacing.sm,
     },
-    caseSelectionnee: {
-      borderColor: theme.colors.primary,
-      backgroundColor: theme.colors.primary,
-    },
-    caseSelectionDesactivee: {
-      opacity: 0.5,
-    },
-    coche: {
-      color: theme.colors.primaryText,
-      fontSize: theme.typography.body,
-      fontWeight: '700',
-    },
-    carte: {
-      minHeight: theme.layout.cardMinHeight,
-      flex: 1,
+    commandesCompactes: {
+      width: '100%',
       flexDirection: 'row',
-      flexWrap: 'wrap',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: theme.spacing.md,
-      padding: theme.spacing.md,
-      borderWidth: theme.borderWidth,
-      borderColor: theme.colors.border,
-      borderRadius: theme.radius.md,
-      backgroundColor: theme.colors.surface,
-    },
-    carteDesactivee: {
-      opacity: 0.5,
-    },
-    description: {
-      flexGrow: 1,
-      flexShrink: 1,
-      minWidth: theme.layout.cardTextMinWidth,
-      gap: theme.spacing.xs,
-    },
-    titre: {
-      color: theme.colors.text,
-      fontSize: theme.typography.itemTitle,
-      fontWeight: '700',
-    },
-    auteur: {
-      color: theme.colors.text,
-      fontSize: theme.typography.body,
-      fontWeight: '600',
-    },
-    edition: {
-      color: theme.colors.textMuted,
-      fontSize: theme.typography.metadata,
+      gap: theme.spacing.sm,
     },
   });

@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { FondsView } from '../../components/books/fonds-view';
-import { creerCoupsDeCoeurInertes } from './outils-fonds';
+import { creerCoupsDeCoeurInertes, illustrerOuvrage } from './outils-fonds';
 
 const ouvrageLu = {
   id: '33575fa9-7968-45b3-8447-ec994a0b8401',
@@ -35,6 +35,14 @@ const creerSelectionVide = () => ({
   demanderSuppression: vi.fn(),
   suppressionDesactivee: false,
 });
+const creerEtatSucces = () => ({
+  type: 'succes' as const,
+  pagePrecedente: vi.fn(),
+  pageSuivante: vi.fn(),
+  ouvrirOuvrage: vi.fn(),
+  coupsDeCoeur: creerCoupsDeCoeurInertes(),
+  selection: creerSelectionVide(),
+});
 
 describe('présentation du fonds', () => {
   it('affiche un squelette accessible pendant le chargement', () => {
@@ -65,13 +73,8 @@ describe('présentation du fonds', () => {
       <FondsView
         {...creerEntete()}
         etat={{
-          type: 'succes',
+          ...creerEtatSucces(),
           page: { items: [], page: 1, limit: 20, total: 0, totalPages: 1 },
-          pagePrecedente: vi.fn(),
-          pageSuivante: vi.fn(),
-          ouvrirOuvrage: vi.fn(),
-          coupsDeCoeur: creerCoupsDeCoeurInertes(),
-          selection: creerSelectionVide(),
         }}
       />,
     );
@@ -86,13 +89,8 @@ describe('présentation du fonds', () => {
       <FondsView
         {...creerEntete()}
         etat={{
-          type: 'succes',
+          ...creerEtatSucces(),
           page: { items: [], page: 2, limit: 20, total: 20, totalPages: 1 },
-          pagePrecedente: vi.fn(),
-          pageSuivante: vi.fn(),
-          ouvrirOuvrage: vi.fn(),
-          coupsDeCoeur: creerCoupsDeCoeurInertes(),
-          selection: creerSelectionVide(),
         }}
       />,
     );
@@ -107,13 +105,8 @@ describe('présentation du fonds', () => {
       <FondsView
         {...creerEntete()}
         etat={{
-          type: 'succes',
+          ...creerEtatSucces(),
           page: { items: [], page: 1, limit: 20, total: 40, totalPages: 2 },
-          pagePrecedente: vi.fn(),
-          pageSuivante: vi.fn(),
-          ouvrirOuvrage: vi.fn(),
-          coupsDeCoeur: creerCoupsDeCoeurInertes(),
-          selection: creerSelectionVide(),
           masquageTemporaire: true,
         }}
       />,
@@ -132,19 +125,15 @@ describe('présentation du fonds', () => {
       <FondsView
         {...creerEntete()}
         etat={{
-          type: 'succes',
+          ...creerEtatSucces(),
           page: {
-            items: [ouvrageLu, ouvrageNonLu],
+            items: [illustrerOuvrage(ouvrageLu), illustrerOuvrage(ouvrageNonLu)],
             page: 1,
             limit: 20,
             total: 40,
             totalPages: 2,
           },
-          pagePrecedente: vi.fn(),
           pageSuivante,
-          ouvrirOuvrage: vi.fn(),
-          coupsDeCoeur: creerCoupsDeCoeurInertes(),
-          selection: creerSelectionVide(),
         }}
       />,
     );
@@ -173,13 +162,14 @@ describe('présentation du fonds', () => {
       <FondsView
         {...creerEntete()}
         etat={{
-          type: 'succes',
-          page: { items: [ouvrageLu], page: 2, limit: 20, total: 40, totalPages: 2 },
-          pagePrecedente: vi.fn(),
-          pageSuivante: vi.fn(),
-          ouvrirOuvrage: vi.fn(),
-          coupsDeCoeur: creerCoupsDeCoeurInertes(),
-          selection: creerSelectionVide(),
+          ...creerEtatSucces(),
+          page: {
+            items: [illustrerOuvrage(ouvrageLu)],
+            page: 2,
+            limit: 20,
+            total: 40,
+            totalPages: 2,
+          },
         }}
       />,
     );
@@ -194,19 +184,15 @@ describe('présentation du fonds', () => {
       <FondsView
         {...creerEntete()}
         etat={{
-          type: 'succes',
+          ...creerEtatSucces(),
           page: {
-            items: [ouvrageLu, ouvrageNonLu],
+            items: [illustrerOuvrage(ouvrageLu), illustrerOuvrage(ouvrageNonLu)],
             page: 1,
             limit: 20,
             total: 40,
             totalPages: 2,
           },
-          pagePrecedente: vi.fn(),
-          pageSuivante: vi.fn(),
           ouvrirOuvrage,
-          coupsDeCoeur: creerCoupsDeCoeurInertes(),
-          selection: creerSelectionVide(),
         }}
       />,
     );
@@ -229,13 +215,8 @@ describe('présentation du fonds', () => {
         {...creerEntete()}
         ajouterOuvrage={ajouterOuvrage}
         etat={{
-          type: 'succes',
+          ...creerEtatSucces(),
           page: { items: [], page: 1, limit: 20, total: 0, totalPages: 1 },
-          pagePrecedente: vi.fn(),
-          pageSuivante: vi.fn(),
-          ouvrirOuvrage: vi.fn(),
-          coupsDeCoeur: creerCoupsDeCoeurInertes(),
-          selection: creerSelectionVide(),
         }}
       />,
     );
