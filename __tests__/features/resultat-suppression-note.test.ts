@@ -18,7 +18,7 @@ describe('interprétation d’un échec de suppression de note', () => {
         },
         TEXTES_SUPPRESSION_NOTE,
       ),
-    ).toEqual({ type: 'indisponible', message: 'Service indisponible.' });
+    ).toEqual({ type: 'indisponible', message: TEXTES_SUPPRESSION_NOTE.messageIndisponible });
   });
 
   it.each([
@@ -62,7 +62,7 @@ describe('interprétation d’un échec de suppression de note', () => {
     });
   });
 
-  it('présente un refus concluant avec le message du serveur', () => {
+  it('présente un refus concluant avec un message localisable', () => {
     expect(
       interpreterEchecSuppressionNote(
         {
@@ -72,6 +72,13 @@ describe('interprétation d’un échec de suppression de note', () => {
         },
         TEXTES_SUPPRESSION_NOTE,
       ),
-    ).toEqual({ type: 'echec', message: 'Droits insuffisants.' });
+    ).toEqual({
+      type: 'echec',
+      message: TEXTES_SUPPRESSION_NOTE.messageErreur({
+        type: 'authentification',
+        message: 'Droits insuffisants.',
+        statut: 403,
+      }),
+    });
   });
 });

@@ -16,7 +16,7 @@ export const interpreterEchecSuppressionNote = (
   });
 
   if (classe.classe === 'indisponible') {
-    return { type: 'indisponible', message: classe.message };
+    return { type: 'indisponible', message: textes.messageIndisponible };
   }
 
   if (classe.classe === 'incertain') {
@@ -27,5 +27,5 @@ export const interpreterEchecSuppressionNote = (
     return { type: 'incertain', message: textes.incertainReponseInexploitable };
   }
 
-  return { type: 'echec', message: classe.erreur.message };
+  return { type: 'echec', message: textes.messageErreur(classe.erreur) };
 };

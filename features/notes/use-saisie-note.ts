@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import type { AvisEcriture } from '@/components/messages-ecriture';
 import type { FormulaireNoteViewProps, ToastNote } from '@/components/notes/formulaire-note-view';
@@ -47,26 +47,62 @@ export const useSaisieNote = ({
 }: OptionsSaisieNote): SaisieNoteCoordonnee => {
   const t = useTraduction();
   const textes = creerTextesNote(t);
+  const schemaSaisie = useMemo(() => creerSaisieNoteSchema(creerMessagesSaisieNote(t)), [t]);
   const ajout = useAjouterNote(livreId);
   const temporisation = useTemporisation();
   const succes = useToastSucces<NoteLecture>();
-  const [resultat, setResultat] = useState<ResultatAjoutNote | null>(null);
+  const [causeEchec, setCauseEchec] = useState<{
+    cause: unknown;
+    contenuSoumis: string;
+  } | null>(null);
   const [departEnAttente, setDepartEnAttente] = useState<(() => void) | null>(null);
   const envoiEnCours = useRef(false);
+  const schemaPrecedent = useRef(schemaSaisie);
+  const resultat: ResultatAjoutNote | null =
+    causeEchec === null ? null : interpreterEchecAjoutNote(causeEchec.cause, textes);
 
   const formulaire = useForm<SaisieNote, unknown, NoteSaisie>({
-    resolver: zodResolver(creerSaisieNoteSchema(creerMessagesSaisieNote(t))),
+    resolver: zodResolver(schemaSaisie),
     defaultValues: SAISIE_NOTE_VIDE,
   });
   const contenu = formulaire.watch('contenu');
   const saisieRenseignee = saisieNoteRenseignee(contenu);
+  const erreurServeurContenu =
+    resultat?.type === 'refus' && causeEchec?.contenuSoumis === contenu.trim()
+      ? resultat.parChamp.contenu
+      : undefined;
   useAvertissementDepart(saisieRenseignee);
+
+  useEffect(() => {
+    const messagesModifies = schemaPrecedent.current !== schemaSaisie;
+    schemaPrecedent.current = schemaSaisie;
+    if (!messagesModifies) return;
+    if (!formulaire.formState.isSubmitted) return;
+    const validation = schemaSaisie.safeParse({ contenu });
+    if (!validation.success) {
+      formulaire.setError('contenu', {
+        type: 'validation',
+        message: validation.error.issues[0].message,
+      });
+      return;
+    }
+    if (erreurServeurContenu !== undefined) {
+      formulaire.setError('contenu', { type: 'server', message: erreurServeurContenu });
+      return;
+    }
+    formulaire.clearErrors('contenu');
+  }, [contenu, erreurServeurContenu, formulaire, schemaSaisie]);
+
+  useEffect(() => {
+    if (causeEchec === null || causeEchec.contenuSoumis === contenu.trim()) return;
+    formulaire.clearErrors('contenu');
+  }, [causeEchec, contenu, formulaire]);
 
   const envoyer = formulaire.handleSubmit(async (valeurs) => {
     if (envoiEnCours.current) return;
     envoiEnCours.current = true;
     temporisation.arreter();
-    setResultat(null);
+    setCauseEchec(null);
 
     try {
       const note = await ajout.mutateAsync(valeurs);
@@ -74,7 +110,7 @@ export const useSaisieNote = ({
       succes.annoncer(note);
     } catch (cause) {
       const echec = interpreterEchecAjoutNote(cause, textes);
-      setResultat(echec);
+      setCauseEchec({ cause, contenuSoumis: valeurs.contenu });
       if (echec.type === 'refus' && echec.parChamp.contenu !== undefined) {
         formulaire.setError('contenu', { type: 'server', message: echec.parChamp.contenu });
       }

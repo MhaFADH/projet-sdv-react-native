@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { OuvrageASupprimer } from '@/domain/groupe-suppressions';
+import { useFormats } from '@/hooks/use-formats';
 import { useStylesTheme } from '@/hooks/use-theme';
 import { useTraduction } from '@/hooks/use-traduction';
 import type { Theme } from '@/theme/tokens';
@@ -29,6 +30,7 @@ export const BandeauSuppressions = ({
   reessayer,
 }: BandeauSuppressionsProps) => {
   const t = useTraduction();
+  const { nombre } = useFormats();
   const styles = useStylesTheme(creerStyles);
   if (nombreEnAttente === 0 && echecs.length === 0) return null;
 
@@ -38,8 +40,15 @@ export const BandeauSuppressions = ({
         <View accessibilityLiveRegion="polite" accessibilityRole="alert" style={styles.bandeau}>
           <Text style={styles.titre}>
             {envoi
-              ? t('suppressions.bandeauEnvoi', { count: nombreEnAttente })
-              : t('suppressions.bandeauAttente', { count: nombreEnAttente, secondes })}
+              ? t('suppressions.bandeauEnvoi', {
+                  count: nombreEnAttente,
+                  nombre: nombre(nombreEnAttente),
+                })
+              : t('suppressions.bandeauAttente', {
+                  count: nombreEnAttente,
+                  nombre: nombre(nombreEnAttente),
+                  secondes: nombre(secondes),
+                })}
           </Text>
           <Avertissement />
           {!envoi ? (
@@ -59,7 +68,10 @@ export const BandeauSuppressions = ({
           <Text style={styles.titreErreur}>{t('suppressions.echecsTitre')}</Text>
           <Text style={styles.texteErreur}>{echecs.map(({ titre }) => titre).join(', ')}</Text>
           <Pressable
-            accessibilityLabel={t('suppressions.reessayerEchecs', { count: echecs.length })}
+            accessibilityLabel={t('suppressions.reessayerEchecs', {
+              count: echecs.length,
+              nombre: nombre(echecs.length),
+            })}
             accessibilityRole="button"
             disabled={envoi}
             onPress={reessayer}

@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Bouton } from '@/components/bouton';
 import { EtatErreur } from '@/components/etats-donnees';
+import type { EnrichissementBibliographique } from '@/domain/enrichissement-bibliographique';
 import type { ValeurNotation } from '@/domain/notation-ouvrage';
 import type { Ouvrage } from '@/domain/ouvrage';
 import { useStylesTheme } from '@/hooks/use-theme';
@@ -12,10 +13,12 @@ import { ControleCoupDeCoeur } from './controle-coup-de-coeur';
 import { ControleNotation } from './controle-notation';
 import { ControleStatutLecture } from './controle-statut-lecture';
 import { CouvertureOuvrage } from './couverture-ouvrage';
+import { EnrichissementOpenLibrary } from './enrichissement-openlibrary';
 
 export type DetailFiche = {
   ouvrage: Ouvrage;
   couverture: CouvertureResolue;
+  enrichissement?: EnrichissementBibliographique;
   corriger: () => void;
   basculerStatut: () => void;
   basculerCoupDeCoeur: () => void;
@@ -55,6 +58,7 @@ export const FicheDetail = (detail: DetailFiche) => {
       <Renseignement libelle={t('fiche.auteur')} valeur={detail.ouvrage.auteur} />
       <Renseignement libelle={t('fiche.editeur')} valeur={editeur} />
       <Renseignement libelle={t('fiche.annee')} valeur={String(detail.ouvrage.annee)} />
+      {detail.enrichissement ? <EnrichissementOpenLibrary {...detail.enrichissement} /> : null}
       <ControleNotation
         modificationEnCours={detail.basculeEnCours}
         noter={detail.noter}

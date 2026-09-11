@@ -24,9 +24,9 @@ export type SuppressionNoteCoordonnee = {
 };
 
 const sansResultat = (
-  resultats: Record<string, ResultatSuppressionNote>,
+  resultats: Record<string, { cause: unknown }>,
   noteId: string,
-): Record<string, ResultatSuppressionNote> =>
+): Record<string, { cause: unknown }> =>
   Object.fromEntries(Object.entries(resultats).filter(([id]) => id !== noteId));
 
 export const useSuppressionNote = ({
@@ -39,12 +39,12 @@ export const useSuppressionNote = ({
   const temporisations = useTemporisations();
   const [noteAConfirmer, setNoteAConfirmer] = useState<NoteLecture | null>(null);
   const [envois, setEnvois] = useState<readonly string[]>([]);
-  const [resultats, setResultats] = useState<Record<string, ResultatSuppressionNote>>({});
-  const [messageListe, setMessageListe] = useState<string | null>(null);
+  const [causesEchec, setCausesEchec] = useState<Record<string, { cause: unknown }>>({});
+  const [noteDejaAbsente, setNoteDejaAbsente] = useState(false);
   const enVol = useRef(new Set<string>());
 
   const verifier = () => {
-    setMessageListe(null);
+    setNoteDejaAbsente(false);
     rafraichirNotes();
   };
 
@@ -53,15 +53,15 @@ export const useSuppressionNote = ({
     enVol.current.add(noteId);
     setEnvois((courants) => [...courants, noteId]);
     temporisations.arreter(noteId);
-    setResultats((courants) => sansResultat(courants, noteId));
-    setMessageListe(null);
+    setCausesEchec((courantes) => sansResultat(courantes, noteId));
+    setNoteDejaAbsente(false);
 
     try {
       const issue = await mutation.mutateAsync(noteId);
-      if (issue === 'deja-absente') setMessageListe(textes.messageDejaAbsente);
+      if (issue === 'deja-absente') setNoteDejaAbsente(true);
     } catch (cause) {
       const echec = interpreterEchecSuppressionNote(cause, textes);
-      setResultats((courants) => ({ ...courants, [noteId]: echec }));
+      setCausesEchec((courantes) => ({ ...courantes, [noteId]: { cause } }));
       if (echec.type === 'indisponible') temporisations.demarrer(noteId);
     } finally {
       enVol.current.delete(noteId);
@@ -70,8 +70,9 @@ export const useSuppressionNote = ({
   };
 
   const construireAvis = (noteId: string): AvisSuppressionNote | null => {
-    const resultat = resultats[noteId];
-    if (resultat === undefined) return null;
+    const echec = causesEchec[noteId];
+    if (echec === undefined) return null;
+    const resultat: ResultatSuppressionNote = interpreterEchecSuppressionNote(echec.cause, textes);
 
     return {
       message: resultat.message,
@@ -92,7 +93,7 @@ export const useSuppressionNote = ({
   };
 
   return {
-    messageListe,
+    messageListe: noteDejaAbsente ? textes.messageDejaAbsente : null,
     suppression: {
       libelle: textes.libelleSupprimer,
       libelleEnvoiEnCours: textes.libelleEnvoiEnCours,

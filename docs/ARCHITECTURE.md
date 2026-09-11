@@ -14,9 +14,9 @@ Les dépendances vont de la composition vers le domaine et les services. Le doma
 | `components/`          | Affiche des props sans connaître le réseau ni le cache. Contient notamment les formulaires, les notes de lecture, cases de sélection, confirmations et bandeaux de suppression. Les états de données sont mutualisés dans `components/etats-donnees.tsx`.                                                     |
 | `services/i18n/`       | Initialise i18next avec les dictionnaires `fr` et `en` découpés par domaine, l’espace de traduction unique et la langue initiale française. Expose l’application d’une langue et un `traduire` hors React pour les messages de repli du client HTTP. |
 | `services/api/`        | Construit les requêtes GET, POST, PATCH et DELETE, applique les en-têtes et le délai d’expiration, traduit les erreurs, valide les réponses, porte la politique de réessai et classe ce qu’une écriture échouée permet de conclure (`issue-ecriture.ts`).                                          |
-| `services/`            | Résout les couvertures reçues sous forme de chemin relatif, d’URL absolue ou de valeur absente. Centralise l’URL publique de l’API pour le client HTTP et les médias sans l’exposer aux composants. |
+| `services/`            | Résout les couvertures reçues sous forme de chemin relatif, d’URL absolue ou de valeur absente. Centralise l’URL publique de l’API pour le client HTTP et les médias sans l’exposer aux composants. Adapte aussi la recherche OpenLibrary secondaire avec son propre délai d’expiration et sa validation Zod. |
 | `services/plateforme/` | Expose une interface unique par capacité dépendant de la plateforme, avec une implémentation web et une implémentation par défaut. Porte notamment le stockage des préférences : `localStorage` sur le web, AsyncStorage sur mobile.                                                                                                                                                                |
-| `domain/`              | Définit l’ouvrage, la notation numérique, la note de lecture, l’enveloppe paginée, les schémas de saisie d’un ouvrage et d’une note et les règles pures du groupe de suppressions sans dépendance technique.                                                                                                             |
+| `domain/`              | Définit l’ouvrage, son enrichissement bibliographique, la notation numérique, la note de lecture, l’enveloppe paginée, les schémas de saisie d’un ouvrage et d’une note et les règles pures du groupe de suppressions sans dépendance technique.                                                                                                             |
 | `theme/`               | Centralise espacements, typographie et dimensions accessibles, et décline les couleurs en palette claire et palette sombre. `creerTheme` produit le thème d’une apparence donnée.                                                                                                                                                                                                                          |
 
 ## Parcours de consultation livré
@@ -45,11 +45,19 @@ Une réponse de page ancienne ne remplace pas la page actuellement demandée : 
 6. Un identifiant de route vide n’engage aucune requête et présente directement l’absence. Un `404` devient l’erreur applicative `introuvable`. La fiche présente alors une absence contextualisée, sans chargement infini, sans réessai automatique et sans succès fictif.
 7. Les autres échecs restent des erreurs réseau ou de validation : un seul réessai automatique temporisé, puis une action « Réessayer » visible.
 
+## Enrichissement bibliographique OpenLibrary
+
+Une fiche exploitable transmet son titre inchangé à `useOpenLibrary`. Le hook attend 300 ms, puis interroge `services/openlibrary.ts` sous une clé `['openlibrary', 'recherche', titre]`, séparée des caches BookList. Le service construit une URL dont `title` est l’unique paramètre, applique son propre délai de cinq secondes et valide `numFound` ainsi que l’éventuel `docs[0].first_publish_year` avec Zod.
+
+TanStack Query propage l’annulation au transport lorsqu’un titre n’est plus consulté. La clé par titre et le contrôle du titre actuellement demandé empêchent une réponse ancienne de remplacer l’enrichissement courant. Une donnée reste fraîche cinq minutes et en cache trente minutes ; lorsqu’une actualisation échoue, la dernière donnée exploitable peut donc rester visible.
+
+La section est purement informative : elle affiche le nombre d’éditions, y compris zéro, et la première année uniquement lorsqu’elle existe. Elle utilise le thème et les formats de la langue actifs. Un chargement, une réponse invalide ou une panne sans cache n’affiche aucune section ni erreur globale et ne bloque aucune action de la fiche.
+
 ## Consultation des notes de lecture
 
 Une fois la fiche bibliographique disponible, `useNotes` interroge `GET /books/:id/notes`. Sa clé `['notes', 'ouvrage', id]` isole les notes de chaque ouvrage des fiches et des listes. Le signal d’annulation fourni par TanStack Query traverse `recupererNotes` et le client HTTP commun.
 
-`notes-api.ts` valide le tableau complet et chacun de ses éléments, vérifie que chaque `livreId` correspond à la fiche demandée et conserve l’ordre de la réponse. `construireEtatNotes` traduit la requête en quatre états de présentation pure : squelette, erreur avec réessai, vide contextualisé et liste en succès. Les dates et heures sont formatées en français dans le domaine. Une erreur propre aux notes reste confinée à cette section et ne remplace jamais les données bibliographiques déjà chargées.
+`notes-api.ts` valide le tableau complet et chacun de ses éléments, vérifie que chaque `livreId` correspond à la fiche demandée et conserve l’ordre de la réponse. `construireEtatNotes` traduit la requête en quatre états de présentation pure : squelette, erreur localisée avec réessai, vide contextualisé et liste en succès. Les dates, heures et nombres suivent `fr-FR` ou `en-US` sans modifier le contenu des notes. Une erreur propre aux notes reste confinée à cette section et ne remplace jamais les données bibliographiques déjà chargées.
 
 ## Retour au fonds
 
@@ -186,7 +194,7 @@ Les formats d’affichage suivent la langue active : `useFormats` dérive `fr-FR
 
 Le domaine reste sans dépendance à l’internationalisation : `creerSaisieOuvrageSchema` et `creerSaisieNoteSchema` reçoivent leurs messages de validation, et `formaterDateNote` reçoit sa locale. Les cas d’usage les construisent à partir de `t` (`features/books/messages-saisie.ts`, `features/notes/messages-saisie.ts`), et les textes d’écriture et de notes sont produits par des fabriques `creerTextes*` plutôt que par des constantes figées.
 
-Les messages de repli du client HTTP passent par `traduire`, l’instance i18next hors React. Un message renvoyé par l’API reste affiché tel quel : il constitue une donnée du serveur, pas une chaîne d’interface. Un message d’erreur déjà rendu conserve la langue active au moment où il a été produit jusqu’à la requête suivante.
+Les messages de repli du client HTTP passent par `traduire`, l’instance i18next hors React. Pour les parcours de notes, la feature conserve la cause d’un échec et reconstruit son message dans la langue active sans exposer l’union d’erreurs HTTP aux composants. Les validations, indisponibilités et résultats incertains déjà visibles suivent ainsi une bascule de langue sans réinitialiser le formulaire, la temporisation ou la mutation concernée.
 
 ## Adaptation de plateforme
 

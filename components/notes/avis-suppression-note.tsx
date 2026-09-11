@@ -1,7 +1,9 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { Bouton } from '@/components/bouton';
 import { libelleReessaiTemporise } from '@/components/messages-ecriture';
+import { useFormats } from '@/hooks/use-formats';
 import { useStylesTheme } from '@/hooks/use-theme';
+import { useTraduction } from '@/hooks/use-traduction';
 import type { Theme } from '@/theme/tokens';
 
 export type AvisSuppressionNote = {
@@ -19,6 +21,8 @@ export const VueAvisSuppressionNote = ({
   secondesRestantes,
   verifier,
 }: AvisSuppressionNote) => {
+  const t = useTraduction();
+  const { nombre } = useFormats();
   const styles = useStylesTheme(creerStyles);
 
   return (
@@ -31,7 +35,9 @@ export const VueAvisSuppressionNote = ({
         <Bouton
           action={reessayer}
           desactive={secondesRestantes > 0}
-          libelle={libelleReessaiTemporise(secondesRestantes, libelleReessayer)}
+          libelle={libelleReessaiTemporise(secondesRestantes, libelleReessayer, (secondes) =>
+            t('ecriture.reessaiTemporise', { secondes: nombre(secondes) }),
+          )}
         />
       </View>
     </View>

@@ -1,4 +1,5 @@
 import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { useFormats } from '@/hooks/use-formats';
 import { useStylesTheme } from '@/hooks/use-theme';
 import { useTraduction } from '@/hooks/use-traduction';
 import type { Theme } from '@/theme/tokens';
@@ -29,12 +30,13 @@ export const ChampNote = ({
   erreur,
 }: ChampNoteProps) => {
   const t = useTraduction();
+  const { nombre } = useFormats();
   const styles = useStylesTheme(creerStyles);
   const enErreur = erreur !== undefined;
   const depassement = caracteresUtilises > caracteresMaximum;
   const compteur = t('notes.compteur', {
-    utilises: caracteresUtilises,
-    maximum: caracteresMaximum,
+    utilises: nombre(caracteresUtilises),
+    maximum: nombre(caracteresMaximum),
   });
 
   return (

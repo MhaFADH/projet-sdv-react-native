@@ -47,7 +47,9 @@ describe('échecs d’une suppression de note', () => {
     supprimerPremiereNote();
     await avancer(0);
 
-    expect(screen.getByRole('alert')).toHaveTextContent('Service indisponible.');
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Le service est temporairement indisponible.',
+    );
     expect(screen.getByRole('button', { name: 'Réessayer dans 3 s' })).toBeDisabled();
     expect(screen.getByText(noteExistante.contenu)).toBeVisible();
 
@@ -74,7 +76,7 @@ describe('échecs d’une suppression de note', () => {
 
     supprimerPremiereNote();
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Droits insuffisants.');
+    expect(await screen.findByRole('alert')).toHaveTextContent('Authentification requise.');
     const reprise = screen.getByRole('button', { name: 'Réessayer la suppression' });
     expect(reprise).toBeEnabled();
     expect(screen.getByText(noteExistante.contenu)).toBeVisible();

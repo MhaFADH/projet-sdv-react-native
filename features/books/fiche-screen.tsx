@@ -9,6 +9,7 @@ import { useSuppressionNote } from '@/features/notes/use-suppression-note';
 import { useBascules } from '@/hooks/use-bascules';
 import { useBook } from '@/hooks/use-book';
 import { useNotes } from '@/hooks/use-notes';
+import { useOpenLibrary } from '@/hooks/use-openlibrary';
 import { useSuppressions } from '@/hooks/use-suppressions';
 import { useTraduction } from '@/hooks/use-traduction';
 import { resoudreCouverture } from '@/services/couvertures';
@@ -27,6 +28,7 @@ export const FicheScreen = ({ id, retour, corriger }: FicheScreenProps) => {
   const [confirmationVisible, setConfirmationVisible] = useState(false);
   const identifiantValide = identifiantUtilisable(id);
   const ouvrageMasque = estMasque(id);
+  const enrichissement = useOpenLibrary(ouvrageMasque ? undefined : requete.data?.titre);
   const notesActives = requete.isSuccess && !ouvrageMasque;
   const requeteNotes = useNotes(id, notesActives);
   const causeBlocage: CauseBlocageNote | null = ouvrageMasque
@@ -47,7 +49,7 @@ export const FicheScreen = ({ id, retour, corriger }: FicheScreenProps) => {
         liste={
           notesActives
             ? {
-                etat: construireEtatNotes(requeteNotes),
+                etat: construireEtatNotes(requeteNotes, t),
                 titreOuvrage: requete.data.titre,
                 suppression: suppressionNote.suppression,
                 messageListe: suppressionNote.messageListe,
@@ -96,6 +98,7 @@ export const FicheScreen = ({ id, retour, corriger }: FicheScreenProps) => {
         type: 'succes',
         ouvrage: ouvrageAffiche,
         couverture: resoudreCouverture(ouvrageAffiche.couverture, ouvrageAffiche.id),
+        enrichissement,
         basculerStatut: () => bascules.basculer({ id, champ: 'lu', valeur: !ouvrageAffiche.lu }),
         basculerCoupDeCoeur: () =>
           bascules.basculer({ id, champ: 'favori', valeur: !ouvrageAffiche.favori }),

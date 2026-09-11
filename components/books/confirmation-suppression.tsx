@@ -1,5 +1,6 @@
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { OuvrageASupprimer } from '@/domain/groupe-suppressions';
+import { useFormats } from '@/hooks/use-formats';
 import { useStylesTheme } from '@/hooks/use-theme';
 import { useTraduction } from '@/hooks/use-traduction';
 import type { Theme } from '@/theme/tokens';
@@ -20,6 +21,7 @@ export const ConfirmationSuppression = ({
   desactivee = false,
 }: ConfirmationSuppressionProps) => {
   const t = useTraduction();
+  const { nombre } = useFormats();
   const styles = useStylesTheme(creerStyles);
 
   return (
@@ -34,7 +36,12 @@ export const ConfirmationSuppression = ({
           <Text accessibilityRole="header" style={styles.titre}>
             {t('suppressions.titre')}
           </Text>
-          <Text style={styles.texte}>{t('suppressions.resume', { count: ouvrages.length })}</Text>
+          <Text style={styles.texte}>
+            {t('suppressions.resume', {
+              count: ouvrages.length,
+              nombre: nombre(ouvrages.length),
+            })}
+          </Text>
           <View accessibilityLabel={t('suppressions.liste')} role="list" style={styles.liste}>
             {ouvrages.map((ouvrage) => (
               <Text key={ouvrage.id} role="listitem" style={styles.ouvrage}>

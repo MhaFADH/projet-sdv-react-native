@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useFormats } from '@/hooks/use-formats';
 import { useStylesTheme } from '@/hooks/use-theme';
 import { useTraduction } from '@/hooks/use-traduction';
 import type { Theme } from '@/theme/tokens';
@@ -15,10 +16,14 @@ export const BarreSelectionSuppression = ({
   demanderSuppression,
 }: ProprietesBarreSelectionSuppression) => {
   const t = useTraduction();
+  const { nombre } = useFormats();
   const styles = useStylesTheme(creerStyles);
   if (nombreSelectionnes === 0) return null;
   const desactivee = suppressionDesactivee;
-  const libelle = t('selection.action', { count: nombreSelectionnes });
+  const libelle = t('selection.action', {
+    count: nombreSelectionnes,
+    nombre: nombre(nombreSelectionnes),
+  });
 
   return (
     <View accessibilityLiveRegion="polite" style={styles.barre}>

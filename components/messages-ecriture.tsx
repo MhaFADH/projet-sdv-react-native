@@ -1,7 +1,9 @@
 import type { PropsWithChildren } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Bouton } from '@/components/bouton';
+import { useFormats } from '@/hooks/use-formats';
 import { useStylesTheme } from '@/hooks/use-theme';
+import { useTraduction } from '@/hooks/use-traduction';
 import type { Theme } from '@/theme/tokens';
 
 type AvisIndisponibleProps = {
@@ -32,8 +34,11 @@ export type AvisEcriture =
       reessayer: () => void;
     };
 
-export const libelleReessaiTemporise = (secondesRestantes: number, libelle: string): string =>
-  secondesRestantes > 0 ? `Réessayer dans ${secondesRestantes} s` : libelle;
+export const libelleReessaiTemporise = (
+  secondesRestantes: number,
+  libelle: string,
+  libelleTemporise: (secondes: number) => string,
+): string => (secondesRestantes > 0 ? libelleTemporise(secondesRestantes) : libelle);
 
 const Cadre = ({ children }: PropsWithChildren) => {
   const styles = useStylesTheme(creerStyles);
@@ -56,15 +61,21 @@ const AvisRefus = ({ message }: { message: string }) => {
 };
 
 const AvisIndisponible = ({ message, secondesRestantes, reessayer }: AvisIndisponibleProps) => {
+  const t = useTraduction();
+  const { nombre } = useFormats();
   const styles = useStylesTheme(creerStyles);
 
   return (
     <Cadre>
-      <Text style={styles.message}>{message} Votre saisie est conservée.</Text>
+      <Text style={styles.message}>{t('ecriture.saisieConservee', { message })}</Text>
       <Bouton
         action={reessayer}
         desactive={secondesRestantes > 0}
-        libelle={libelleReessaiTemporise(secondesRestantes, 'Réessayer l’enregistrement')}
+        libelle={libelleReessaiTemporise(
+          secondesRestantes,
+          t('ecriture.reessaiEnregistrement'),
+          (secondes) => t('ecriture.reessaiTemporise', { secondes: nombre(secondes) }),
+        )}
       />
     </Cadre>
   );

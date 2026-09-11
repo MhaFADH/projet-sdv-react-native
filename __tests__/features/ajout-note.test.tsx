@@ -26,12 +26,12 @@ describe('ajout d’une note de lecture', () => {
 
     const champ = champNote();
     expect(champ.tagName).toBe('TEXTAREA');
-    expect(screen.getByText(`0 / ${LONGUEUR_MAXIMALE_NOTE} caractères`)).toBeVisible();
+    expect(screen.getByText('0 / 1 000 caractères')).toBeVisible();
     expect(boutonAjouter()).toHaveStyle({ minHeight: '44px' });
     expect(await screen.findByText('Observation ancienne.')).toBeVisible();
 
     saisirNote('Une observation neuve.');
-    expect(screen.getByText(`22 / ${LONGUEUR_MAXIMALE_NOTE} caractères`)).toBeVisible();
+    expect(screen.getByText('22 / 1 000 caractères')).toBeVisible();
     client.clear();
   });
 
@@ -44,9 +44,7 @@ describe('ajout d’une note de lecture', () => {
     expect(await screen.findByText('Le contenu de la note est obligatoire.')).toBeVisible();
 
     saisirNote('x'.repeat(LONGUEUR_MAXIMALE_NOTE + 1));
-    expect(
-      screen.getByText(`${LONGUEUR_MAXIMALE_NOTE + 1} / ${LONGUEUR_MAXIMALE_NOTE} caractères`),
-    ).toBeVisible();
+    expect(screen.getByText('1 001 / 1 000 caractères')).toBeVisible();
     fireEvent.click(boutonAjouter());
 
     expect(

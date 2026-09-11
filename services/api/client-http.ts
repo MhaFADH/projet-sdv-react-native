@@ -13,22 +13,33 @@ type OptionsRequete = {
   signal?: AbortSignal;
 };
 
+type OptionsRequeteUrl = {
+  delaiExpirationMs: number;
+  signal?: AbortSignal;
+  transport?: TransportHttp;
+};
+
 type OptionsEcriture = {
   signal?: AbortSignal;
 };
 
 type RequeteHttp = {
-  chemin: string;
+  url: string;
   methode: 'GET' | 'POST' | 'PATCH' | 'DELETE';
-  parametres?: Record<string, ParametreRequete>;
   corps?: unknown;
+  delaiExpirationMs?: number;
   signal?: AbortSignal;
+  transport?: TransportHttp;
 };
 
 type ResultatRequete = {
   corps: unknown;
   statut: number;
 };
+
+export type TransportHttp = (url: string, initialisation: RequestInit) => Promise<Response>;
+
+const transportParDefaut: TransportHttp = (url, initialisation) => fetch(url, initialisation);
 
 const lireCorps = async (reponse: Response): Promise<unknown> => {
   const texte = await reponse.text();
@@ -69,34 +80,42 @@ const erreurTransport = (expiree: boolean, annulee: boolean): ErreurApplication 
 };
 
 const executer = async ({
-  chemin,
+  url,
   methode,
-  parametres = {},
   corps,
+  delaiExpirationMs = configuration.delaiExpirationMs,
   signal,
+  transport = transportParDefaut,
 }: RequeteHttp): Promise<ResultatRequete> => {
-  const url = construireUrlApi(chemin, parametres);
   const controleur = new AbortController();
   let expiree = false;
   const annuler = () => controleur.abort(signal?.reason);
 
   if (signal?.aborted) annuler();
   signal?.addEventListener('abort', annuler, { once: true });
-  const expiration = setTimeout(() => {
-    expiree = true;
-    controleur.abort();
-  }, configuration.delaiExpirationMs);
 
-  let reponse: Response;
-  let reponseCorps: unknown;
-  try {
-    reponse = await fetch(url, {
+  const executerTransport = async (): Promise<{ reponse: Response; reponseCorps: unknown }> => {
+    const reponse = await transport(url, {
       method: methode,
       headers: methode === 'GET' || methode === 'DELETE' ? EN_TETES_JSON : EN_TETES_ENVOI_JSON,
       body: corps === undefined ? undefined : JSON.stringify(corps),
       signal: controleur.signal,
     });
-    reponseCorps = await lireCorps(reponse);
+    return { reponse, reponseCorps: await lireCorps(reponse) };
+  };
+
+  let expiration: ReturnType<typeof setTimeout> | undefined;
+  const attenteExpiration = new Promise<never>((_resolve, reject) => {
+    expiration = setTimeout(() => {
+      expiree = true;
+      controleur.abort();
+      reject(new Error('expiration'));
+    }, delaiExpirationMs);
+  });
+
+  let resultat: { reponse: Response; reponseCorps: unknown };
+  try {
+    resultat = await Promise.race([executerTransport(), attenteExpiration]);
   } catch {
     throw erreurTransport(expiree, signal?.aborted ?? false);
   } finally {
@@ -104,32 +123,60 @@ const executer = async ({
     signal?.removeEventListener('abort', annuler);
   }
 
+  const { reponse, reponseCorps } = resultat;
   if (!reponse.ok) throw traduireErreurHttp(reponse.status, reponseCorps);
   return { corps: reponseCorps, statut: reponse.status };
 };
 
 const get = async (chemin: string, options: OptionsRequete = {}): Promise<unknown> =>
-  (await executer({ chemin, methode: 'GET', ...options })).corps;
+  (
+    await executer({
+      url: construireUrlApi(chemin, options.parametres),
+      methode: 'GET',
+      signal: options.signal,
+    })
+  ).corps;
+
+const getUrl = async (url: string, options: OptionsRequeteUrl): Promise<unknown> =>
+  (await executer({ url, methode: 'GET', ...options })).corps;
 
 const post = async (
   chemin: string,
   corps: unknown,
   options: OptionsEcriture = {},
 ): Promise<unknown> =>
-  (await executer({ chemin, methode: 'POST', corps, signal: options.signal })).corps;
+  (
+    await executer({
+      url: construireUrlApi(chemin),
+      methode: 'POST',
+      corps,
+      signal: options.signal,
+    })
+  ).corps;
 
 const patch = async (
   chemin: string,
   corps: unknown,
   options: OptionsEcriture = {},
 ): Promise<unknown> =>
-  (await executer({ chemin, methode: 'PATCH', corps, signal: options.signal })).corps;
+  (
+    await executer({
+      url: construireUrlApi(chemin),
+      methode: 'PATCH',
+      corps,
+      signal: options.signal,
+    })
+  ).corps;
 
 const supprimer = async (chemin: string, options: OptionsEcriture = {}): Promise<void> => {
-  const resultat = await executer({ chemin, methode: 'DELETE', signal: options.signal });
+  const resultat = await executer({
+    url: construireUrlApi(chemin),
+    methode: 'DELETE',
+    signal: options.signal,
+  });
   if (resultat.statut !== 204 || resultat.corps !== undefined) {
     throw creerErreurValidation(traduire('erreursHttp.reponseSuppression'));
   }
 };
 
-export const clientHttp = { get, post, patch, supprimer };
+export const clientHttp = { get, getUrl, post, patch, supprimer };

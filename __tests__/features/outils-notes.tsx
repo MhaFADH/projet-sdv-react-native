@@ -1,12 +1,28 @@
-import { QueryClient } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen } from '@testing-library/react';
+import type { PropsWithChildren } from 'react';
 import { vi } from 'vitest';
 import { extraitNote, formaterDateNote, type NoteLecture } from '../../domain/note-lecture';
+import { BasculesProvider } from '../../features/books/bascules-provider';
 import { FicheScreen } from '../../features/books/fiche-screen';
+import { SuppressionsProvider } from '../../features/books/suppressions-provider';
+import { PreferencesProvider } from '../../features/preferences/preferences-provider';
 import { creerEnveloppeOuvrages } from '../outils-rendu';
 
 export const ID_LIVRE = '33575fa9-7968-45b3-8447-ec994a0b8401';
 export const ID_AUTRE_LIVRE = '33575fa9-7968-45b3-8447-ec994a0b8402';
+
+export const creerEnveloppeNotesAvecPreferences =
+  (client: QueryClient) =>
+  ({ children }: PropsWithChildren) => (
+    <QueryClientProvider client={client}>
+      <PreferencesProvider>
+        <SuppressionsProvider>
+          <BasculesProvider>{children}</BasculesProvider>
+        </SuppressionsProvider>
+      </PreferencesProvider>
+    </QueryClientProvider>
+  );
 
 const ouvrage = {
   id: ID_LIVRE,
@@ -54,6 +70,7 @@ type OptionsTransport = {
   fiche?: (id: string) => Promise<Response>;
   notes?: readonly NoteLecture[];
   suppressionNote?: (noteId: string) => Promise<Response>;
+  suppressionOuvrage?: (livreId: string) => Promise<Response>;
 };
 
 export const creerTransport = ({
@@ -61,6 +78,7 @@ export const creerTransport = ({
   fiche,
   notes: notesInitiales = [noteExistante],
   suppressionNote,
+  suppressionOuvrage,
 }: OptionsTransport = {}) => {
   const notes: NoteLecture[] = [...notesInitiales];
   const compteurs = {
@@ -99,6 +117,7 @@ export const creerTransport = ({
 
     if (methode === 'DELETE') {
       compteurs.suppressionsOuvrages += 1;
+      if (suppressionOuvrage) return suppressionOuvrage(url.slice(url.lastIndexOf('/') + 1));
       return Promise.resolve(new Response(null, { status: 204 }));
     }
 

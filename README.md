@@ -77,7 +77,9 @@ Le délai d’annulation d’une suppression reste fixé à cinq secondes : c’
 - un échec de relecture après un `PATCH` confirmé reste distinct d’un refus : l’écriture acquise n’est jamais annoncée comme annulée et la lecture est réessayable ;
 - validation de la réponse d’écriture, conservation de la version la plus récente face à une relecture obsolète et actualisation ciblée des caches de fiche et de liste ;
 - fiche en squelette, erreur avec réessai, absence contextualisée sur `404` et succès ;
-- consultation de `GET /books/:id/notes` dans un cache distinct par ouvrage, avec validation de chaque note, ordre serveur conservé, date et heure françaises, squelette, vide contextualisé et erreur réessayable sans masquer la bibliographie ;
+- enrichissement secondaire de la fiche par `GET https://openlibrary.org/search.json?title=<titre>` après 300 ms, avec validation Zod, cache dédié par titre, délai d’expiration de cinq secondes, annulation des recherches inutiles et conservation d’une donnée en cache pendant une panne ;
+- nombre d’éditions OpenLibrary et première année du premier résultat affichés lorsqu’ils existent, sans couverture externe ni erreur globale lorsque le service est indisponible ;
+- consultation de `GET /books/:id/notes` dans un cache distinct par ouvrage, avec validation de chaque note, ordre serveur conservé, date et heure selon la langue active, squelette, vide contextualisé et erreur réessayable sans masquer la bibliographie ;
 - ajout d’une note depuis la fiche : champ multiligne, compteur sur 1 000 caractères, validation partagée avec le validateur de l’API, `POST /books/:id/notes` validé à l’exécution, champ et soumission verrouillés pendant l’envoi ;
 - note ajoutée affichée en tête sans invalider les caches d’ouvrages, champ vidé et confirmation par le même toast de cinq secondes que la création d’ouvrage, qui coexiste avec le bandeau de suppression sans en réinitialiser le compteur ;
 - refus `422` reporté sur le champ, `503` réessayable après temporisation, ouvrage disparu (`404`) expliqué sans effacer le texte ;

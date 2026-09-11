@@ -46,7 +46,7 @@ describe('échecs de l’ajout d’une note', () => {
     envoyer();
     await avancer(0);
 
-    expect(screen.getByText('contenu obligatoire, 1000 caracteres maximum')).toBeVisible();
+    expect(screen.getByText('Le contenu de la note est invalide.')).toBeVisible();
     expect(champNote()).toHaveValue(SAISIE);
     expect(champNote()).not.toHaveAttribute('readonly');
     expect(screen.queryByTestId('toast-succes')).not.toBeInTheDocument();

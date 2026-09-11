@@ -1,4 +1,6 @@
 import type { Traduire } from '@/hooks/use-traduction';
+import type { ErreurApplication } from '@/services/api/erreurs';
+import { messageErreurApplication } from './message-erreur-application';
 
 export type TextesSuppressionNote = {
   titreConfirmation: string;
@@ -12,6 +14,8 @@ export type TextesSuppressionNote = {
   incertainReponseInexploitable: string;
   libelleVerifier: string;
   libelleReessayer: string;
+  messageIndisponible: string;
+  messageErreur: (erreur: ErreurApplication) => string;
 };
 
 export const creerTextesSuppressionNote = (t: Traduire): TextesSuppressionNote => ({
@@ -26,4 +30,6 @@ export const creerTextesSuppressionNote = (t: Traduire): TextesSuppressionNote =
   incertainReponseInexploitable: t('suppressionNote.incertainReponseInexploitable'),
   libelleVerifier: t('suppressionNote.verifier'),
   libelleReessayer: t('suppressionNote.reessayer'),
+  messageIndisponible: t('erreursHttp.indisponible'),
+  messageErreur: (erreur) => messageErreurApplication(erreur, t),
 });

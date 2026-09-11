@@ -59,6 +59,7 @@ export const ecritureEn = {
     anneeEntiere: 'The year must be a whole number.',
     anneeBornes: 'The year must be between {{minimum}} and {{maximum}}.',
     noteObligatoire: 'The note content is required.',
+    noteInvalide: 'The note content is invalid.',
     noteLongueurMaximale: 'The note cannot exceed {{maximum}} characters.',
   },
   erreursHttp: {

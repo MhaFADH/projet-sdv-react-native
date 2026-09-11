@@ -60,6 +60,7 @@ export const ecritureFr = {
     anneeEntiere: 'L’année doit être un nombre entier.',
     anneeBornes: 'L’année doit être comprise entre {{minimum}} et {{maximum}}.',
     noteObligatoire: 'Le contenu de la note est obligatoire.',
+    noteInvalide: 'Le contenu de la note est invalide.',
     noteLongueurMaximale: 'La note ne peut pas dépasser {{maximum}} caractères.',
   },
   erreursHttp: {

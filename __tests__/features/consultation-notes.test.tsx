@@ -115,7 +115,9 @@ describe('consultation des notes sur la fiche', () => {
     );
     expect(screen.getByRole('heading', { name: 'Bel-Ami' })).toBeVisible();
     expect(screen.getByText('Guy de Maupassant')).toBeVisible();
-    expect(screen.getByRole('alert')).toHaveTextContent('Notes indisponibles.');
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Le service est temporairement indisponible.',
+    );
     expect(reessayer).toHaveStyle({ minHeight: '44px' });
     fireEvent.click(reessayer);
 

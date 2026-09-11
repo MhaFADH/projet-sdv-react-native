@@ -847,3 +847,42 @@ Le fonds réel a été vérifié dans Chrome avec l’API locale : couvertures f
 - `npm test` et `npm run test:coverage` réussissent avec 69 fichiers et 336 tests ; la couverture globale atteint 93,95 % des instructions et 94,93 % des lignes ;
 - l’export statique Expo web réussit pour les sept routes, dont `/ouvrages/[id]` ;
 - aucune capacité de pilotage de navigateur n’était disponible dans cette session. `expo start --web` a démarré Metro mais n’a pas exposé le port 8082 avant l’arrêt de la tentative ; la recette interactive n’a donc pas été revendiquée.
+
+## Intervention — issues #36 et #38
+
+- Outil : Codex.
+- Fournisseur : OpenAI.
+- Périmètre : enrichissement OpenLibrary de la fiche et adaptation des notes et suppressions aux préférences du lot 3.
+
+### Demande reçue
+
+1. `$implement https://github.com/MhaFADH/projet-sdv-react-native/issues/36 https://github.com/MhaFADH/projet-sdv-react-native/issues/38 en parallele, tu as accès à github cli, ne PR pas sans mon autorisation`
+
+### Actions réalisées avec l’IA
+
+- lecture parallèle des deux tickets, de leur spécification parent, de leurs dépendances, du contrat de l’API voisine et de la documentation officielle de recherche OpenLibrary ;
+- ajout test-first d’un enrichissement par titre seul, validé par Zod, temporisé, annulable et mis en cache par titre exact avec TanStack Query ;
+- affichage localisé du nombre d’éditions et de la première année de publication disponible, sans couverture externe et sans bloquer les actions de la fiche en cas d’échec ;
+- adaptation des états des notes, validations, erreurs, résultats incertains, confirmations et suppressions au thème et à la langue actifs, sans traduire le contenu saisi ;
+- conservation du groupe de suppressions d’ouvrages pendant cinq secondes et maintien de la suppression immédiate indépendante des notes ;
+- ajout de tests de parcours avec un vrai `QueryClient` et un transport simulé pour les deux locales, les deux thèmes, le cache, le délai, l’annulation, les réponses obsolètes et la coexistence des suppressions ;
+- mise à jour du README, de l’architecture et de l’ADR sur l’état serveur, puis double revue parallèle Standards et Spec.
+
+### Défauts constatés et corrections réelles
+
+- La première version OpenLibrary dupliquait `fetch`, l’annulation et le délai hors du client HTTP central et exposait des `Error` ordinaires. Le client commun accepte désormais aussi une URL absolue, un délai explicite et un transport injecté tout en produisant l’union d’erreurs applicatives.
+- La première adaptation des erreurs de consultation faisait dépendre un composant pur des services et des features. La traduction de l’erreur a été replacée dans `features/notes/`, et le composant reçoit une chaîne prête à afficher.
+- Une erreur serveur `422` pouvait être retraduite après modification du texte, donc réapparaître sur une saisie jamais refusée. La cause est liée au contenu soumis et disparaît visuellement dès que ce contenu change.
+- Une première tentative de retraduction revalidait aussi le formulaire après sa remise à zéro réussie et affichait une erreur « obligatoire ». La revalidation est désormais déclenchée uniquement lorsque le schéma traduit change.
+- Les nombres visibles des suppressions étaient injectés bruts dans les traductions. Ils utilisent maintenant le formateur de la locale tout en gardant une valeur numérique distincte pour le pluriel.
+- Les premiers tests de thème ne prouvaient que la couleur du contenu d’une note. Les fonds d’erreur, les confirmations et le résultat incertain sont maintenant vérifiés en clair et en sombre.
+- La contre-revue Standards a relevé que la décision de l’ADR restait bornée aux lots 1 et 2 malgré l’ajout OpenLibrary. Sa portée a été harmonisée avec son statut et son état d’implémentation, aux lots 1 à 3.
+- La couverture lancée en concurrence avec la suite standard a fait échouer une assertion chronométrée ancienne avec une lecture de trop. Relancée seule, la même couverture réussit intégralement.
+
+### Vérification
+
+- `npm run check`, `npm run typecheck` et `npm run knip` réussissent ;
+- `npm test` et `npm run test:coverage` réussissent avec 75 fichiers et 365 tests ; la couverture globale atteint 94,21 % des instructions et 95,27 % des lignes ;
+- l’export Expo web réussit pour les sept routes ;
+- Chrome headless affiche la fiche réelle en thème sombre avec le bloc « Données OpenLibrary », le cas normal « 0 édition référencée », le formulaire d’ajout et la liste des notes ;
+- aucun commit, push ou pull request n’a été effectué.

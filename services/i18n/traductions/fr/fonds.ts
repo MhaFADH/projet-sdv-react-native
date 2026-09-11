@@ -51,8 +51,8 @@ export const fondsFr = {
     effacerLibelle: 'Effacer la recherche',
   },
   selection: {
-    action_one: '{{count}} sélectionné — Supprimer',
-    action_other: '{{count}} sélectionnés — Supprimer',
+    action_one: '{{nombre}} sélectionné — Supprimer',
+    action_other: '{{nombre}} sélectionnés — Supprimer',
   },
   criteres: {
     barre: 'Critères du fonds',

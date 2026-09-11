@@ -18,7 +18,7 @@ describe('interprétation d’un échec d’ajout de note', () => {
       ),
     ).toEqual({
       type: 'refus',
-      parChamp: { contenu: 'contenu obligatoire, 1000 caracteres maximum' },
+      parChamp: { contenu: TEXTES_NOTE.refusContenuInvalide },
       message: undefined,
     });
   });
@@ -36,7 +36,7 @@ describe('interprétation d’un échec d’ajout de note', () => {
     ).toEqual({
       type: 'refus',
       parChamp: {},
-      message: 'livreId : inconnu',
+      message: TEXTES_NOTE.refusValidation,
     });
   });
 
@@ -78,7 +78,7 @@ describe('interprétation d’un échec d’ajout de note', () => {
         },
         TEXTES_NOTE,
       ),
-    ).toEqual({ type: 'indisponible', message: 'Service indisponible.' });
+    ).toEqual({ type: 'indisponible', message: TEXTES_NOTE.messageIndisponible });
   });
 
   it.each([
@@ -112,6 +112,16 @@ describe('interprétation d’un échec d’ajout de note', () => {
         },
         TEXTES_NOTE,
       ),
-    ).toEqual({ type: 'refus', parChamp: {}, message: 'La requête a échoué.' });
+    ).toEqual({
+      type: 'refus',
+      parChamp: {},
+      message: TEXTES_NOTE.messageErreur({
+        type: 'reseau',
+        cause: 'http',
+        message: 'La requête a échoué.',
+        reessayable: false,
+        statut: 400,
+      }),
+    });
   });
 });

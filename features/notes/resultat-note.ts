@@ -10,15 +10,19 @@ export type ResultatAjoutNote =
 
 const interpreterRefus = (
   erreur: Extract<ErreurApplication, { type: 'validation' }>,
+  textes: TextesNote,
 ): ResultatAjoutNote => {
   const { parChamp, horsFormulaire } = repartirRefusNote(erreur.champs);
-  const messages = horsFormulaire.length > 0 ? horsFormulaire : [];
-  if (parChamp.contenu === undefined && messages.length === 0) messages.push(erreur.message);
+  if (parChamp.contenu !== undefined) parChamp.contenu = textes.refusContenuInvalide;
+  const message =
+    horsFormulaire.length > 0 || parChamp.contenu === undefined
+      ? textes.refusValidation
+      : undefined;
 
   return {
     type: 'refus',
     parChamp,
-    message: messages.length > 0 ? messages.join(' · ') : undefined,
+    message,
   };
 };
 
@@ -32,7 +36,7 @@ export const interpreterEchecAjoutNote = (
   });
 
   if (classe.classe === 'indisponible') {
-    return { type: 'indisponible', message: classe.message };
+    return { type: 'indisponible', message: textes.messageIndisponible };
   }
 
   if (classe.classe === 'incertain') {
@@ -43,12 +47,12 @@ export const interpreterEchecAjoutNote = (
     if (classe.erreur.champs === undefined) {
       return { type: 'incertain', message: textes.incertainReponseInexploitable };
     }
-    return interpreterRefus(classe.erreur);
+    return interpreterRefus(classe.erreur, textes);
   }
 
   if (classe.erreur.type === 'introuvable') {
     return { type: 'refus', parChamp: {}, message: textes.refusIntrouvable };
   }
 
-  return { type: 'refus', parChamp: {}, message: classe.erreur.message };
+  return { type: 'refus', parChamp: {}, message: textes.messageErreur(classe.erreur) };
 };

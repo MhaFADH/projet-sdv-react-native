@@ -50,8 +50,8 @@ export const fondsEn = {
     effacerLibelle: 'Clear the search',
   },
   selection: {
-    action_one: '{{count}} selected — Delete',
-    action_other: '{{count}} selected — Delete',
+    action_one: '{{nombre}} selected — Delete',
+    action_other: '{{nombre}} selected — Delete',
   },
   criteres: {
     barre: 'Collection criteria',
