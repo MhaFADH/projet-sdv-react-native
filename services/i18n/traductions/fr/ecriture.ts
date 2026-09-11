@@ -1,0 +1,82 @@
+export const ecritureFr = {
+  formulaire: {
+    champTitre: 'Titre',
+    champAuteur: 'Auteur',
+    champEditeur: 'Éditeur',
+    champAnnee: 'Année de publication',
+    facultatif: '{{libelle}} (facultatif)',
+    statutLecture: 'Statut de lecture',
+  },
+  abandon: {
+    titre: 'Abandonner cette saisie ?',
+    message:
+      'Les informations saisies ne sont pas enregistrées. Elles seront perdues si vous quittez le formulaire.',
+    poursuivre: 'Poursuivre la saisie',
+    abandonner: 'Abandonner la saisie',
+  },
+  erreurGlobale: {
+    titre: 'Une erreur inattendue est survenue',
+    message: 'L’application ne peut pas afficher cette page pour le moment.',
+  },
+  ecriture: {
+    saisieConservee: '{{message}} Votre saisie est conservée.',
+    reessaiEnregistrement: 'Réessayer l’enregistrement',
+    reessaiTemporise: 'Réessayer dans {{secondes}} s',
+    envoiEnCours: 'Enregistrement en cours…',
+    creationTitre: 'Ajouter un ouvrage',
+    creationQuitter: '← Retour au fonds',
+    creationEnregistrer: 'Enregistrer l’ouvrage',
+    creationSansChangement: 'Aucune information à enregistrer.',
+    creationSansReponse:
+      'Aucune réponse du serveur : l’ouvrage a peut-être été créé. Vérifiez le fonds avant de réessayer.',
+    creationReponseInexploitable:
+      'La réponse du serveur est inexploitable : l’ouvrage a peut-être été créé. Vérifiez le fonds avant de réessayer.',
+    creationAvertissement:
+      'Un nouvel envoi peut créer un second ouvrage identique : la création n’est pas rejouable sans risque de doublon.',
+    creationVerifier: 'Vérifier dans le fonds',
+    creationReessayer: 'Réessayer malgré le risque de doublon',
+    creationSucces: '« {{titre}} » a été ajouté au fonds.',
+    correctionTitre: 'Corriger un ouvrage',
+    correctionQuitter: '← Retour',
+    correctionEnregistrer: 'Enregistrer la correction',
+    correctionSansChangement: 'Aucune modification à enregistrer : la fiche est déjà à jour.',
+    correctionSansReponse:
+      'Aucune réponse du serveur : la correction n’a peut-être pas été enregistrée. Vérifiez la fiche avant de réessayer.',
+    correctionReponseInexploitable:
+      'La réponse du serveur est inexploitable : la correction n’a peut-être pas été enregistrée. Vérifiez la fiche avant de réessayer.',
+    correctionAvertissement:
+      'Un nouvel envoi renvoie la même correction sur le même ouvrage : il ne crée pas de second ouvrage.',
+    correctionVerifier: 'Vérifier la fiche',
+    correctionReessayer: 'Réessayer la correction',
+    correctionSucces: '« {{titre}} » a été corrigé.',
+  },
+  validation: {
+    obligatoire: '{{libelle}} est obligatoire.',
+    longueurMaximale: '{{libelle}} ne peut pas dépasser {{maximum}} caractères.',
+    libelleTitre: 'Le titre',
+    libelleAuteur: 'L’auteur',
+    libelleEditeur: 'L’éditeur',
+    anneeObligatoire: 'L’année de publication est obligatoire.',
+    anneeEntiere: 'L’année doit être un nombre entier.',
+    anneeBornes: 'L’année doit être comprise entre {{minimum}} et {{maximum}}.',
+    noteObligatoire: 'Le contenu de la note est obligatoire.',
+    noteLongueurMaximale: 'La note ne peut pas dépasser {{maximum}} caractères.',
+  },
+  erreursHttp: {
+    annulee: 'La requête a été annulée.',
+    injoignable: 'Le serveur est injoignable.',
+    reponseSuppression: 'La réponse du serveur pour la suppression est invalide.',
+    reponseOuvrages: 'La réponse du serveur pour les ouvrages est invalide.',
+    reponseFiche: 'La réponse du serveur pour cette fiche est invalide.',
+    reponseBascule: 'La réponse du serveur après la bascule est invalide.',
+    reponseCorrection: 'La réponse du serveur pour l’ouvrage corrigé est invalide.',
+    reponseNotes: 'La réponse du serveur pour les notes est invalide.',
+    reponseNoteAjoutee: 'La réponse du serveur pour la note ajoutée est invalide.',
+    authentification: 'Authentification requise.',
+    introuvable: "Cet ouvrage n'existe pas ou plus.",
+    conflit: 'Cet ouvrage a été modifié entre-temps.',
+    validation: 'Certaines données sont invalides.',
+    indisponible: 'Le service est temporairement indisponible.',
+    echec: 'La requête a échoué.',
+  },
+};

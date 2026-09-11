@@ -5,11 +5,12 @@ import type { CommandesSuppressionNote } from '@/components/notes/vue-liste-note
 import type { NoteLecture } from '@/domain/note-lecture';
 import { useSupprimerNote } from '@/hooks/use-supprimer-note';
 import { useTemporisations } from '@/hooks/use-temporisations';
+import { useTraduction } from '@/hooks/use-traduction';
 import {
   interpreterEchecSuppressionNote,
   type ResultatSuppressionNote,
 } from './resultat-suppression-note';
-import { TEXTES_SUPPRESSION_NOTE } from './textes-suppression-note';
+import { creerTextesSuppressionNote } from './textes-suppression-note';
 
 type OptionsSuppressionNote = {
   livreId: string;
@@ -32,6 +33,8 @@ export const useSuppressionNote = ({
   livreId,
   rafraichirNotes,
 }: OptionsSuppressionNote): SuppressionNoteCoordonnee => {
+  const t = useTraduction();
+  const textes = creerTextesSuppressionNote(t);
   const mutation = useSupprimerNote(livreId);
   const temporisations = useTemporisations();
   const [noteAConfirmer, setNoteAConfirmer] = useState<NoteLecture | null>(null);
@@ -55,9 +58,9 @@ export const useSuppressionNote = ({
 
     try {
       const issue = await mutation.mutateAsync(noteId);
-      if (issue === 'deja-absente') setMessageListe(TEXTES_SUPPRESSION_NOTE.messageDejaAbsente);
+      if (issue === 'deja-absente') setMessageListe(textes.messageDejaAbsente);
     } catch (cause) {
-      const echec = interpreterEchecSuppressionNote(cause);
+      const echec = interpreterEchecSuppressionNote(cause, textes);
       setResultats((courants) => ({ ...courants, [noteId]: echec }));
       if (echec.type === 'indisponible') temporisations.demarrer(noteId);
     } finally {
@@ -72,13 +75,13 @@ export const useSuppressionNote = ({
 
     return {
       message: resultat.message,
-      libelleReessayer: TEXTES_SUPPRESSION_NOTE.libelleReessayer,
+      libelleReessayer: textes.libelleReessayer,
       reessayer: () => void envoyer(noteId),
       secondesRestantes:
         resultat.type === 'indisponible' ? temporisations.secondesRestantes(noteId) : 0,
       verifier:
         resultat.type === 'incertain'
-          ? { libelle: TEXTES_SUPPRESSION_NOTE.libelleVerifier, executer: verifier }
+          ? { libelle: textes.libelleVerifier, executer: verifier }
           : undefined,
     };
   };
@@ -91,8 +94,8 @@ export const useSuppressionNote = ({
   return {
     messageListe,
     suppression: {
-      libelle: TEXTES_SUPPRESSION_NOTE.libelleSupprimer,
-      libelleEnvoiEnCours: TEXTES_SUPPRESSION_NOTE.libelleEnvoiEnCours,
+      libelle: textes.libelleSupprimer,
+      libelleEnvoiEnCours: textes.libelleEnvoiEnCours,
       demander: (note) => setNoteAConfirmer(note),
       enEnvoi: (noteId) => envois.includes(noteId),
       avis: construireAvis,
@@ -102,10 +105,10 @@ export const useSuppressionNote = ({
         ? null
         : {
             note: noteAConfirmer,
-            titre: TEXTES_SUPPRESSION_NOTE.titreConfirmation,
-            avertissement: TEXTES_SUPPRESSION_NOTE.avertissementSansAnnulation,
-            libelleRenoncer: TEXTES_SUPPRESSION_NOTE.libelleRenoncer,
-            libelleConfirmer: TEXTES_SUPPRESSION_NOTE.libelleConfirmer,
+            titre: textes.titreConfirmation,
+            avertissement: textes.avertissementSansAnnulation,
+            libelleRenoncer: textes.libelleRenoncer,
+            libelleConfirmer: textes.libelleConfirmer,
             renoncer: () => setNoteAConfirmer(null),
             confirmer: () => confirmer(noteAConfirmer),
           },

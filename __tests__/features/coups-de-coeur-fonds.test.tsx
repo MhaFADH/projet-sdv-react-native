@@ -32,6 +32,7 @@ const rendreFonds = (
       changerPage={vi.fn()}
       consultationDemandee={consultation}
       ouvrirOuvrage={ouvrirOuvrage}
+      ouvrirPreferences={vi.fn()}
       pageDemandee={1}
     />,
     { wrapper: creerEnveloppeOuvrages(client) },

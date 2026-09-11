@@ -7,16 +7,26 @@ export type NoteLecture = {
   createdAt: string;
 };
 
-const formatteurDateNote = new Intl.DateTimeFormat('fr-FR', {
+const OPTIONS_DATE_NOTE: Intl.DateTimeFormatOptions = {
   day: 'numeric',
   month: 'long',
   year: 'numeric',
   hour: '2-digit',
   minute: '2-digit',
-});
+};
 
-export const formaterDateNote = (createdAt: string): string =>
-  formatteurDateNote.format(new Date(createdAt));
+const formatteursParLocale = new Map<string, Intl.DateTimeFormat>();
+
+const formatteurDateNote = (locale: string): Intl.DateTimeFormat => {
+  const existant = formatteursParLocale.get(locale);
+  if (existant) return existant;
+  const formatteur = new Intl.DateTimeFormat(locale, OPTIONS_DATE_NOTE);
+  formatteursParLocale.set(locale, formatteur);
+  return formatteur;
+};
+
+export const formaterDateNote = (createdAt: string, locale: string): string =>
+  formatteurDateNote(locale).format(new Date(createdAt));
 
 const LONGUEUR_EXTRAIT_NOTE = 80;
 
@@ -24,6 +34,3 @@ export const extraitNote = (contenu: string): string =>
   contenu.length <= LONGUEUR_EXTRAIT_NOTE
     ? contenu
     : `${contenu.slice(0, LONGUEUR_EXTRAIT_NOTE).trimEnd()}…`;
-
-export const libelleNote = (note: NoteLecture): string =>
-  `note du ${formaterDateNote(note.createdAt)} : « ${extraitNote(note.contenu)} »`;

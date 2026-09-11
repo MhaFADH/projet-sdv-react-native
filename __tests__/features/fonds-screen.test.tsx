@@ -41,6 +41,7 @@ const FondsControle = ({ pageInitiale, ouvrirOuvrage }: FondsControleProps) => {
       changerPage={changerPage}
       consultationDemandee={CONSULTATION_FONDS_PAR_DEFAUT}
       ouvrirOuvrage={ouvrirOuvrage}
+      ouvrirPreferences={vi.fn()}
       pageDemandee={pageDemandee}
     />
   );

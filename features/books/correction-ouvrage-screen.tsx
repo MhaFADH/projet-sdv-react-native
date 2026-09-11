@@ -10,7 +10,8 @@ import {
 } from '@/domain/saisie-ouvrage';
 import { useBook } from '@/hooks/use-book';
 import { useModifierOuvrage } from '@/hooks/use-modifier-ouvrage';
-import { TEXTES_CORRECTION } from './textes-ecriture';
+import { useTraduction } from '@/hooks/use-traduction';
+import { creerTextesCorrection } from './textes-ecriture';
 import { useSaisieOuvrage } from './use-saisie-ouvrage';
 
 const ABSENCE_PAR_DEFAUT = "Cet ouvrage n'existe pas ou plus.";
@@ -26,6 +27,7 @@ const FormulaireCorrection = ({
   retourAuFonds,
   ouvrirOuvrage,
 }: { ouvrage: Ouvrage } & Omit<CorrectionOuvrageScreenProps, 'id'>) => {
+  const textes = creerTextesCorrection(useTraduction());
   const modification = useModifierOuvrage();
   const [reference, setReference] = useState<OuvrageSaisi>(() => referenceDepuisOuvrage(ouvrage));
 
@@ -43,7 +45,7 @@ const FormulaireCorrection = ({
     envoyer,
     ouvrirOuvrage,
     quitter: retourAuFonds,
-    textes: TEXTES_CORRECTION,
+    textes,
     valeursApresSucces: saisieDepuisOuvrage,
     valeursInitiales: saisieDepuisOuvrage(ouvrage),
     verifier: () => ouvrirOuvrage(ouvrage.id),
@@ -58,10 +60,11 @@ export const CorrectionOuvrageScreen = ({
   ouvrirOuvrage,
 }: CorrectionOuvrageScreenProps) => {
   const requete = useBook(id);
+  const textes = creerTextesCorrection(useTraduction());
   const cadre = {
-    libelleQuitter: TEXTES_CORRECTION.libelleQuitter,
+    libelleQuitter: textes.libelleQuitter,
     retour: retourAuFonds,
-    titre: TEXTES_CORRECTION.titre,
+    titre: textes.titre,
   };
 
   if (!identifiantUtilisable(id)) {

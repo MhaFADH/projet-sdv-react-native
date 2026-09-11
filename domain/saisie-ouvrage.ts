@@ -14,40 +14,51 @@ export type ChampSaisieOuvrage = (typeof CHAMPS_SAISIE_OUVRAGE)[number];
 export const anneeMaximaleAutorisee = (): number =>
   new Date().getFullYear() + NOMBRE_ANNEES_FUTURES_AUTORISEES;
 
-const texteNormalise = (libelle: string) =>
+export type MessagesSaisieOuvrage = {
+  libelleTitre: string;
+  libelleAuteur: string;
+  libelleEditeur: string;
+  obligatoire: (libelle: string) => string;
+  longueurMaximale: (libelle: string, maximum: number) => string;
+  anneeObligatoire: string;
+  anneeEntiere: string;
+  anneeBornes: (minimum: number, maximum: number) => string;
+};
+
+const texteNormalise = (libelle: string, messages: MessagesSaisieOuvrage) =>
   z
     .string()
     .trim()
-    .max(
-      LONGUEUR_MAXIMALE_TEXTE,
-      `${libelle} ne peut pas dépasser ${LONGUEUR_MAXIMALE_TEXTE} caractères.`,
-    );
+    .max(LONGUEUR_MAXIMALE_TEXTE, messages.longueurMaximale(libelle, LONGUEUR_MAXIMALE_TEXTE));
 
-const texteObligatoire = (libelle: string) =>
-  z.string().trim().min(1, `${libelle} est obligatoire.`).pipe(texteNormalise(libelle));
+const texteObligatoire = (libelle: string, messages: MessagesSaisieOuvrage) =>
+  z.string().trim().min(1, messages.obligatoire(libelle)).pipe(texteNormalise(libelle, messages));
 
-const anneeSaisie = z
-  .string()
-  .trim()
-  .min(1, 'L’année de publication est obligatoire.')
-  .pipe(z.string().regex(/^\d+$/, 'L’année doit être un nombre entier.'))
-  .transform((valeur) => Number.parseInt(valeur, 10))
-  .refine((annee) => annee >= ANNEE_PUBLICATION_MINIMALE && annee <= anneeMaximaleAutorisee(), {
-    error: () =>
-      `L’année doit être comprise entre ${ANNEE_PUBLICATION_MINIMALE} et ${anneeMaximaleAutorisee()}.`,
+const anneeSaisie = (messages: MessagesSaisieOuvrage) =>
+  z
+    .string()
+    .trim()
+    .min(1, messages.anneeObligatoire)
+    .pipe(z.string().regex(/^\d+$/, messages.anneeEntiere))
+    .transform((valeur) => Number.parseInt(valeur, 10))
+    .refine((annee) => annee >= ANNEE_PUBLICATION_MINIMALE && annee <= anneeMaximaleAutorisee(), {
+      error: () => messages.anneeBornes(ANNEE_PUBLICATION_MINIMALE, anneeMaximaleAutorisee()),
+    });
+
+export const creerSaisieOuvrageSchema = (messages: MessagesSaisieOuvrage) =>
+  z.object({
+    titre: texteObligatoire(messages.libelleTitre, messages),
+    auteur: texteObligatoire(messages.libelleAuteur, messages),
+    editeur: texteNormalise(messages.libelleEditeur, messages),
+    annee: anneeSaisie(messages),
+    lu: z.boolean(),
   });
 
-export const saisieOuvrageSchema = z.object({
-  titre: texteObligatoire('Le titre'),
-  auteur: texteObligatoire('L’auteur'),
-  editeur: texteNormalise('L’éditeur'),
-  annee: anneeSaisie,
-  lu: z.boolean(),
-});
+type SchemaSaisieOuvrage = ReturnType<typeof creerSaisieOuvrageSchema>;
 
-export type SaisieOuvrage = z.input<typeof saisieOuvrageSchema>;
+export type SaisieOuvrage = z.input<SchemaSaisieOuvrage>;
 
-export type OuvrageSaisi = z.output<typeof saisieOuvrageSchema>;
+export type OuvrageSaisi = z.output<SchemaSaisieOuvrage>;
 
 export const SAISIE_OUVRAGE_VIDE: SaisieOuvrage = {
   titre: '',

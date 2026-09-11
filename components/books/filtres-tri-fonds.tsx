@@ -7,32 +7,38 @@ import type {
   OrdreFonds,
   TriFonds,
 } from '@/domain/criteres-ouvrages';
+import { useFormats } from '@/hooks/use-formats';
+import { useStylesTheme, useTheme } from '@/hooks/use-theme';
+import { useTraduction } from '@/hooks/use-traduction';
 import { creerActivationParEspace } from '@/services/plateforme/activation-clavier';
-import { theme } from '@/theme/tokens';
+import type { Theme } from '@/theme/tokens';
 import { type ChoixCritere, GroupeChoixFonds } from './groupe-choix-fonds';
 
-const LECTURES: readonly ChoixCritere<FiltreLecture>[] = [
-  { valeur: 'tous', libelle: 'Tous les statuts' },
-  { valeur: 'lu', libelle: 'Lus' },
-  { valeur: 'nonlu', libelle: 'Non lus' },
-];
+type Traduire = ReturnType<typeof useTraduction>;
 
-const RECOMMANDATIONS: readonly ChoixCritere<FiltreRecommandation>[] = [
-  { valeur: 'toutes', libelle: 'Toutes les recommandations' },
-  { valeur: 'favoris', libelle: 'Coups de cœur' },
-];
+const LECTURES = ['tous', 'lu', 'nonlu'] as const satisfies readonly FiltreLecture[];
+const RECOMMANDATIONS = ['toutes', 'favoris'] as const satisfies readonly FiltreRecommandation[];
+const TRIS = ['titre', 'auteur', 'annee', 'note'] as const satisfies readonly TriFonds[];
+const ORDRES = ['asc', 'desc'] as const satisfies readonly OrdreFonds[];
 
-const TRIS: readonly ChoixCritere<TriFonds>[] = [
-  { valeur: 'titre', libelle: 'Titre' },
-  { valeur: 'auteur', libelle: 'Auteur' },
-  { valeur: 'annee', libelle: 'Année' },
-  { valeur: 'note', libelle: 'Notation' },
-];
+const LIBELLES_TRI = {
+  titre: 'criteres.tri.titreOuvrage',
+  auteur: 'criteres.tri.auteur',
+  annee: 'criteres.tri.annee',
+  note: 'criteres.tri.note',
+} as const;
 
-const ORDRES: readonly ChoixCritere<OrdreFonds>[] = [
-  { valeur: 'asc', libelle: 'Croissant' },
-  { valeur: 'desc', libelle: 'Décroissant' },
-];
+const choixLecture = (t: Traduire): readonly ChoixCritere<FiltreLecture>[] =>
+  LECTURES.map((valeur) => ({ valeur, libelle: t(`criteres.lecture.${valeur}`) }));
+
+const choixRecommandation = (t: Traduire): readonly ChoixCritere<FiltreRecommandation>[] =>
+  RECOMMANDATIONS.map((valeur) => ({ valeur, libelle: t(`criteres.recommandation.${valeur}`) }));
+
+const choixTri = (t: Traduire): readonly ChoixCritere<TriFonds>[] =>
+  TRIS.map((valeur) => ({ valeur, libelle: t(LIBELLES_TRI[valeur]) }));
+
+const choixOrdre = (t: Traduire): readonly ChoixCritere<OrdreFonds>[] =>
+  ORDRES.map((valeur) => ({ valeur, libelle: t(`criteres.ordre.${valeur}`) }));
 
 const libelleChoisi = <Valeur extends string>(
   choix: readonly ChoixCritere<Valeur>[],
@@ -49,46 +55,48 @@ const ContenuCriteres = ({
   appliquer,
   compact,
 }: ProprietesFiltresTriFonds & { compact: boolean }) => {
+  const t = useTraduction();
+  const styles = useStylesTheme(creerStyles);
   const modifier = (modification: Partial<ConsultationFonds>) =>
     appliquer({ ...consultation, ...modification });
 
   return (
     <View
-      accessibilityLabel="Critères du fonds"
+      accessibilityLabel={t('criteres.barre')}
       accessibilityRole="toolbar"
       style={[styles.conteneur, compact && styles.conteneurCompact]}
     >
       <View style={styles.zone}>
-        <Text style={styles.titreZone}>Affiner</Text>
+        <Text style={styles.titreZone}>{t('criteres.affiner')}</Text>
         <GroupeChoixFonds
-          choix={LECTURES}
+          choix={choixLecture(t)}
           choisir={(lecture) => modifier({ lecture })}
           compact={compact}
-          titre="Filtre de lecture"
+          titre={t('criteres.lecture.titre')}
           valeur={consultation.lecture}
         />
         <GroupeChoixFonds
-          choix={RECOMMANDATIONS}
+          choix={choixRecommandation(t)}
           choisir={(recommandation) => modifier({ recommandation })}
           compact={compact}
-          titre="Recommandations"
+          titre={t('criteres.recommandation.titre')}
           valeur={consultation.recommandation}
         />
       </View>
-      <View accessibilityLabel="Options de tri" style={[styles.zone, styles.zoneSeparee]}>
-        <Text style={styles.titreZone}>Trier</Text>
+      <View accessibilityLabel={t('criteres.optionsTri')} style={[styles.zone, styles.zoneSeparee]}>
+        <Text style={styles.titreZone}>{t('criteres.trier')}</Text>
         <GroupeChoixFonds
-          choix={TRIS}
+          choix={choixTri(t)}
           choisir={(tri) => modifier({ tri })}
           compact={compact}
-          titre="Trier par"
+          titre={t('criteres.tri.titre')}
           valeur={consultation.tri}
         />
         <GroupeChoixFonds
-          choix={ORDRES}
+          choix={choixOrdre(t)}
           choisir={(ordre) => modifier({ ordre })}
           compact={compact}
-          titre="Ordre"
+          titre={t('criteres.ordre.titre')}
           valeur={consultation.ordre}
         />
       </View>
@@ -97,17 +105,21 @@ const ContenuCriteres = ({
 };
 
 export const FiltresTriFonds = ({ consultation, appliquer }: ProprietesFiltresTriFonds) => {
+  const t = useTraduction();
+  const { locale } = useFormats();
+  const theme = useTheme();
+  const styles = useStylesTheme(creerStyles);
   const { width } = useWindowDimensions();
   const compact = width < theme.layout.compactBreakpoint;
   const [ouvert, setOuvert] = useState(false);
   const basculer = () => setOuvert((valeur) => !valeur);
-  const resume = `${libelleChoisi(LECTURES, consultation.lecture)}, ${libelleChoisi(
-    RECOMMANDATIONS,
+  const resume = `${libelleChoisi(choixLecture(t), consultation.lecture)}, ${libelleChoisi(
+    choixRecommandation(t),
     consultation.recommandation,
-  )}, ${libelleChoisi(TRIS, consultation.tri)} ${libelleChoisi(
-    ORDRES,
+  )}, ${libelleChoisi(choixTri(t), consultation.tri)} ${libelleChoisi(
+    choixOrdre(t),
     consultation.ordre,
-  ).toLocaleLowerCase('fr')}`;
+  ).toLocaleLowerCase(locale)}`;
 
   if (!compact) {
     return <ContenuCriteres appliquer={appliquer} compact={false} consultation={consultation} />;
@@ -117,7 +129,7 @@ export const FiltresTriFonds = ({ consultation, appliquer }: ProprietesFiltresTr
     <View style={styles.mobile}>
       <Pressable
         {...creerActivationParEspace(basculer)}
-        accessibilityLabel={`Filtres et tri. ${resume}`}
+        accessibilityLabel={t('criteres.declencheurLibelle', { resume })}
         accessibilityRole="button"
         accessibilityState={{ expanded: ouvert }}
         aria-expanded={ouvert}
@@ -125,7 +137,7 @@ export const FiltresTriFonds = ({ consultation, appliquer }: ProprietesFiltresTr
         style={styles.declencheur}
       >
         <View style={styles.resume}>
-          <Text style={styles.texteDeclencheur}>Filtres et tri</Text>
+          <Text style={styles.texteDeclencheur}>{t('criteres.declencheur')}</Text>
           <Text numberOfLines={1} style={styles.texteResume}>
             {resume}
           </Text>
@@ -139,59 +151,60 @@ export const FiltresTriFonds = ({ consultation, appliquer }: ProprietesFiltresTr
   );
 };
 
-const styles = StyleSheet.create({
-  conteneur: {
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    gap: theme.spacing.md,
-    padding: theme.spacing.md,
-    borderWidth: theme.borderWidth,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.surface,
-  },
-  conteneurCompact: {
-    flexDirection: 'column',
-    borderTopWidth: 0,
-    borderTopLeftRadius: 0,
-    borderTopRightRadius: 0,
-  },
-  zone: {
-    width: '100%',
-    minWidth: 0,
-    gap: theme.spacing.sm,
-  },
-  zoneSeparee: {
-    paddingTop: theme.spacing.md,
-    borderTopWidth: theme.borderWidth,
-    borderTopColor: theme.colors.border,
-  },
-  titreZone: {
-    color: theme.colors.primary,
-    fontSize: theme.typography.body,
-    fontWeight: '700',
-    letterSpacing: theme.typography.overlineLetterSpacing,
-    textTransform: 'uppercase',
-  },
-  mobile: { width: '100%' },
-  declencheur: {
-    minHeight: theme.minTargetSize,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderWidth: theme.borderWidth,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.surface,
-  },
-  resume: { flex: 1, gap: theme.spacing.xs },
-  texteDeclencheur: {
-    color: theme.colors.text,
-    fontSize: theme.typography.body,
-    fontWeight: '700',
-  },
-  texteResume: { color: theme.colors.textMuted, fontSize: theme.typography.caption },
-  chevron: { color: theme.colors.primary, fontSize: theme.typography.sectionTitle },
-});
+const creerStyles = (theme: Theme) =>
+  StyleSheet.create({
+    conteneur: {
+      flexDirection: 'column',
+      alignItems: 'flex-start',
+      gap: theme.spacing.md,
+      padding: theme.spacing.md,
+      borderWidth: theme.borderWidth,
+      borderColor: theme.colors.border,
+      borderRadius: theme.radius.md,
+      backgroundColor: theme.colors.surface,
+    },
+    conteneurCompact: {
+      flexDirection: 'column',
+      borderTopWidth: 0,
+      borderTopLeftRadius: 0,
+      borderTopRightRadius: 0,
+    },
+    zone: {
+      width: '100%',
+      minWidth: 0,
+      gap: theme.spacing.sm,
+    },
+    zoneSeparee: {
+      paddingTop: theme.spacing.md,
+      borderTopWidth: theme.borderWidth,
+      borderTopColor: theme.colors.border,
+    },
+    titreZone: {
+      color: theme.colors.primary,
+      fontSize: theme.typography.body,
+      fontWeight: '700',
+      letterSpacing: theme.typography.overlineLetterSpacing,
+      textTransform: 'uppercase',
+    },
+    mobile: { width: '100%' },
+    declencheur: {
+      minHeight: theme.minTargetSize,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
+      borderWidth: theme.borderWidth,
+      borderColor: theme.colors.border,
+      borderRadius: theme.radius.md,
+      backgroundColor: theme.colors.surface,
+    },
+    resume: { flex: 1, gap: theme.spacing.xs },
+    texteDeclencheur: {
+      color: theme.colors.text,
+      fontSize: theme.typography.body,
+      fontWeight: '700',
+    },
+    texteResume: { color: theme.colors.textMuted, fontSize: theme.typography.caption },
+    chevron: { color: theme.colors.primary, fontSize: theme.typography.sectionTitle },
+  });

@@ -1,5 +1,7 @@
 import { StyleSheet, Text, TextInput, View } from 'react-native';
-import { theme } from '@/theme/tokens';
+import { useStylesTheme } from '@/hooks/use-theme';
+import { useTraduction } from '@/hooks/use-traduction';
+import type { Theme } from '@/theme/tokens';
 
 type ChampNoteProps = {
   libelle: string;
@@ -26,9 +28,14 @@ export const ChampNote = ({
   caracteresMaximum,
   erreur,
 }: ChampNoteProps) => {
+  const t = useTraduction();
+  const styles = useStylesTheme(creerStyles);
   const enErreur = erreur !== undefined;
   const depassement = caracteresUtilises > caracteresMaximum;
-  const compteur = `${caracteresUtilises} / ${caracteresMaximum} caractères`;
+  const compteur = t('notes.compteur', {
+    utilises: caracteresUtilises,
+    maximum: caracteresMaximum,
+  });
 
   return (
     <View style={styles.champ}>
@@ -52,7 +59,7 @@ export const ChampNote = ({
         value={valeur}
       />
       <Text
-        accessibilityLabel={`${compteur} utilisés`}
+        accessibilityLabel={t('notes.compteurUtilises', { compteur })}
         nativeID={IDENTIFIANT_COMPTEUR}
         role="status"
         style={[styles.compteur, depassement && styles.compteurDepasse]}
@@ -68,41 +75,42 @@ export const ChampNote = ({
   );
 };
 
-const styles = StyleSheet.create({
-  champ: { gap: theme.spacing.xs },
-  libelle: {
-    color: theme.colors.primary,
-    fontSize: theme.typography.caption,
-    fontWeight: '700',
-    letterSpacing: theme.typography.overlineLetterSpacing,
-    textTransform: 'uppercase',
-  },
-  saisie: {
-    minHeight: theme.minTargetSize * 2,
-    color: theme.colors.text,
-    fontSize: theme.typography.body,
-    lineHeight: theme.typography.bodyLineHeight,
-    borderWidth: theme.borderWidth,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.sm,
-    backgroundColor: theme.colors.surface,
-    padding: theme.spacing.sm,
-    textAlignVertical: 'top',
-  },
-  saisieDesactivee: {
-    backgroundColor: theme.colors.surfaceMuted,
-    color: theme.colors.textMuted,
-  },
-  saisieErreur: { borderColor: theme.colors.dangerText },
-  compteur: {
-    alignSelf: 'flex-end',
-    color: theme.colors.textMuted,
-    fontSize: theme.typography.metadata,
-  },
-  compteurDepasse: { color: theme.colors.dangerText, fontWeight: '700' },
-  erreur: {
-    color: theme.colors.dangerText,
-    fontSize: theme.typography.metadata,
-    fontWeight: '600',
-  },
-});
+const creerStyles = (theme: Theme) =>
+  StyleSheet.create({
+    champ: { gap: theme.spacing.xs },
+    libelle: {
+      color: theme.colors.primary,
+      fontSize: theme.typography.caption,
+      fontWeight: '700',
+      letterSpacing: theme.typography.overlineLetterSpacing,
+      textTransform: 'uppercase',
+    },
+    saisie: {
+      minHeight: theme.minTargetSize * 2,
+      color: theme.colors.text,
+      fontSize: theme.typography.body,
+      lineHeight: theme.typography.bodyLineHeight,
+      borderWidth: theme.borderWidth,
+      borderColor: theme.colors.border,
+      borderRadius: theme.radius.sm,
+      backgroundColor: theme.colors.surface,
+      padding: theme.spacing.sm,
+      textAlignVertical: 'top',
+    },
+    saisieDesactivee: {
+      backgroundColor: theme.colors.surfaceMuted,
+      color: theme.colors.textMuted,
+    },
+    saisieErreur: { borderColor: theme.colors.dangerText },
+    compteur: {
+      alignSelf: 'flex-end',
+      color: theme.colors.textMuted,
+      fontSize: theme.typography.metadata,
+    },
+    compteurDepasse: { color: theme.colors.dangerText, fontWeight: '700' },
+    erreur: {
+      color: theme.colors.dangerText,
+      fontSize: theme.typography.metadata,
+      fontWeight: '600',
+    },
+  });

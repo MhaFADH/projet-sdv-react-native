@@ -5,7 +5,9 @@ import { ConfirmationAbandon } from '@/components/confirmation-abandon';
 import { type AvisEcriture, AvisEcritureView } from '@/components/messages-ecriture';
 import { type ActionToast, ToastSucces } from '@/components/toast-succes';
 import type { OuvrageSaisi, SaisieOuvrage } from '@/domain/saisie-ouvrage';
-import { theme } from '@/theme/tokens';
+import { useStylesTheme } from '@/hooks/use-theme';
+import { useTraduction } from '@/hooks/use-traduction';
+import type { Theme } from '@/theme/tokens';
 import { BasculeStatut, ChampTexte } from './champs-saisie';
 
 type ControleSaisie = Control<SaisieOuvrage, unknown, OuvrageSaisi>;
@@ -87,65 +89,81 @@ export const FormulaireOuvrageView = ({
   confirmationAbandon,
   avis,
   toast,
-}: FormulaireOuvrageViewProps) => (
-  <ScrollView contentContainerStyle={styles.conteneur}>
-    <View style={styles.entete}>
-      <Bouton action={quitter} libelle={libelleQuitter} variante="secondaire" />
-      <Text accessibilityRole="header" style={styles.titre}>
-        {titre}
-      </Text>
-    </View>
+}: FormulaireOuvrageViewProps) => {
+  const t = useTraduction();
+  const styles = useStylesTheme(creerStyles);
 
-    {confirmationAbandon === null ? null : <ConfirmationAbandon {...confirmationAbandon} />}
-    {toast === null ? null : <ToastSucces key={toast.cle} {...toast} />}
-    {avis === null ? null : <AvisEcritureView avis={avis} />}
+  return (
+    <ScrollView contentContainerStyle={styles.conteneur}>
+      <View style={styles.entete}>
+        <Bouton action={quitter} libelle={libelleQuitter} variante="secondaire" />
+        <Text accessibilityRole="header" style={styles.titre}>
+          {titre}
+        </Text>
+      </View>
 
-    <View style={styles.carte}>
-      <ChampTexteControle controle={controle} enEnvoi={enEnvoi} libelle="Titre" nom="titre" />
-      <ChampTexteControle controle={controle} enEnvoi={enEnvoi} libelle="Auteur" nom="auteur" />
-      <ChampTexteControle
-        controle={controle}
-        enEnvoi={enEnvoi}
-        facultatif
-        libelle="Éditeur"
-        nom="editeur"
-      />
-      <ChampTexteControle
-        controle={controle}
-        enEnvoi={enEnvoi}
-        libelle="Année de publication"
-        nom="annee"
-        numerique
-      />
-      <BasculeStatutControle controle={controle} enEnvoi={enEnvoi} />
-      <Bouton action={enregistrer} desactive={enEnvoi} libelle={libelleEnregistrer} />
-    </View>
-  </ScrollView>
-);
+      {confirmationAbandon === null ? null : <ConfirmationAbandon {...confirmationAbandon} />}
+      {toast === null ? null : <ToastSucces key={toast.cle} {...toast} />}
+      {avis === null ? null : <AvisEcritureView avis={avis} />}
 
-const styles = StyleSheet.create({
-  conteneur: {
-    width: '100%',
-    maxWidth: theme.layout.contentMaxWidth,
-    alignSelf: 'center',
-    padding: theme.spacing.md,
-    gap: theme.spacing.lg,
-  },
-  entete: {
-    gap: theme.spacing.md,
-    alignItems: 'flex-start',
-  },
-  titre: {
-    color: theme.colors.text,
-    fontSize: theme.typography.pageTitle,
-    fontWeight: '700',
-  },
-  carte: {
-    gap: theme.spacing.md,
-    borderWidth: theme.borderWidth,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.surface,
-    padding: theme.spacing.lg,
-  },
-});
+      <View style={styles.carte}>
+        <ChampTexteControle
+          controle={controle}
+          enEnvoi={enEnvoi}
+          libelle={t('formulaire.champTitre')}
+          nom="titre"
+        />
+        <ChampTexteControle
+          controle={controle}
+          enEnvoi={enEnvoi}
+          libelle={t('formulaire.champAuteur')}
+          nom="auteur"
+        />
+        <ChampTexteControle
+          controle={controle}
+          enEnvoi={enEnvoi}
+          facultatif
+          libelle={t('formulaire.champEditeur')}
+          nom="editeur"
+        />
+        <ChampTexteControle
+          controle={controle}
+          enEnvoi={enEnvoi}
+          libelle={t('formulaire.champAnnee')}
+          nom="annee"
+          numerique
+        />
+        <BasculeStatutControle controle={controle} enEnvoi={enEnvoi} />
+        <Bouton action={enregistrer} desactive={enEnvoi} libelle={libelleEnregistrer} />
+      </View>
+    </ScrollView>
+  );
+};
+
+const creerStyles = (theme: Theme) =>
+  StyleSheet.create({
+    conteneur: {
+      width: '100%',
+      maxWidth: theme.layout.contentMaxWidth,
+      alignSelf: 'center',
+      padding: theme.spacing.md,
+      gap: theme.spacing.lg,
+    },
+    entete: {
+      gap: theme.spacing.md,
+      alignItems: 'flex-start',
+    },
+    titre: {
+      color: theme.colors.text,
+      fontSize: theme.typography.pageTitle,
+      fontWeight: '700',
+    },
+    carte: {
+      gap: theme.spacing.md,
+      borderWidth: theme.borderWidth,
+      borderColor: theme.colors.border,
+      borderRadius: theme.radius.md,
+      backgroundColor: theme.colors.surface,
+      padding: theme.spacing.lg,
+    },
+  });

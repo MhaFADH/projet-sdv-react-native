@@ -45,6 +45,7 @@ describe('sélection dans la présentation du fonds', () => {
       <FondsView
         ajouterOuvrage={vi.fn()}
         etat={creerEtat(new Set(), basculer, demanderSuppression)}
+        ouvrirPreferences={vi.fn()}
       />,
     );
 
@@ -63,6 +64,7 @@ describe('sélection dans la présentation du fonds', () => {
       <FondsView
         ajouterOuvrage={vi.fn()}
         etat={creerEtat(new Set([ouvrage.id]), basculer, demanderSuppression)}
+        ouvrirPreferences={vi.fn()}
       />,
     );
     expect(screen.getByRole('checkbox', { name: 'Sélectionner Bel-Ami' })).toHaveAttribute(

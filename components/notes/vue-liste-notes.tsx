@@ -1,7 +1,9 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SqueletteDonnees } from '@/components/etats-donnees';
 import type { NoteLecture } from '@/domain/note-lecture';
-import { theme } from '@/theme/tokens';
+import { useStylesTheme } from '@/hooks/use-theme';
+import { useTraduction } from '@/hooks/use-traduction';
+import type { Theme } from '@/theme/tokens';
 import type { AvisSuppressionNote } from './avis-suppression-note';
 import { VueNote } from './vue-note';
 
@@ -31,14 +33,17 @@ const ContenuNotes = ({
   titreOuvrage,
   suppression,
 }: Omit<ProprietesVueListeNotes, 'messageListe'>) => {
+  const t = useTraduction();
+  const styles = useStylesTheme(creerStyles);
+
   if (etat.type === 'chargement') {
     return (
-      <SqueletteDonnees libelle={`Chargement des notes de ${titreOuvrage}`} nombreLignes={2} />
+      <SqueletteDonnees libelle={t('notes.chargement', { titre: titreOuvrage })} nombreLignes={2} />
     );
   }
 
   if (etat.type === 'vide') {
-    return <Text style={styles.message}>Aucune note de lecture pour {titreOuvrage}.</Text>;
+    return <Text style={styles.message}>{t('notes.vide', { titre: titreOuvrage })}</Text>;
   }
 
   if (etat.type === 'erreur') {
@@ -46,7 +51,7 @@ const ContenuNotes = ({
       <View accessibilityRole="alert" style={styles.erreur}>
         <Text style={styles.message}>{etat.message}</Text>
         <Pressable
-          accessibilityLabel="Réessayer le chargement des notes"
+          accessibilityLabel={t('notes.reessaiChargement')}
           accessibilityRole="button"
           accessibilityState={{ disabled: etat.reessaiEnCours }}
           disabled={etat.reessaiEnCours}
@@ -54,7 +59,7 @@ const ContenuNotes = ({
           style={[styles.bouton, etat.reessaiEnCours && styles.desactive]}
         >
           <Text style={styles.texteBouton}>
-            {etat.reessaiEnCours ? 'Nouvel essai en cours' : 'Réessayer'}
+            {t(etat.reessaiEnCours ? 'notes.reessaiEnCours' : 'etats.reessayer')}
           </Text>
         </Pressable>
       </View>
@@ -62,7 +67,7 @@ const ContenuNotes = ({
   }
 
   return (
-    <View accessibilityLabel={`Notes de lecture de ${titreOuvrage}`} role="list">
+    <View accessibilityLabel={t('notes.liste', { titre: titreOuvrage })} role="list">
       {etat.notes.map((note) => (
         <VueNote
           key={note.id}
@@ -85,63 +90,69 @@ export const VueListeNotes = ({
   titreOuvrage,
   suppression,
   messageListe,
-}: ProprietesVueListeNotes) => (
-  <View style={styles.section}>
-    <Text accessibilityRole="header" style={styles.titre}>
-      Notes de lecture
-    </Text>
-    {messageListe === null ? null : (
-      <Text role="status" style={styles.messageListe}>
-        {messageListe}
-      </Text>
-    )}
-    <ContenuNotes etat={etat} suppression={suppression} titreOuvrage={titreOuvrage} />
-  </View>
-);
+}: ProprietesVueListeNotes) => {
+  const t = useTraduction();
+  const styles = useStylesTheme(creerStyles);
 
-const styles = StyleSheet.create({
-  section: {
-    gap: theme.spacing.md,
-    padding: theme.spacing.lg,
-    borderWidth: theme.borderWidth,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.md,
-    backgroundColor: theme.colors.surface,
-  },
-  titre: {
-    color: theme.colors.text,
-    fontSize: theme.typography.sectionTitle,
-    fontWeight: '700',
-  },
-  messageListe: {
-    color: theme.colors.text,
-    fontSize: theme.typography.body,
-    lineHeight: theme.typography.bodyLineHeight,
-    fontWeight: '600',
-  },
-  message: {
-    color: theme.colors.text,
-    fontSize: theme.typography.body,
-    lineHeight: theme.typography.bodyLineHeight,
-  },
-  erreur: {
-    gap: theme.spacing.md,
-    padding: theme.spacing.md,
-    borderRadius: theme.radius.sm,
-    backgroundColor: theme.colors.dangerBackground,
-  },
-  bouton: {
-    minHeight: theme.minTargetSize,
-    alignSelf: 'flex-start',
-    justifyContent: 'center',
-    paddingHorizontal: theme.spacing.md,
-    borderRadius: theme.radius.sm,
-    backgroundColor: theme.colors.primary,
-  },
-  texteBouton: {
-    color: theme.colors.primaryText,
-    fontSize: theme.typography.body,
-    fontWeight: '700',
-  },
-  desactive: { opacity: 0.5 },
-});
+  return (
+    <View style={styles.section}>
+      <Text accessibilityRole="header" style={styles.titre}>
+        {t('notes.section')}
+      </Text>
+      {messageListe === null ? null : (
+        <Text role="status" style={styles.messageListe}>
+          {messageListe}
+        </Text>
+      )}
+      <ContenuNotes etat={etat} suppression={suppression} titreOuvrage={titreOuvrage} />
+    </View>
+  );
+};
+
+const creerStyles = (theme: Theme) =>
+  StyleSheet.create({
+    section: {
+      gap: theme.spacing.md,
+      padding: theme.spacing.lg,
+      borderWidth: theme.borderWidth,
+      borderColor: theme.colors.border,
+      borderRadius: theme.radius.md,
+      backgroundColor: theme.colors.surface,
+    },
+    titre: {
+      color: theme.colors.text,
+      fontSize: theme.typography.sectionTitle,
+      fontWeight: '700',
+    },
+    messageListe: {
+      color: theme.colors.text,
+      fontSize: theme.typography.body,
+      lineHeight: theme.typography.bodyLineHeight,
+      fontWeight: '600',
+    },
+    message: {
+      color: theme.colors.text,
+      fontSize: theme.typography.body,
+      lineHeight: theme.typography.bodyLineHeight,
+    },
+    erreur: {
+      gap: theme.spacing.md,
+      padding: theme.spacing.md,
+      borderRadius: theme.radius.sm,
+      backgroundColor: theme.colors.dangerBackground,
+    },
+    bouton: {
+      minHeight: theme.minTargetSize,
+      alignSelf: 'flex-start',
+      justifyContent: 'center',
+      paddingHorizontal: theme.spacing.md,
+      borderRadius: theme.radius.sm,
+      backgroundColor: theme.colors.primary,
+    },
+    texteBouton: {
+      color: theme.colors.primaryText,
+      fontSize: theme.typography.body,
+      fontWeight: '700',
+    },
+    desactive: { opacity: 0.5 },
+  });

@@ -1,22 +1,7 @@
-export const theme = {
-  colors: {
-    background: '#F7F4EE',
-    surface: '#FFFFFF',
-    surfaceMuted: '#EAE4DA',
-    text: '#1F2933',
-    textMuted: '#52606D',
-    border: '#C9C2B7',
-    primary: '#5B3A29',
-    primaryText: '#FFFFFF',
-    successBackground: '#E1F2E8',
-    successText: '#205C3B',
-    neutralBackground: '#ECEFF2',
-    dangerBackground: '#FBE9E7',
-    favoriBackground: '#FCEAF1',
-    favoriText: '#A32F5B',
-    dangerText: '#8A2C24',
-    overlay: 'rgba(31, 41, 51, 0.45)',
-  },
+import type { ApparenceEffective } from '@/domain/preferences';
+import { PALETTES, type Palette } from './palettes';
+
+const tokensPartages = {
   spacing: {
     xs: 4,
     sm: 8,
@@ -50,3 +35,12 @@ export const theme = {
   borderWidth: 1,
   minTargetSize: 44,
 } as const;
+
+export type Theme = typeof tokensPartages & { colors: Palette };
+
+export const creerTheme = (apparence: ApparenceEffective): Theme => ({
+  ...tokensPartages,
+  colors: PALETTES[apparence],
+});
+
+export const theme = creerTheme('clair');

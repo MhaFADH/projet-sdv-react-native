@@ -9,6 +9,7 @@ import {
   type PageOuvrages,
 } from '@/domain/ouvrage';
 import type { CorrectionOuvrage, OuvrageSaisi } from '@/domain/saisie-ouvrage';
+import { traduire } from '@/services/i18n';
 import { clientHttp } from './client-http';
 import { creerErreurValidation } from './erreurs';
 
@@ -58,7 +59,7 @@ export const fetchBooksPage = async (
   });
   const resultat = pageOuvragesSchema.safeParse(corps);
   if (!resultat.success || resultat.data.page !== criteres.page) {
-    throw creerErreurValidation('La réponse du serveur pour les ouvrages est invalide.');
+    throw creerErreurValidation(traduire('erreursHttp.reponseOuvrages'));
   }
   return resultat.data;
 };
@@ -69,7 +70,7 @@ export const fetchBook = async (id: string, signal?: AbortSignal): Promise<Ouvra
   });
   const resultat = ouvrageSchema.safeParse(corps);
   if (!resultat.success || resultat.data.id !== id) {
-    throw creerErreurValidation('La réponse du serveur pour cette fiche est invalide.');
+    throw creerErreurValidation(traduire('erreursHttp.reponseFiche'));
   }
   return resultat.data;
 };
@@ -97,7 +98,7 @@ export const patchBasculeOuvrage = async ({
   const corps = await clientHttp.patch(`/books/${encodeURIComponent(id)}`, { [champ]: valeur });
   const resultat = ouvrageSchema.safeParse(corps);
   if (!resultat.success || resultat.data.id !== id) {
-    throw creerErreurValidation('La réponse du serveur après la bascule est invalide.');
+    throw creerErreurValidation(traduire('erreursHttp.reponseBascule'));
   }
   return resultat.data;
 };
@@ -109,7 +110,7 @@ export const patchBook = async (id: string, correction: CorrectionOuvrage): Prom
   const corps = await clientHttp.patch(`/books/${encodeURIComponent(id)}`, correction);
   const resultat = ouvrageSchema.safeParse(corps);
   if (!resultat.success || resultat.data.id !== id) {
-    throw creerErreurValidation('La réponse du serveur pour l’ouvrage corrigé est invalide.');
+    throw creerErreurValidation(traduire('erreursHttp.reponseCorrection'));
   }
   return resultat.data;
 };

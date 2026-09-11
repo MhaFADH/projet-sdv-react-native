@@ -34,14 +34,4 @@ export const lireNumeroPage = (valeur: string | string[] | undefined): number =>
   return numero < PREMIERE_PAGE ? PREMIERE_PAGE : numero;
 };
 
-const EDITEUR_NON_RENSEIGNE = 'Éditeur non renseigné';
-
-export const libelleEditeur = (editeur: string): string =>
-  editeur.trim() === '' ? EDITEUR_NON_RENSEIGNE : editeur;
-
-export const libelleEdition = ({ editeur, annee }: Pick<Ouvrage, 'editeur' | 'annee'>): string =>
-  `${libelleEditeur(editeur)} · ${annee}`;
-
-export const libelleStatutLecture = (lu: boolean): string => (lu ? 'Lu' : 'Non lu');
-
 export const identifiantUtilisable = (id: string): boolean => id.trim() !== '';

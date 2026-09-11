@@ -1,15 +1,18 @@
 import { classerEchecEcriture } from '@/services/api/issue-ecriture';
-import { TEXTES_SUPPRESSION_NOTE } from './textes-suppression-note';
+import type { TextesSuppressionNote } from './textes-suppression-note';
 
 export type ResultatSuppressionNote =
   | { type: 'echec'; message: string }
   | { type: 'indisponible'; message: string }
   | { type: 'incertain'; message: string };
 
-export const interpreterEchecSuppressionNote = (cause: unknown): ResultatSuppressionNote => {
+export const interpreterEchecSuppressionNote = (
+  cause: unknown,
+  textes: TextesSuppressionNote,
+): ResultatSuppressionNote => {
   const classe = classerEchecEcriture(cause, {
-    sansReponse: TEXTES_SUPPRESSION_NOTE.incertainSansReponse,
-    reponseInexploitable: TEXTES_SUPPRESSION_NOTE.incertainReponseInexploitable,
+    sansReponse: textes.incertainSansReponse,
+    reponseInexploitable: textes.incertainReponseInexploitable,
   });
 
   if (classe.classe === 'indisponible') {
@@ -21,7 +24,7 @@ export const interpreterEchecSuppressionNote = (cause: unknown): ResultatSuppres
   }
 
   if (classe.erreur.type === 'validation') {
-    return { type: 'incertain', message: TEXTES_SUPPRESSION_NOTE.incertainReponseInexploitable };
+    return { type: 'incertain', message: textes.incertainReponseInexploitable };
   }
 
   return { type: 'echec', message: classe.erreur.message };

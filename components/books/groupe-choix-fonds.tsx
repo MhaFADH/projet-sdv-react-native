@@ -1,8 +1,9 @@
 import { useRef } from 'react';
 import type { View as VueNative } from 'react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useStylesTheme } from '@/hooks/use-theme';
 import { creerNavigationGroupeRadio } from '@/services/plateforme/activation-clavier';
-import { theme } from '@/theme/tokens';
+import type { Theme } from '@/theme/tokens';
 
 export type ChoixCritere<Valeur extends string> = {
   valeur: Valeur;
@@ -24,6 +25,7 @@ export const GroupeChoixFonds = <Valeur extends string>({
   choisir,
   compact,
 }: ProprietesGroupeChoixFonds<Valeur>) => {
+  const styles = useStylesTheme(creerStyles);
   const references = useRef<Array<VueNative | null>>([]);
   const choisirIndex = (index: number) => {
     const indexNormalise = (index + choix.length) % choix.length;
@@ -77,47 +79,48 @@ export const GroupeChoixFonds = <Valeur extends string>({
   );
 };
 
-const styles = StyleSheet.create({
-  groupe: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-  },
-  groupeCompact: {
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-  },
-  titre: {
-    width: theme.layout.criteriaLabelWidth,
-    color: theme.colors.text,
-    fontSize: theme.typography.caption,
-    fontWeight: '700',
-  },
-  titreCompact: { width: 'auto' },
-  choix: {
-    flex: 1,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.spacing.xs,
-  },
-  bouton: {
-    minHeight: theme.minTargetSize,
-    minWidth: theme.minTargetSize,
-    justifyContent: 'center',
-    paddingHorizontal: theme.spacing.sm,
-    borderWidth: theme.borderWidth,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.sm,
-    backgroundColor: theme.colors.background,
-  },
-  boutonSelectionne: {
-    borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.primary,
-  },
-  libelle: {
-    color: theme.colors.text,
-    fontSize: theme.typography.caption,
-    fontWeight: '600',
-  },
-  libelleSelectionne: { color: theme.colors.primaryText },
-});
+const creerStyles = (theme: Theme) =>
+  StyleSheet.create({
+    groupe: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+    },
+    groupeCompact: {
+      flexDirection: 'column',
+      alignItems: 'flex-start',
+    },
+    titre: {
+      width: theme.layout.criteriaLabelWidth,
+      color: theme.colors.text,
+      fontSize: theme.typography.caption,
+      fontWeight: '700',
+    },
+    titreCompact: { width: 'auto' },
+    choix: {
+      flex: 1,
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: theme.spacing.xs,
+    },
+    bouton: {
+      minHeight: theme.minTargetSize,
+      minWidth: theme.minTargetSize,
+      justifyContent: 'center',
+      paddingHorizontal: theme.spacing.sm,
+      borderWidth: theme.borderWidth,
+      borderColor: theme.colors.border,
+      borderRadius: theme.radius.sm,
+      backgroundColor: theme.colors.background,
+    },
+    boutonSelectionne: {
+      borderColor: theme.colors.primary,
+      backgroundColor: theme.colors.primary,
+    },
+    libelle: {
+      color: theme.colors.text,
+      fontSize: theme.typography.caption,
+      fontWeight: '600',
+    },
+    libelleSelectionne: { color: theme.colors.primaryText },
+  });

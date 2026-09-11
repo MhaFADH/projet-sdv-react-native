@@ -1,6 +1,8 @@
 import { StyleSheet, View } from 'react-native';
 import type { Ouvrage } from '@/domain/ouvrage';
-import { theme } from '@/theme/tokens';
+import { useStylesTheme } from '@/hooks/use-theme';
+import { useTraduction } from '@/hooks/use-traduction';
+import type { Theme } from '@/theme/tokens';
 import type { AvisReessai } from './avis-echec-bascule';
 import { LigneOuvrage } from './ligne-ouvrage';
 
@@ -28,27 +30,33 @@ export const OuvragesList = ({
   coupsDeCoeur,
   ouvertureDesactivee = false,
   selectionDesactivee = false,
-}: OuvragesListProps) => (
-  <View accessibilityLabel="Ouvrages du fonds" role="list" style={styles.liste}>
-    {ouvrages.map((ouvrage) => (
-      <LigneOuvrage
-        basculeEnCours={coupsDeCoeur.enCours(ouvrage.id)}
-        basculerCoupDeCoeur={() => coupsDeCoeur.basculer(ouvrage)}
-        basculerSelection={() => basculerSelection(ouvrage.id)}
-        erreurBascule={coupsDeCoeur.erreur(ouvrage.id)}
-        key={ouvrage.id}
-        ouvertureDesactivee={ouvertureDesactivee}
-        ouvrage={ouvrage}
-        ouvrirOuvrage={() => ouvrirOuvrage(ouvrage.id)}
-        selectionDesactivee={selectionDesactivee}
-        selectionne={identifiantsSelectionnes.has(ouvrage.id)}
-      />
-    ))}
-  </View>
-);
+}: OuvragesListProps) => {
+  const t = useTraduction();
+  const styles = useStylesTheme(creerStyles);
 
-const styles = StyleSheet.create({
-  liste: {
-    gap: theme.spacing.md,
-  },
-});
+  return (
+    <View accessibilityLabel={t('fonds.liste')} role="list" style={styles.liste}>
+      {ouvrages.map((ouvrage) => (
+        <LigneOuvrage
+          basculeEnCours={coupsDeCoeur.enCours(ouvrage.id)}
+          basculerCoupDeCoeur={() => coupsDeCoeur.basculer(ouvrage)}
+          basculerSelection={() => basculerSelection(ouvrage.id)}
+          erreurBascule={coupsDeCoeur.erreur(ouvrage.id)}
+          key={ouvrage.id}
+          ouvertureDesactivee={ouvertureDesactivee}
+          ouvrage={ouvrage}
+          ouvrirOuvrage={() => ouvrirOuvrage(ouvrage.id)}
+          selectionDesactivee={selectionDesactivee}
+          selectionne={identifiantsSelectionnes.has(ouvrage.id)}
+        />
+      ))}
+    </View>
+  );
+};
+
+const creerStyles = (theme: Theme) =>
+  StyleSheet.create({
+    liste: {
+      gap: theme.spacing.md,
+    },
+  });

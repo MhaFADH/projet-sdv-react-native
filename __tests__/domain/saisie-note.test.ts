@@ -1,12 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { LONGUEUR_MAXIMALE_NOTE } from '../../domain/note-lecture';
 import {
+  creerSaisieNoteSchema,
   longueurContenuNote,
   repartirRefusNote,
   SAISIE_NOTE_VIDE,
   saisieNoteRenseignee,
-  saisieNoteSchema,
 } from '../../domain/saisie-note';
+import { creerMessagesSaisieNote } from '../../features/notes/messages-saisie';
+import { traduireEnTest } from '../outils-traduction';
+
+const saisieNoteSchema = creerSaisieNoteSchema(creerMessagesSaisieNote(traduireEnTest));
 
 describe('schéma de saisie d’une note de lecture', () => {
   it('normalise les espaces périphériques du contenu', () => {

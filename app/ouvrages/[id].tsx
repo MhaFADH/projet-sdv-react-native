@@ -2,9 +2,11 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FicheScreen } from '@/features/books/fiche-screen';
-import { theme } from '@/theme/tokens';
+import { useStylesTheme } from '@/hooks/use-theme';
+import type { Theme } from '@/theme/tokens';
 
 const FicheRoute = () => {
+  const styles = useStylesTheme(creerStyles);
   const router = useRouter();
   const { id, retourPage, retourRecherche, retourStatus, retourFavori, retourSort, retourOrder } =
     useLocalSearchParams<{
@@ -47,11 +49,12 @@ const FicheRoute = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  page: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-});
+const creerStyles = (theme: Theme) =>
+  StyleSheet.create({
+    page: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+  });
 
 export default FicheRoute;

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { LONGUEUR_MAXIMALE_NOTE, type NoteLecture } from '@/domain/note-lecture';
 import type { NoteSaisie } from '@/domain/saisie-note';
+import { traduire } from '@/services/i18n';
 import { clientHttp } from './client-http';
 import { creerErreurValidation, estErreurApplication } from './erreurs';
 
@@ -22,7 +23,7 @@ export const recupererNotes = async (
   const corps = await clientHttp.get(cheminNotes(livreId), { signal });
   const resultat = schemaNotesLecture.safeParse(corps);
   if (!resultat.success || resultat.data.some((note) => note.livreId !== livreId)) {
-    throw creerErreurValidation('La réponse du serveur pour les notes est invalide.');
+    throw creerErreurValidation(traduire('erreursHttp.reponseNotes'));
   }
   return resultat.data;
 };
@@ -31,7 +32,7 @@ export const ajouterNote = async (livreId: string, saisie: NoteSaisie): Promise<
   const corps = await clientHttp.post(cheminNotes(livreId), { contenu: saisie.contenu });
   const resultat = schemaNoteLecture.safeParse(corps);
   if (!resultat.success || resultat.data.livreId !== livreId) {
-    throw creerErreurValidation('La réponse du serveur pour la note ajoutée est invalide.');
+    throw creerErreurValidation(traduire('erreursHttp.reponseNoteAjoutee'));
   }
   return resultat.data;
 };

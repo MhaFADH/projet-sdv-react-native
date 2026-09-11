@@ -1,5 +1,6 @@
 import { StyleSheet, View } from 'react-native';
-import { theme } from '@/theme/tokens';
+import { useStylesTheme } from '@/hooks/use-theme';
+import type { Theme } from '@/theme/tokens';
 import {
   ConfirmationSuppressionNote,
   type DemandeSuppressionNote,
@@ -21,23 +22,28 @@ type VueSectionNotesProps = {
   liste: ListeSectionNotes | null;
 };
 
-export const VueSectionNotes = ({ formulaire, liste }: VueSectionNotesProps) => (
-  <View style={styles.section}>
-    <FormulaireNoteView {...formulaire} />
-    {liste === null ? null : (
-      <>
-        <VueListeNotes
-          etat={liste.etat}
-          messageListe={liste.messageListe}
-          suppression={liste.suppression}
-          titreOuvrage={liste.titreOuvrage}
-        />
-        <ConfirmationSuppressionNote demande={liste.confirmation} />
-      </>
-    )}
-  </View>
-);
+export const VueSectionNotes = ({ formulaire, liste }: VueSectionNotesProps) => {
+  const styles = useStylesTheme(creerStyles);
 
-const styles = StyleSheet.create({
-  section: { gap: theme.spacing.lg },
-});
+  return (
+    <View style={styles.section}>
+      <FormulaireNoteView {...formulaire} />
+      {liste === null ? null : (
+        <>
+          <VueListeNotes
+            etat={liste.etat}
+            messageListe={liste.messageListe}
+            suppression={liste.suppression}
+            titreOuvrage={liste.titreOuvrage}
+          />
+          <ConfirmationSuppressionNote demande={liste.confirmation} />
+        </>
+      )}
+    </View>
+  );
+};
+
+const creerStyles = (theme: Theme) =>
+  StyleSheet.create({
+    section: { gap: theme.spacing.lg },
+  });

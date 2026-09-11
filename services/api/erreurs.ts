@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { traduire } from '@/services/i18n';
 
 export const STATUT_INDISPONIBLE = 503;
 export const STATUT_ERREUR_SERVEUR_MINIMALE = 500;
@@ -57,7 +58,7 @@ export const traduireErreurHttp = (statut: number, corps: unknown): ErreurApplic
   if (statut === STATUT_HTTP.nonAuthentifie || statut === STATUT_HTTP.interdit) {
     return {
       type: 'authentification',
-      message: messageServeur ?? 'Authentification requise.',
+      message: messageServeur ?? traduire('erreursHttp.authentification'),
       statut,
     };
   }
@@ -65,14 +66,14 @@ export const traduireErreurHttp = (statut: number, corps: unknown): ErreurApplic
   if (statut === STATUT_HTTP.introuvable) {
     return {
       type: 'introuvable',
-      message: messageServeur ?? "Cet ouvrage n'existe pas ou plus.",
+      message: messageServeur ?? traduire('erreursHttp.introuvable'),
     };
   }
 
   if (statut === STATUT_HTTP.conflit) {
     return {
       type: 'conflit',
-      message: messageServeur ?? 'Cet ouvrage a été modifié entre-temps.',
+      message: messageServeur ?? traduire('erreursHttp.conflit'),
       serveur: resultat.success ? resultat.data.serveur : undefined,
       versionAttendue: resultat.success ? resultat.data.versionAttendue : undefined,
     };
@@ -81,7 +82,7 @@ export const traduireErreurHttp = (statut: number, corps: unknown): ErreurApplic
   if (statut === STATUT_HTTP.validation) {
     return {
       type: 'validation',
-      message: messageServeur ?? 'Certaines données sont invalides.',
+      message: messageServeur ?? traduire('erreursHttp.validation'),
       champs: resultat.success ? resultat.data.champs : undefined,
     };
   }
@@ -91,9 +92,9 @@ export const traduireErreurHttp = (statut: number, corps: unknown): ErreurApplic
     cause: statut === STATUT_HTTP.indisponible ? 'indisponible' : 'http',
     message:
       messageServeur ??
-      (statut === STATUT_HTTP.indisponible
-        ? 'Le service est temporairement indisponible.'
-        : 'La requête a échoué.'),
+      traduire(
+        statut === STATUT_HTTP.indisponible ? 'erreursHttp.indisponible' : 'erreursHttp.echec',
+      ),
     reessayable: statut === STATUT_HTTP.indisponible || statut >= STATUT_HTTP.erreurServeurMinimale,
     statut,
   };

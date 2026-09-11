@@ -14,6 +14,7 @@ type FondsScreenProps = {
   changerConsultation: (consultation: ConsultationFonds) => void;
   ouvrirOuvrage: (id: string) => void;
   ajouterOuvrage: () => void;
+  ouvrirPreferences: () => void;
 };
 
 type EtatSelection = {
@@ -31,6 +32,7 @@ export const FondsScreen = ({
   changerConsultation,
   ouvrirOuvrage,
   ajouterOuvrage,
+  ouvrirPreferences,
 }: FondsScreenProps) => {
   const requete = useBooksPage(pageDemandee, consultationDemandee);
   const { confirmerSuppressions, estMasque, suppressionDesactivee } = useSuppressions();
@@ -73,6 +75,7 @@ export const FondsScreen = ({
         ajouterOuvrage={ajouterOuvrage}
         criteres={criteres}
         etat={{ type: 'chargement' }}
+        ouvrirPreferences={ouvrirPreferences}
         recherche={recherche}
       />
     );
@@ -88,6 +91,7 @@ export const FondsScreen = ({
           message: requete.error.message,
           reessayer: () => void requete.refetch(),
         }}
+        ouvrirPreferences={ouvrirPreferences}
         recherche={recherche}
       />
     );
@@ -177,6 +181,7 @@ export const FondsScreen = ({
             ? { message: requete.error.message, reessayer: () => void requete.refetch() }
             : undefined,
         }}
+        ouvrirPreferences={ouvrirPreferences}
         recherche={recherche}
       />
       {confirmationVisible && ouvragesSelectionnes.length > 0 ? (

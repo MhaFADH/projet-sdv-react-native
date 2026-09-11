@@ -2,9 +2,11 @@ import { useRouter } from 'expo-router';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FormulaireOuvrageScreen } from '@/features/books/formulaire-ouvrage-screen';
-import { theme } from '@/theme/tokens';
+import { useStylesTheme } from '@/hooks/use-theme';
+import type { Theme } from '@/theme/tokens';
 
 const NouvelOuvrageRoute = () => {
+  const styles = useStylesTheme(creerStyles);
   const router = useRouter();
   const retourAuFonds = () => {
     if (router.canGoBack()) {
@@ -24,11 +26,12 @@ const NouvelOuvrageRoute = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  page: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-});
+const creerStyles = (theme: Theme) =>
+  StyleSheet.create({
+    page: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+  });
 
 export default NouvelOuvrageRoute;

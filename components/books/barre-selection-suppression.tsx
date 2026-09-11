@@ -1,5 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { theme } from '@/theme/tokens';
+import { useStylesTheme } from '@/hooks/use-theme';
+import { useTraduction } from '@/hooks/use-traduction';
+import type { Theme } from '@/theme/tokens';
 
 type ProprietesBarreSelectionSuppression = {
   nombreSelectionnes: number;
@@ -7,17 +9,16 @@ type ProprietesBarreSelectionSuppression = {
   demanderSuppression: () => void;
 };
 
-const libelleSelection = (nombre: number): string =>
-  `${nombre} sélectionné${nombre === 1 ? '' : 's'} — Supprimer`;
-
 export const BarreSelectionSuppression = ({
   nombreSelectionnes,
   suppressionDesactivee,
   demanderSuppression,
 }: ProprietesBarreSelectionSuppression) => {
+  const t = useTraduction();
+  const styles = useStylesTheme(creerStyles);
   if (nombreSelectionnes === 0) return null;
   const desactivee = suppressionDesactivee;
-  const libelle = libelleSelection(nombreSelectionnes);
+  const libelle = t('selection.action', { count: nombreSelectionnes });
 
   return (
     <View accessibilityLiveRegion="polite" style={styles.barre}>
@@ -37,24 +38,25 @@ export const BarreSelectionSuppression = ({
   );
 };
 
-const styles = StyleSheet.create({
-  barre: { alignSelf: 'flex-end' },
-  bouton: {
-    minHeight: theme.minTargetSize,
-    justifyContent: 'center',
-    paddingHorizontal: theme.spacing.md,
-    borderRadius: theme.radius.sm,
-    backgroundColor: theme.colors.dangerText,
-  },
-  boutonDesactive: {
-    backgroundColor: theme.colors.surfaceMuted,
-  },
-  texte: {
-    color: theme.colors.primaryText,
-    fontSize: theme.typography.body,
-    fontWeight: '700',
-  },
-  texteDesactive: {
-    color: theme.colors.textMuted,
-  },
-});
+const creerStyles = (theme: Theme) =>
+  StyleSheet.create({
+    barre: { alignSelf: 'flex-end' },
+    bouton: {
+      minHeight: theme.minTargetSize,
+      justifyContent: 'center',
+      paddingHorizontal: theme.spacing.md,
+      borderRadius: theme.radius.sm,
+      backgroundColor: theme.colors.dangerText,
+    },
+    boutonDesactive: {
+      backgroundColor: theme.colors.surfaceMuted,
+    },
+    texte: {
+      color: theme.colors.primaryText,
+      fontSize: theme.typography.body,
+      fontWeight: '700',
+    },
+    texteDesactive: {
+      color: theme.colors.textMuted,
+    },
+  });

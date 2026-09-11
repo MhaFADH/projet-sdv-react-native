@@ -1,7 +1,9 @@
 import { ScrollView, StyleSheet, Text } from 'react-native';
 import { Bouton } from '@/components/bouton';
 import { EtatAbsence, EtatErreur, SqueletteDonnees } from '@/components/etats-donnees';
-import { theme } from '@/theme/tokens';
+import { useStylesTheme } from '@/hooks/use-theme';
+import { useTraduction } from '@/hooks/use-traduction';
+import type { Theme } from '@/theme/tokens';
 
 type EtatCorrectionIndisponible =
   | { type: 'chargement' }
@@ -18,10 +20,12 @@ type CorrectionIndisponibleViewProps = {
 const NOMBRE_LIGNES_SQUELETTE = 4;
 
 const Contenu = ({ etat }: Pick<CorrectionIndisponibleViewProps, 'etat'>) => {
+  const t = useTraduction();
+
   if (etat.type === 'chargement') {
     return (
       <SqueletteDonnees
-        libelle="Chargement de l’ouvrage à corriger"
+        libelle={t('correction.chargement')}
         nombreLignes={NOMBRE_LIGNES_SQUELETTE}
       />
     );
@@ -32,12 +36,12 @@ const Contenu = ({ etat }: Pick<CorrectionIndisponibleViewProps, 'etat'>) => {
       <EtatErreur
         message={etat.message}
         reessayer={etat.reessayer}
-        titre="Impossible de charger cet ouvrage"
+        titre={t('correction.erreurTitre')}
       />
     );
   }
 
-  return <EtatAbsence alerte message={etat.message} titre="Cet ouvrage ne peut pas être corrigé" />;
+  return <EtatAbsence alerte message={etat.message} titre={t('correction.indisponibleTitre')} />;
 };
 
 export const CorrectionIndisponibleView = ({
@@ -45,27 +49,32 @@ export const CorrectionIndisponibleView = ({
   libelleQuitter,
   etat,
   retour,
-}: CorrectionIndisponibleViewProps) => (
-  <ScrollView contentContainerStyle={styles.conteneur}>
-    <Bouton action={retour} libelle={libelleQuitter} variante="secondaire" />
-    <Text accessibilityRole="header" style={styles.titre}>
-      {titre}
-    </Text>
-    <Contenu etat={etat} />
-  </ScrollView>
-);
+}: CorrectionIndisponibleViewProps) => {
+  const styles = useStylesTheme(creerStyles);
 
-const styles = StyleSheet.create({
-  conteneur: {
-    width: '100%',
-    maxWidth: theme.layout.contentMaxWidth,
-    alignSelf: 'center',
-    padding: theme.spacing.md,
-    gap: theme.spacing.lg,
-  },
-  titre: {
-    color: theme.colors.text,
-    fontSize: theme.typography.pageTitle,
-    fontWeight: '700',
-  },
-});
+  return (
+    <ScrollView contentContainerStyle={styles.conteneur}>
+      <Bouton action={retour} libelle={libelleQuitter} variante="secondaire" />
+      <Text accessibilityRole="header" style={styles.titre}>
+        {titre}
+      </Text>
+      <Contenu etat={etat} />
+    </ScrollView>
+  );
+};
+
+const creerStyles = (theme: Theme) =>
+  StyleSheet.create({
+    conteneur: {
+      width: '100%',
+      maxWidth: theme.layout.contentMaxWidth,
+      alignSelf: 'center',
+      padding: theme.spacing.md,
+      gap: theme.spacing.lg,
+    },
+    titre: {
+      color: theme.colors.text,
+      fontSize: theme.typography.pageTitle,
+      fontWeight: '700',
+    },
+  });

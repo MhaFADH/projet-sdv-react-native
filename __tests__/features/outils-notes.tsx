@@ -1,7 +1,7 @@
 import { QueryClient } from '@tanstack/react-query';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { vi } from 'vitest';
-import { formaterDateNote, libelleNote, type NoteLecture } from '../../domain/note-lecture';
+import { extraitNote, formaterDateNote, type NoteLecture } from '../../domain/note-lecture';
 import { FicheScreen } from '../../features/books/fiche-screen';
 import { creerEnveloppeOuvrages } from '../outils-rendu';
 
@@ -124,10 +124,13 @@ export const rendreFiche = (id = ID_LIVRE) => {
 
 export const champNote = () => screen.getByRole('textbox', { name: 'Note de lecture' });
 
+const libelleNote = (note: NoteLecture) =>
+  `note du ${formaterDateNote(note.createdAt, 'fr-FR')} : « ${extraitNote(note.contenu)} »`;
+
 export const boutonSupprimerNote = (note: NoteLecture) =>
   screen.getByRole('button', { name: `Supprimer la ${libelleNote(note)}` });
 
-export const libelleDateNote = (note: NoteLecture) => formaterDateNote(note.createdAt);
+export const libelleDateNote = (note: NoteLecture) => formaterDateNote(note.createdAt, 'fr-FR');
 
 export const boutonAjouter = () => screen.getByRole('button', { name: 'Ajouter la note' });
 

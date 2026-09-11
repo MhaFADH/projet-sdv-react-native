@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { libelleStatutLecture } from '@/domain/ouvrage';
-import { theme } from '@/theme/tokens';
+import { useStylesTheme } from '@/hooks/use-theme';
+import { useTraduction } from '@/hooks/use-traduction';
+import type { Theme } from '@/theme/tokens';
 
 type ChampTexteProps = {
   libelle: string;
@@ -18,8 +19,6 @@ type BasculeStatutProps = {
   modifier: (lu: boolean) => void;
   desactive: boolean;
 };
-
-const MENTION_FACULTATIF = ' (facultatif)';
 
 type EtatAccessibleChamp = {
   'aria-invalid'?: boolean;
@@ -39,7 +38,9 @@ export const ChampTexte = ({
   facultatif = false,
   numerique = false,
 }: ChampTexteProps) => {
-  const libelleAccessible = `${libelle}${facultatif ? MENTION_FACULTATIF : ''}`;
+  const t = useTraduction();
+  const styles = useStylesTheme(creerStyles);
+  const libelleAccessible = facultatif ? t('formulaire.facultatif', { libelle }) : libelle;
   const identifiantErreur = `erreur-${libelle}`;
 
   return (
@@ -64,81 +65,86 @@ export const ChampTexte = ({
   );
 };
 
-export const BasculeStatut = ({ lu, modifier, desactive }: BasculeStatutProps) => (
-  <View style={styles.champ}>
-    <Text style={styles.libelle}>Statut de lecture</Text>
-    <Pressable
-      accessibilityLabel="Statut de lecture"
-      accessibilityRole="switch"
-      accessibilityState={{ checked: lu, disabled: desactive }}
-      aria-checked={lu}
-      accessibilityValue={{ text: libelleStatutLecture(lu) }}
-      disabled={desactive}
-      onPress={() => modifier(!lu)}
-      style={[styles.bascule, lu && styles.basculeActive, desactive && styles.basculeDesactivee]}
-    >
-      <Text style={[styles.texteBascule, lu && styles.texteBasculeActive]}>
-        {libelleStatutLecture(lu)}
-      </Text>
-    </Pressable>
-  </View>
-);
+export const BasculeStatut = ({ lu, modifier, desactive }: BasculeStatutProps) => {
+  const t = useTraduction();
+  const styles = useStylesTheme(creerStyles);
+  const statut = t(lu ? 'ouvrage.lu' : 'ouvrage.nonLu');
 
-const styles = StyleSheet.create({
-  champ: {
-    gap: theme.spacing.xs,
-  },
-  libelle: {
-    color: theme.colors.primary,
-    fontSize: theme.typography.caption,
-    fontWeight: '700',
-    letterSpacing: theme.typography.overlineLetterSpacing,
-    textTransform: 'uppercase',
-  },
-  saisie: {
-    minHeight: theme.minTargetSize,
-    color: theme.colors.text,
-    fontSize: theme.typography.body,
-    borderWidth: theme.borderWidth,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.sm,
-    backgroundColor: theme.colors.surface,
-    paddingHorizontal: theme.spacing.sm,
-  },
-  saisieDesactivee: {
-    backgroundColor: theme.colors.surfaceMuted,
-    color: theme.colors.textMuted,
-  },
-  saisieErreur: {
-    borderColor: theme.colors.dangerText,
-  },
-  erreur: {
-    color: theme.colors.dangerText,
-    fontSize: theme.typography.metadata,
-    fontWeight: '600',
-  },
-  bascule: {
-    minHeight: theme.minTargetSize,
-    alignSelf: 'flex-start',
-    justifyContent: 'center',
-    borderWidth: theme.borderWidth,
-    borderColor: theme.colors.border,
-    borderRadius: theme.radius.sm,
-    backgroundColor: theme.colors.neutralBackground,
-    paddingHorizontal: theme.spacing.md,
-  },
-  basculeActive: {
-    backgroundColor: theme.colors.successBackground,
-  },
-  basculeDesactivee: {
-    backgroundColor: theme.colors.surfaceMuted,
-  },
-  texteBascule: {
-    color: theme.colors.textMuted,
-    fontSize: theme.typography.body,
-    fontWeight: '700',
-  },
-  texteBasculeActive: {
-    color: theme.colors.successText,
-  },
-});
+  return (
+    <View style={styles.champ}>
+      <Text style={styles.libelle}>{t('formulaire.statutLecture')}</Text>
+      <Pressable
+        accessibilityLabel={t('formulaire.statutLecture')}
+        accessibilityRole="switch"
+        accessibilityState={{ checked: lu, disabled: desactive }}
+        aria-checked={lu}
+        accessibilityValue={{ text: statut }}
+        disabled={desactive}
+        onPress={() => modifier(!lu)}
+        style={[styles.bascule, lu && styles.basculeActive, desactive && styles.basculeDesactivee]}
+      >
+        <Text style={[styles.texteBascule, lu && styles.texteBasculeActive]}>{statut}</Text>
+      </Pressable>
+    </View>
+  );
+};
+
+const creerStyles = (theme: Theme) =>
+  StyleSheet.create({
+    champ: {
+      gap: theme.spacing.xs,
+    },
+    libelle: {
+      color: theme.colors.primary,
+      fontSize: theme.typography.caption,
+      fontWeight: '700',
+      letterSpacing: theme.typography.overlineLetterSpacing,
+      textTransform: 'uppercase',
+    },
+    saisie: {
+      minHeight: theme.minTargetSize,
+      color: theme.colors.text,
+      fontSize: theme.typography.body,
+      borderWidth: theme.borderWidth,
+      borderColor: theme.colors.border,
+      borderRadius: theme.radius.sm,
+      backgroundColor: theme.colors.surface,
+      paddingHorizontal: theme.spacing.sm,
+    },
+    saisieDesactivee: {
+      backgroundColor: theme.colors.surfaceMuted,
+      color: theme.colors.textMuted,
+    },
+    saisieErreur: {
+      borderColor: theme.colors.dangerText,
+    },
+    erreur: {
+      color: theme.colors.dangerText,
+      fontSize: theme.typography.metadata,
+      fontWeight: '600',
+    },
+    bascule: {
+      minHeight: theme.minTargetSize,
+      alignSelf: 'flex-start',
+      justifyContent: 'center',
+      borderWidth: theme.borderWidth,
+      borderColor: theme.colors.border,
+      borderRadius: theme.radius.sm,
+      backgroundColor: theme.colors.neutralBackground,
+      paddingHorizontal: theme.spacing.md,
+    },
+    basculeActive: {
+      backgroundColor: theme.colors.successBackground,
+    },
+    basculeDesactivee: {
+      backgroundColor: theme.colors.surfaceMuted,
+    },
+    texteBascule: {
+      color: theme.colors.textMuted,
+      fontSize: theme.typography.body,
+      fontWeight: '700',
+    },
+    texteBasculeActive: {
+      color: theme.colors.successText,
+    },
+  });

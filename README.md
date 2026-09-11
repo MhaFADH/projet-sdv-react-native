@@ -71,6 +71,11 @@ Pour tester depuis un appareil mobile, remplacer `localhost` dans `.env.local` p
 - réponse perdue présentée comme un résultat incertain — la note a peut-être été supprimée — avec actualisation des notes pour vérifier, sans annoncer de restauration serveur ;
 - `404` traité comme une issue documentée et non comme un blocage : la liste est actualisée et le cas expliqué ;
 - notes retirées du seul cache des notes de l’ouvrage, état vide contextualisé si la dernière disparaît, et aucune interaction avec le groupe de suppressions d’ouvrages, son compteur ou son « Annuler tout » ;
+- écran Préférences accessible depuis l’en-tête du fonds (`/preferences`), regroupant le thème — système, clair ou sombre — et la langue — français ou anglais ;
+- thème « système » et français par défaut, choix explicites persistés par plateforme et restaurés au démarrage, une valeur stockée absente ou invalide retombant sur sa valeur initiale ;
+- bascule à chaud du thème et de la langue sur l’écran Préférences et sur le fonds, sans rechargement, les deux préférences restant indépendantes ;
+- formats d’affichage `fr-FR` en français et `en-US` en anglais, dates de notes comprises ; titres, auteurs, éditeurs et notes de lecture ne sont jamais traduits ;
+- fonds, fiche, ajout et correction d’un ouvrage, notes de lecture, confirmations, avis d’erreur et messages de validation suivent la langue et le thème choisis ;
 - retour au fonds qui retrouve la page consultée et la réactualise, ou affiche la dernière page disponible si elle a disparu ;
 - annulation des requêtes obsolètes et ErrorBoundary global ;
 - ajout d’un ouvrage depuis le fonds (`/ouvrages/nouveau`) : titre, auteur, éditeur facultatif, année vide à l’ouverture et statut « Non lu » ;
@@ -104,12 +109,14 @@ npx expo install --check
 - `app/` compose les routes et les providers ;
 - `components/` contient la présentation pure ;
 - `features/books/` compose les parcours de consultation du fonds, de la fiche et d’ajout d’un ouvrage ;
+- `features/preferences/` porte les préférences globales de thème et de langue ;
 - `features/notes/` compose la saisie et la suppression d’une note de lecture, et les états de présentation des notes ;
 - `hooks/` porte l’intégration React avec TanStack Query ;
 - `services/api/` centralise HTTP, validation et erreurs ;
-- `services/plateforme/` porte les capacités dépendant de la plateforme derrière une interface unique ;
+- `services/plateforme/` porte les capacités dépendant de la plateforme derrière une interface unique, dont le stockage des préférences ;
+- `services/i18n/` initialise i18next et porte les dictionnaires français et anglais ;
 - `domain/` contient les types et constantes métier purs ;
-- `theme/` centralise les tokens visuels.
+- `theme/` centralise les tokens visuels et les palettes claire et sombre.
 
 Le détail du flux est décrit dans [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), la décision TanStack Query dans [`docs/ADR/001-gestion-etat-serveur.md`](docs/ADR/001-gestion-etat-serveur.md), la suppression différée et l’exception validée des notes dans [`docs/ADR/004-suppression-differee.md`](docs/ADR/004-suppression-differee.md) et la protection de la saisie, y compris pour l’ajout d’une note, dans [`docs/ADR/005-protection-saisie.md`](docs/ADR/005-protection-saisie.md).
 

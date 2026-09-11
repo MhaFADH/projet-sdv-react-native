@@ -48,6 +48,7 @@ const FondsControle = () => {
       changerPage={setPage}
       consultationDemandee={consultation}
       ouvrirOuvrage={vi.fn()}
+      ouvrirPreferences={vi.fn()}
       pageDemandee={page}
     />
   );

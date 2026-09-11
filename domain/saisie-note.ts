@@ -5,24 +5,27 @@ export type ChampSaisieNote = 'contenu';
 
 const CHAMP_CONTENU: ChampSaisieNote = 'contenu';
 
-export const saisieNoteSchema = z.object({
-  contenu: z
-    .string()
-    .trim()
-    .min(1, 'Le contenu de la note est obligatoire.')
-    .pipe(
-      z
-        .string()
-        .max(
-          LONGUEUR_MAXIMALE_NOTE,
-          `La note ne peut pas dépasser ${LONGUEUR_MAXIMALE_NOTE} caractères.`,
-        ),
-    ),
-});
+export type MessagesSaisieNote = {
+  obligatoire: string;
+  longueurMaximale: (maximum: number) => string;
+};
 
-export type SaisieNote = z.input<typeof saisieNoteSchema>;
+export const creerSaisieNoteSchema = (messages: MessagesSaisieNote) =>
+  z.object({
+    contenu: z
+      .string()
+      .trim()
+      .min(1, messages.obligatoire)
+      .pipe(
+        z.string().max(LONGUEUR_MAXIMALE_NOTE, messages.longueurMaximale(LONGUEUR_MAXIMALE_NOTE)),
+      ),
+  });
 
-export type NoteSaisie = z.output<typeof saisieNoteSchema>;
+type SchemaSaisieNote = ReturnType<typeof creerSaisieNoteSchema>;
+
+export type SaisieNote = z.input<SchemaSaisieNote>;
+
+export type NoteSaisie = z.output<SchemaSaisieNote>;
 
 export const SAISIE_NOTE_VIDE: SaisieNote = { contenu: '' };
 

@@ -2,9 +2,11 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CorrectionOuvrageScreen } from '@/features/books/correction-ouvrage-screen';
-import { theme } from '@/theme/tokens';
+import { useStylesTheme } from '@/hooks/use-theme';
+import type { Theme } from '@/theme/tokens';
 
 const CorrectionRoute = () => {
+  const styles = useStylesTheme(creerStyles);
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const retourAuFonds = () => {
@@ -28,11 +30,12 @@ const CorrectionRoute = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  page: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-});
+const creerStyles = (theme: Theme) =>
+  StyleSheet.create({
+    page: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+  });
 
 export default CorrectionRoute;
